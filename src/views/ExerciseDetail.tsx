@@ -4,6 +4,9 @@ import { IconBack, IconChevronRight, IconClose, IconExternal } from "../componen
 import { Menu } from "../components/ui";
 import { showToast } from "../lib/toast";
 import { isCustom } from "../lib/workout";
+import { ladderRows } from "../lib/progress";
+import { formatValue } from "../lib/history";
+import { READY_STREAK } from "../data/progressions";
 import { addExerciseLink, deleteCustomExercise, removeExerciseLink, restoreCustomExercise, setExerciseNote } from "../state/actions";
 import { formatDose, formatSeconds, variationDose } from "../lib/format";
 import { groupSets, setsLine } from "./Player";
@@ -80,6 +83,8 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
           </ul>
         </section>
       ) : null}
+
+      <Progression id={ex.id} />
 
       <MyNotes id={ex.id} />
 
@@ -159,6 +164,33 @@ function MyNotes({ id }: { id: string }) {
         <button type="submit" className="btn sm" disabled={!url.trim()}>Add link</button>
       </form>
       {err && <p className="form-error" role="alert">{err}</p>}
+    </section>
+  );
+}
+
+/** The exercise's ladder: steps, targets, my best at each, where I am. */
+function Progression({ id }: { id: string }) {
+  const { sessions, customExercises } = useAppState();
+  const lad = ladderRows(id, sessions, customExercises);
+  if (!lad) return null;
+  return (
+    <section className="card" aria-labelledby="prog-title">
+      <div className="card-head">
+        <h2 id="prog-title">Progression</h2>
+        {lad.ready && <span className="tag good">Ready to move up</span>}
+      </div>
+      <p className="muted small">Move up when your best set hits the target in {READY_STREAK} workouts in a row.</p>
+      <ol className="ladder">
+        {lad.rows.map((r, i) => (
+          <li key={r.v} className={[r.current && "current", r.done && "done"].filter(Boolean).join(" ")}>
+            <span className="ladder-num" aria-hidden="true">{r.done && !r.current ? "✓" : i + 1}</span>
+            <span className="ladder-main">
+              <span className="var-name">{r.name}{r.current && <span className="tag accent">You're here</span>}</span>
+              <span className="muted small">Target {formatValue(r.target, r.mode)}{r.best ? ` · best ${formatValue(r.best, r.mode)}` : ""}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }

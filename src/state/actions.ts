@@ -2,6 +2,7 @@
 import type { Equipment, Exercise } from "../data/catalog";
 import { cloneWorkout, defaultName, doseFields, fromTemplate, getExercise, newItem, tidy, uid } from "../lib/workout";
 import type { Template } from "../data/templates";
+import type { Suggestion } from "../lib/progress";
 import { activeRoutine, liveRoutines, rotationNext } from "../lib/routine";
 import { getState, update, type AppState, type Block, type Item, type Routine, type Session, type Workout } from "./store";
 
@@ -370,3 +371,13 @@ export const addExerciseLink = (id: string, url: string, label?: string) =>
 
 export const removeExerciseLink = (id: string, i: number) =>
   editNote(id, (n) => { n.links = (n.links ?? []).filter((_, k) => k !== i); });
+
+// ── Suggestions ───────────────────────────────────────────────────
+
+/** Apply a suggestion to a workout item: next ladder step (dose resets to its default) or the bigger amount. */
+export function applySuggestion(workoutId: string, itemId: string, sg: Suggestion) {
+  if (sg.kind === "move-up") setVariation(workoutId, itemId, sg.to);
+  else updateItem(workoutId, itemId, { [sg.field]: sg.to, skipSuggest: undefined });
+}
+
+export const dismissSuggestion = (workoutId: string, itemId: string, key: string) => updateItem(workoutId, itemId, { skipSuggest: key });

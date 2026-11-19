@@ -12,9 +12,10 @@ import {
 import { showToast } from "../lib/toast";
 import { keepAwake } from "../lib/wakeLock";
 import { GROUP_LABEL, getExercise, itemTitle, uid, workoutSummary } from "../lib/workout";
-import { addSession, setBeeps } from "../state/actions";
+import { addSession, applySuggestion, dismissSuggestion, setBeeps } from "../state/actions";
+import { activeSuggestion } from "../lib/progress";
 import { getRun, mutateRun, setRun, useRun } from "../state/run";
-import { getState, todayStr, useAppState, type SetLog, type Workout } from "../state/store";
+import { getState, todayStr, useAppState, type Session, type SetLog, type Workout } from "../state/store";
 
 /** Start (or resume) a workout. Call from a tap: it unlocks sound and keeps the screen on. */
 export function startWorkout(w: Workout) {
@@ -345,6 +346,41 @@ export function setsLine(mode: string, sets: SetLog[]) {
   return `${vals.join(", ")}${kg.length ? ` · ${kg.join("/")} kg` : ""}`;
 }
 
+/** After a workout: what's ready to go up next time (this workout's results included). */
+function NextTime({ run, sets, custom }: { run: Run; sets: SetLog[]; custom: Exercise[] }) {
+  const s = useAppState();
+  const w = s.workouts.find((x) => x.id === run.workoutId && !x.deletedAt);
+  if (!w) return null;
+  const now: Session = { id: "pending", workoutId: w.id, date: todayStr(), startedAt: run.startedAt, endedAt: run.endedAt ?? Date.now(), sets };
+  const sessions = [...s.sessions, now];
+  const list = w.blocks.flatMap((b) => b.items).flatMap((it) => {
+    const sg = activeSuggestion(it, sessions, custom);
+    if (!sg) return [];
+    const ex = getExercise(it.exerciseId, custom);
+    const v = ex?.variations?.find((x) => x.id === it.variationId);
+    const t = itemTitle(ex, v);
+    return [{ it, sg, name: t.sub ? `${t.main} · ${t.sub}` : t.main }];
+  });
+  if (!list.length) return null;
+  return (
+    <section className="card" aria-labelledby="next-title">
+      <h2 id="next-title">Next time</h2>
+      <p className="muted small">You hit these in your last two workouts. Update {w.name || "the workout"}?</p>
+      <ul className="next-list">
+        {list.map(({ it, sg, name }) => (
+          <li key={it.id}>
+            <span><b>{name}</b><span className="muted small"> · {sg.text}</span></span>
+            <span className="row-btns">
+              <button type="button" className="btn sm primary" onClick={() => { applySuggestion(w.id, it.id, sg); showToast(`${name} updated`); }}>{sg.kind === "move-up" ? "Move up" : "Apply"}</button>
+              <button type="button" className="btn sm ghost" onClick={() => dismissSuggestion(w.id, it.id, sg.key)}>Not now</button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Summary({ run, custom }: { run: Run; custom: Exercise[] }) {
   const [rpe, setRpe] = useState<number | undefined>();
   const [note, setNote] = useState("");
@@ -391,6 +427,7 @@ function Summary({ run, custom }: { run: Run; custom: Exercise[] }) {
             ))}
           </ul>
         )}
+        <NextTime run={run} sets={sets} custom={custom} />
         <div className="card">
           <span className="stepper-label">How hard was it? (RPE)</span>
           <div className="rpe" role="group" aria-label="Effort, 1 to 10">

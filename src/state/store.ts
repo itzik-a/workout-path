@@ -16,6 +16,8 @@ export interface Item {
   perSide?: boolean;
   /** rest after each set, seconds */
   rest: number;
+  /** a suggestion the user said "Not now" to (its key), so it stays hidden */
+  skipSuggest?: string;
 }
 
 export interface Block {

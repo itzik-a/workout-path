@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import type { Exercise, Mode } from "../data/catalog";
 import { FilterBar, GroupedList, rowMeta, useFilteredExercises } from "../components/ExerciseBrowser";
-import { IconBack, IconCheck, IconChevronRight, IconGrip, IconPlay, IconPlus } from "../components/Icons";
+import { IconBack, IconCheck, IconChevronRight, IconClose, IconGrip, IconPlay, IconPlus } from "../components/Icons";
 import { Menu, Seg, Select, Stepper, useMedia, type MenuItem } from "../components/ui";
 import { NO_FILTERS } from "../lib/filter";
 import { showToast } from "../lib/toast";
@@ -12,8 +12,10 @@ import { GROUP_LABEL, allExercises, blockSummary, getExercise, itemParts, itemSu
 import {
   addExercise, deleteBlock, duplicateItem, duplicateWorkout, groupWithNext, moveBlock, moveItem,
   removeItem, renameWorkout, restoreWorkout, setVariation, takeOutOfGroup, ungroup, updateBlock, updateItem,
+  applySuggestion, dismissSuggestion,
 } from "../state/actions";
-import { useAppState, type Block, type Item, type Workout } from "../state/store";
+import { useAppState, type Block, type Item, type Session, type Workout } from "../state/store";
+import { activeSuggestion } from "../lib/progress";
 import { deleteWithUndo } from "./Workouts";
 import { startWorkout } from "./Player";
 
@@ -26,6 +28,7 @@ type AddAt = { index?: number; blockId?: string };
 interface Ctx {
   w: Workout;
   custom: Exercise[];
+  sessions: Session[];
   open: string | null;
   setOpen: (id: string | null) => void;
   withUndo: (text: string, fn: () => void) => void;
@@ -74,7 +77,7 @@ export function Builder({ id }: { id: string }) {
   const target = picker.blockId ? w.blocks.find((b) => b.id === picker.blockId && b.kind !== "straight") : undefined;
   const counts = new Map<string, number>();
   w.blocks.forEach((b) => b.items.forEach((it) => counts.set(it.exerciseId, (counts.get(it.exerciseId) ?? 0) + 1)));
-  const ctx: Ctx = { w, custom, open, setOpen, withUndo, onAddTo: openPicker };
+  const ctx: Ctx = { w, custom, sessions: s.sessions, open, setOpen, withUndo, onAddTo: openPicker };
 
   return (
     <div className="builder-layout">
@@ -299,7 +302,23 @@ function ItemCard({ ctx, item, inGroup, handle, menu }: {
         <span className="item-dose">{itemSummary(item, mode, inGroup)}</span>
       </button>
       <Menu label={`More for ${name}`} items={menu(name)} />
+      <SuggestRow ctx={ctx} item={item} name={name} />
       {isOpen && <ItemEditor wid={ctx.w.id} item={item} ex={ex} mode={mode} inGroup={inGroup} />}
+    </div>
+  );
+}
+
+/** "↑ Ready for 50 s · Apply · Not now" under an item, from the last workouts. */
+function SuggestRow({ ctx, item, name }: { ctx: Ctx; item: Item; name: string }) {
+  const sg = activeSuggestion(item, ctx.sessions, ctx.custom);
+  if (!sg) return null;
+  return (
+    <div className="suggest">
+      <span className="suggest-text"><b>↑</b> {sg.text}</span>
+      <button type="button" className="btn sm primary" onClick={() => ctx.withUndo(`${name}: ${sg.text.replace("Ready for ", "now ")}`, () => applySuggestion(ctx.w.id, item.id, sg))}>
+        {sg.kind === "move-up" ? "Move up" : "Apply"}
+      </button>
+      <button type="button" className="icon-btn subtle suggest-x" aria-label="Not now" title="Not now" onClick={() => dismissSuggestion(ctx.w.id, item.id, sg.key)}><IconClose /></button>
     </div>
   );
 }

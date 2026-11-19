@@ -92,7 +92,7 @@ SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minut
 5. **Routines + Today** (done): weekly / rotation schedules, Today picks the next workout.
 6. **History + progress** (done): session list, per-exercise bests and charts.
 7. **Sync + backup** (done): Gist sync, JSON export / import.
-8. **Later ideas**: custom exercises in the app, progression ladders (e.g. tuck → adv tuck → straddle planche, with "move up when you hit X s"), suggested dose increases, starter workout templates, photos / video links per exercise.
+8. **Later ideas** (done except photos): custom exercises in the app, progression ladders (e.g. tuck → adv tuck → straddle planche, with "move up when you hit X s"), suggested dose increases, starter workout templates, photos / video links per exercise.
 
 ## 7. Decisions (2026-11-19)
 
