@@ -176,6 +176,21 @@ export const EXERCISES: Exercise[] = [
     ],
     aliases: ["Spin bike"],
   },
+  {
+    id: "running",
+    name: "Running",
+    section: "cardio",
+    regions: ["lower", "full"],
+    mode: "time",
+    dose: { sets: 1, minutes: 30 },
+    variations: [
+      { id: "easy", name: "Easy run" },
+      { id: "tempo", name: "Tempo run", dose: { sets: 1, minutes: 20 } },
+      { id: "intervals", name: "Intervals", dose: { sets: 6, minutes: 1 } },
+    ],
+    cue: "Tall posture, short quick steps landing under the hips, relaxed shoulders.",
+    aliases: ["Run", "Jogging", "Jog"],
+  },
 
   // ── Mobility & Warm-up ─────────────────────────────────────────
   {

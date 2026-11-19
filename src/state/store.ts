@@ -2,7 +2,7 @@
    Every change goes through src/state/actions.ts. New fields must be
    optional in normalize() so older saved copies still load. */
 import { useSyncExternalStore } from "react";
-import { HOME_EQUIPMENT, type Equipment, type Exercise } from "../data/catalog";
+import { HOME_EQUIPMENT, type Equipment, type Exercise, type Mode } from "../data/catalog";
 
 export interface Item {
   id: string;
@@ -14,6 +14,8 @@ export interface Item {
   minutes?: number;
   kg?: number;
   perSide?: boolean;
+  /** this item only: timed (seconds) instead of the exercise's reps, e.g. 20 s of burpees */
+  mode?: Mode;
   /** rest after each set, seconds */
   rest: number;
   /** a suggestion the user said "Not now" to (its key), so it stays hidden */
@@ -64,6 +66,8 @@ export interface SetLog {
   minutes?: number;
   kg?: number;
   skipped?: boolean;
+  /** set when the item overrode the exercise's mode (timed reps), so history reads the right field */
+  mode?: Mode;
 }
 
 export interface Session {

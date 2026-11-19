@@ -230,11 +230,11 @@ function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: numbe
     note = n === st.reps ? "reps" : `reps · target ${st.reps}`;
   } else if (!t) {
     big = <span className="big-clock">{clock((st.mode === "hold" ? st.seconds ?? 0 : (st.minutes ?? 0) * 60) * 1000)}</span>;
-    note = `${MODE_LABEL[st.mode]} · tap Start`;
+    note = `${st.override ? "Timed" : MODE_LABEL[st.mode]} · tap Start`;
   } else {
     const p = phaseOf(t, now);
     if (p.lead) { big = <span className="big-num">{p.sec}</span>; note = "Get ready"; }
-    else { big = <span className="big-clock">{clock(p.ms)}</span>; ring = p.frac; note = t.left != null ? "Paused" : st.mode === "hold" ? "Hold" : "Go"; }
+    else { big = <span className="big-clock">{clock(p.ms)}</span>; ring = p.frac; note = t.left != null ? "Paused" : st.mode === "hold" && !st.override ? "Hold" : "Go"; }
   }
   return (
     <>
@@ -319,12 +319,13 @@ function EndSheet({ run, onClose }: { run: Run; onClose: () => void }) {
 export function groupSets(sets: SetLog[], custom: Exercise[]) {
   const groups = new Map<string, { name: string; mode: string; sets: SetLog[] }>();
   for (const x of sets) {
-    const key = `${x.exerciseId}:${x.variationId ?? ""}`;
+    const key = `${x.exerciseId}:${x.variationId ?? ""}:${x.mode ?? ""}`;
     if (!groups.has(key)) {
       const ex = getExercise(x.exerciseId, custom);
       const v = ex?.variations?.find((y) => y.id === x.variationId);
       const t = itemTitle(ex, v);
-      groups.set(key, { name: t.sub ? `${t.main} · ${t.sub}` : t.main, mode: v?.mode ?? ex?.mode ?? "reps", sets: [] });
+      const name = t.sub ? `${t.main} · ${t.sub}` : t.main;
+      groups.set(key, { name: x.mode ? `${name} (timed)` : name, mode: x.mode ?? v?.mode ?? ex?.mode ?? "reps", sets: [] });
     }
     groups.get(key)!.sets.push(x);
   }

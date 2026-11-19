@@ -5,12 +5,12 @@ import type { Item, Session } from "../state/store";
 import { doneSets, formatValue, setValue } from "./history";
 import { getExercise, itemParts, itemTitle } from "./workout";
 
-/** Results for one exercise + variation, newest workout first. */
-function recent(sessions: Session[], exerciseId: string, variationId: string | undefined, mode: Mode) {
+/** Results for one exercise + variation, newest workout first (timed sets of a reps exercise only when `override` says so). */
+function recent(sessions: Session[], exerciseId: string, variationId: string | undefined, mode: Mode, override?: Mode) {
   return [...sessions]
     .sort((a, b) => b.startedAt - a.startedAt)
     .map((s) => {
-      const all = s.sets.filter((x) => x.exerciseId === exerciseId && (x.variationId ?? undefined) === (variationId ?? undefined));
+      const all = s.sets.filter((x) => x.exerciseId === exerciseId && (x.variationId ?? undefined) === (variationId ?? undefined) && x.mode === override);
       const done = all.filter((x) => !x.skipped);
       return { values: done.map((x) => setValue(x, mode)), skipped: all.length > done.length, any: all.length > 0 };
     })
@@ -31,12 +31,14 @@ export function bump(n: number, mode: Mode) {
 }
 
 export function suggestFor(item: Item, sessions: Session[], custom?: Exercise[]): Suggestion | null {
-  const { ex, mode } = itemParts(item, custom);
+  const { ex, mode, base } = itemParts(item, custom);
   if (!ex) return null;
-  const hist = recent(sessions, item.exerciseId, item.variationId, mode).slice(0, READY_STREAK);
+  const override = mode !== base ? mode : undefined;
+  const hist = recent(sessions, item.exerciseId, item.variationId, mode, override).slice(0, READY_STREAK);
   if (hist.length < READY_STREAK) return null;
 
-  const ladder = ladderFor(item.exerciseId);
+  // Ladder targets are in the variation's own unit, so a timed item only gets "increase".
+  const ladder = override ? undefined : ladderFor(item.exerciseId);
   const step = ladder ? ladder.steps.findIndex((s) => s.v === item.variationId) : -1;
   if (ladder && step >= 0 && step < ladder.steps.length - 1) {
     const target = ladder.steps[step].target;
@@ -73,7 +75,7 @@ export function ladderRows(exerciseId: string, sessions: Session[], custom?: Exe
   const rows = ladder.steps.map((st) => {
     const v = ex.variations?.find((x) => x.id === st.v);
     const mode = v?.mode ?? ex.mode;
-    const best = Math.max(0, ...sessions.flatMap((s) => doneSets(s).filter((x) => x.exerciseId === exerciseId && x.variationId === st.v).map((x) => setValue(x, mode))));
+    const best = Math.max(0, ...sessions.flatMap((s) => doneSets(s).filter((x) => x.exerciseId === exerciseId && x.variationId === st.v && !x.mode).map((x) => setValue(x, mode))));
     return { v: st.v, name: v ? itemTitle(ex, v).sub ?? v.name : st.v, target: st.target, mode, best, current: false, done: false };
   });
   let cur = 0;

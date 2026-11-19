@@ -19,12 +19,16 @@ export function getExercise(id: string, custom: Exercise[] = []): Exercise | und
   return EXERCISES.find((e) => e.id === id) ?? custom.find((e) => e.id === id);
 }
 
-/** An item's exercise, variation and effective mode. */
-export function itemParts(item: Item, custom?: Exercise[]): { ex?: Exercise; v?: Variation; mode: Mode } {
+/** An item's exercise, variation and effective mode (`base` is the variation's own, before the item's override). */
+export function itemParts(item: Item, custom?: Exercise[]): { ex?: Exercise; v?: Variation; mode: Mode; base: Mode } {
   const ex = getExercise(item.exerciseId, custom);
   const v = ex?.variations?.find((x) => x.id === item.variationId);
-  return { ex, v, mode: v?.mode ?? ex?.mode ?? "reps" };
+  const base = v?.mode ?? ex?.mode ?? "reps";
+  return { ex, v, mode: item.mode ?? base, base };
 }
+
+/** Default seconds when a reps exercise is switched to timed. */
+export const TIMED_DEFAULT_S = 30;
 
 /** Title for an item: "Push up" + "Fingertip", but just "Dead hang" when the variation already says it. */
 export function itemTitle(ex: Exercise | undefined, v: Variation | undefined): { main: string; sub?: string } {

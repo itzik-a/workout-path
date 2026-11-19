@@ -82,21 +82,27 @@ export function NumberInput({ value, onChange, min = 0, max = 9999, decimal, lab
 }
 
 /** − value + with a label above. */
+/** Rest steps: 5 s up to 30 s (Tabata's 10 s), then 15 s. */
+export const restStep = (value: number, dir: 1 | -1) => (dir < 0 ? (value <= 30 ? 5 : 15) : value < 30 ? 5 : 15);
+
 export function Stepper({ label, value, onChange, min = 0, max = 999, step = 1, unit, decimal }: {
   label: string; value: number; onChange: (n: number) => void;
-  min?: number; max?: number; step?: number; unit?: string; decimal?: boolean;
+  min?: number; max?: number; unit?: string; decimal?: boolean;
+  /** a fixed step, or one that depends on the value and direction (see restStep) */
+  step?: number | ((value: number, dir: 1 | -1) => number);
 }) {
   const set = (n: number) => onChange(clamp(Math.round(n * 100) / 100, min, max));
+  const by = (dir: 1 | -1) => (typeof step === "function" ? step(value, dir) : step);
   return (
     <div className="stepper">
       <span className="stepper-label">{label}</span>
       <div className="stepper-ctl">
-        <button type="button" aria-label={`Less ${label.toLowerCase()}`} disabled={value <= min} onClick={() => set(value - step)}><IconMinus /></button>
+        <button type="button" aria-label={`Less ${label.toLowerCase()}`} disabled={value <= min} onClick={() => set(value - by(-1))}><IconMinus /></button>
         <span className="stepper-value">
           <NumberInput value={value} onChange={onChange} min={min} max={max} decimal={decimal} label={label} />
           {unit && <span className="unit">{unit}</span>}
         </span>
-        <button type="button" aria-label={`More ${label.toLowerCase()}`} disabled={value >= max} onClick={() => set(value + step)}><IconPlus /></button>
+        <button type="button" aria-label={`More ${label.toLowerCase()}`} disabled={value >= max} onClick={() => set(value + by(1))}><IconPlus /></button>
       </div>
     </div>
   );

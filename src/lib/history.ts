@@ -10,6 +10,7 @@ export const sessionMs = (s: Session) => (s.endedAt ? s.endedAt - s.startedAt : 
 export const newestFirst = (ss: Session[]) => [...ss].sort((a, b) => b.startedAt - a.startedAt);
 
 export function setMode(x: SetLog, custom?: Exercise[]): Mode {
+  if (x.mode) return x.mode;
   const ex = getExercise(x.exerciseId, custom);
   return ex?.variations?.find((v) => v.id === x.variationId)?.mode ?? ex?.mode ?? "reps";
 }
@@ -57,22 +58,24 @@ export function loggedExercises(sessions: Session[], custom?: Exercise[]): Logge
   return [...map.values()];
 }
 
-/** One chartable line: all variations together (when they share a mode) or one variation. */
-export interface Track { key: string; label: string; mode: Mode; variationId?: string | null }
+/** One chartable line: all variations together (when they share a mode) or one variation
+    (its timed sets, from an item that made a reps exercise timed, are a line of their own: `override`). */
+export interface Track { key: string; label: string; mode: Mode; variationId?: string | null; override?: Mode | null }
 
 export function tracksFor(exerciseId: string, sessions: Session[], custom?: Exercise[]): Track[] {
   const ex = getExercise(exerciseId, custom);
-  const byVar = new Map<string, { mode: Mode; n: number }>();
+  const byVar = new Map<string, { vid: string; override: Mode | null; mode: Mode; n: number }>();
   for (const s of sessions) for (const x of doneSets(s)) {
     if (x.exerciseId !== exerciseId) continue;
-    const k = x.variationId ?? "";
-    const e = byVar.get(k) ?? { mode: setMode(x, custom), n: 0 };
+    const k = `${x.variationId ?? ""}@${x.mode ?? ""}`;
+    const e = byVar.get(k) ?? { vid: x.variationId ?? "", override: x.mode ?? null, mode: setMode(x, custom), n: 0 };
     e.n++;
     byVar.set(k, e);
   }
-  const vars = [...byVar.entries()].sort((a, b) => b[1].n - a[1].n).map(([k, { mode }]): Track => {
-    const v = ex?.variations?.find((y) => y.id === k);
-    return { key: k || "-", label: v ? itemTitle(ex, v).sub ?? v.name : ex?.name ?? "Exercise", mode, variationId: k || null };
+  const vars = [...byVar.values()].sort((a, b) => b.n - a.n).map(({ vid, override, mode }): Track => {
+    const v = ex?.variations?.find((y) => y.id === vid);
+    const label = v ? itemTitle(ex, v).sub ?? v.name : ex?.name ?? "Exercise";
+    return { key: `${vid || "-"}${override ? `@${override}` : ""}`, label: override ? `${label} (timed)` : label, mode, variationId: vid || null, override };
   });
   const modes = new Set(vars.map((t) => t.mode));
   if (vars.length > 1 && modes.size === 1) return [{ key: "all", label: "All variations", mode: vars[0].mode }, ...vars];
@@ -85,7 +88,8 @@ export interface Point { id: string; t: number; date: string; best: number; tota
 export function seriesFor(exerciseId: string, track: Track, sessions: Session[]): Point[] {
   const out: Point[] = [];
   for (const s of [...sessions].sort((a, b) => a.startedAt - b.startedAt)) {
-    const sets = doneSets(s).filter((x) => x.exerciseId === exerciseId && (track.variationId === undefined || (x.variationId ?? null) === track.variationId));
+    const sets = doneSets(s).filter((x) => x.exerciseId === exerciseId && (track.variationId === undefined
+      || (x.variationId ?? null) === track.variationId && (x.mode ?? null) === (track.override ?? null)));
     if (!sets.length) continue;
     const vals = sets.map((x) => setValue(x, track.mode));
     out.push({ id: s.id, t: s.startedAt, date: s.date, best: Math.max(...vals), total: vals.reduce((a, b) => a + b, 0), kg: Math.max(0, ...sets.map((x) => x.kg ?? 0)), sets });

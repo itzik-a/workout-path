@@ -13,6 +13,8 @@ export interface WorkStep {
   exerciseId: string;
   variationId?: string;
   mode: Mode;
+  /** the item made a reps exercise timed; logged on the set */
+  override?: Mode;
   reps?: number;
   seconds?: number;
   minutes?: number;
@@ -57,12 +59,13 @@ export function buildSteps(w: Workout, custom?: Exercise[]): Step[] {
   w.blocks.forEach((b, bi) => {
     const lastBlock = bi === w.blocks.length - 1;
     const work = (it: (typeof b.items)[number], set: number, sets: number, group?: WorkStep["group"]) => {
-      const { mode } = itemParts(it, custom);
+      const { mode, base } = itemParts(it, custom);
+      const override = mode !== base ? mode : undefined;
       const sides = it.perSide ? (["left", "right"] as const) : [undefined];
       sides.forEach((side, si) => {
         if (si && mode !== "reps") rest(SWITCH_SIDES_S, "Switch sides");
         steps.push({
-          kind: "work", itemId: it.id, exerciseId: it.exerciseId, variationId: it.variationId, mode,
+          kind: "work", itemId: it.id, exerciseId: it.exerciseId, variationId: it.variationId, mode, override,
           reps: it.reps, seconds: it.seconds, minutes: it.minutes, kg: it.kg, side, set, sets, group,
         });
       });
@@ -128,7 +131,7 @@ export function enter(r: Run, i: number, at: number, how: How) {
 function log(r: Run, i: number, patch: Partial<SetLog>) {
   const s = r.steps[i];
   if (s?.kind !== "work") return;
-  const entry: SetLog = { itemId: s.itemId, exerciseId: s.exerciseId, variationId: s.variationId, set: s.set, side: s.side, kg: s.kg, ...patch };
+  const entry: SetLog = { itemId: s.itemId, exerciseId: s.exerciseId, variationId: s.variationId, set: s.set, side: s.side, kg: s.kg, mode: s.override, ...patch };
   for (const k of Object.keys(entry) as (keyof SetLog)[]) if (entry[k] === undefined) delete entry[k];
   r.logs[i] = entry;
 }

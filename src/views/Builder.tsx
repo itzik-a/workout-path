@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type DragEvent, type PointerEvent as React
 import type { Exercise, Mode } from "../data/catalog";
 import { FilterBar, GroupedList, rowMeta, useFilteredExercises } from "../components/ExerciseBrowser";
 import { IconBack, IconCheck, IconChevronRight, IconClose, IconGrip, IconPlay, IconPlus } from "../components/Icons";
-import { Menu, Seg, Select, Stepper, useMedia, type MenuItem } from "../components/ui";
+import { Menu, Seg, Select, Stepper, restStep, useMedia, type MenuItem } from "../components/ui";
 import { NO_FILTERS } from "../lib/filter";
 import { showToast } from "../lib/toast";
 import { useDragSort } from "../lib/useDragSort";
@@ -12,7 +12,7 @@ import { GROUP_LABEL, allExercises, blockSummary, getExercise, itemParts, itemSu
 import {
   addExercise, deleteBlock, duplicateItem, duplicateWorkout, groupWithNext, moveBlock, moveItem,
   removeItem, renameWorkout, restoreWorkout, setVariation, takeOutOfGroup, ungroup, updateBlock, updateItem,
-  applySuggestion, dismissSuggestion,
+  applySuggestion, dismissSuggestion, setTimed,
 } from "../state/actions";
 import { useAppState, type Block, type Item, type Session, type Workout } from "../state/store";
 import { activeSuggestion } from "../lib/progress";
@@ -255,7 +255,7 @@ function GroupCard({ ctx, b, bi, handle, dropping, moves }: {
             />
             <div className="dose-row">
               <Stepper label="Rounds" value={b.rounds} min={1} max={20} onChange={(rounds) => updateBlock(w.id, b.id, { rounds })} />
-              <Stepper label="Rest between rounds" value={b.restBetween} min={0} max={600} step={15} unit="s" onChange={(restBetween) => updateBlock(w.id, b.id, { restBetween })} />
+              <Stepper label="Rest between rounds" value={b.restBetween} min={0} max={600} step={restStep} unit="s" onChange={(restBetween) => updateBlock(w.id, b.id, { restBetween })} />
             </div>
           </div>
         )}
@@ -290,7 +290,7 @@ function GroupCard({ ctx, b, bi, handle, dropping, moves }: {
 function ItemCard({ ctx, item, inGroup, handle, menu }: {
   ctx: Ctx; item: Item; inGroup: boolean; handle: Handle; menu: (name: string) => MenuItem[];
 }) {
-  const { ex, v, mode } = itemParts(item, ctx.custom);
+  const { ex, v, mode, base } = itemParts(item, ctx.custom);
   const title = itemTitle(ex, v);
   const name = title.main;
   const isOpen = ctx.open === item.id;
@@ -303,7 +303,7 @@ function ItemCard({ ctx, item, inGroup, handle, menu }: {
       </button>
       <Menu label={`More for ${name}`} items={menu(name)} />
       <SuggestRow ctx={ctx} item={item} name={name} />
-      {isOpen && <ItemEditor wid={ctx.w.id} item={item} ex={ex} mode={mode} inGroup={inGroup} />}
+      {isOpen && <ItemEditor wid={ctx.w.id} item={item} ex={ex} mode={mode} base={base} inGroup={inGroup} />}
     </div>
   );
 }
@@ -323,7 +323,7 @@ function SuggestRow({ ctx, item, name }: { ctx: Ctx; item: Item; name: string })
   );
 }
 
-function ItemEditor({ wid, item, ex, mode, inGroup }: { wid: string; item: Item; ex?: Exercise; mode: Mode; inGroup: boolean }) {
+function ItemEditor({ wid, item, ex, mode, base, inGroup }: { wid: string; item: Item; ex?: Exercise; mode: Mode; base: Mode; inGroup: boolean }) {
   const set = (patch: Partial<Item>) => updateItem(wid, item.id, patch);
   const side = item.perSide ? " / side" : "";
   return (
@@ -341,11 +341,15 @@ function ItemEditor({ wid, item, ex, mode, inGroup }: { wid: string; item: Item;
         {mode === "reps" && <Stepper label={`Reps${side}`} value={item.reps ?? 0} min={1} max={300} onChange={(reps) => set({ reps })} />}
         {mode === "hold" && <Stepper label={`Hold${side}`} value={item.seconds ?? 0} min={1} max={900} step={5} unit="s" onChange={(seconds) => set({ seconds })} />}
         {mode === "time" && <Stepper label={`Time${side}`} value={item.minutes ?? 0} min={1} max={240} unit="min" onChange={(minutes) => set({ minutes })} />}
-        <Stepper label={inGroup ? "Rest after" : "Rest"} value={item.rest} min={0} max={900} step={15} unit="s" onChange={(rest) => set({ rest })} />
+        <Stepper label={inGroup ? "Rest after" : "Rest"} value={item.rest} min={0} max={900} step={restStep} unit="s" onChange={(rest) => set({ rest })} />
         <Stepper label="Weight" value={item.kg ?? 0} min={0} max={300} unit="kg" decimal onChange={(kg) => set({ kg })} />
       </div>
       <div className="chips">
         <button type="button" className="chip" aria-pressed={!!item.perSide} onClick={() => set({ perSide: !item.perSide })}>Per side</button>
+        {base === "reps" && (
+          <button type="button" className="chip" aria-pressed={mode !== base} onClick={() => setTimed(wid, item.id, mode === base)}
+            title="Work for a set time instead of counting reps (intervals, Tabata)">Timed</button>
+        )}
       </div>
     </div>
   );

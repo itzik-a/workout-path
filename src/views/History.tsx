@@ -329,7 +329,7 @@ function ExerciseProgress({ id }: { id: string }) {
         <div className="chips" role="group" aria-label="Variation">
           {tracks.map((t) => (
             <button type="button" key={t.key} className="chip" aria-pressed={t.key === track.key} onClick={() => setPick((p) => ({ ...p, track: t.key }))}>
-              {t.label}{t.key !== "all" && tracks.some((u) => u.mode !== t.mode) ? ` · ${MODE_LABEL[t.mode].toLowerCase()}` : ""}
+              {t.label}{t.key !== "all" && !t.override && tracks.some((u) => u.mode !== t.mode) ? ` · ${MODE_LABEL[t.mode].toLowerCase()}` : ""}
             </button>
           ))}
         </div>

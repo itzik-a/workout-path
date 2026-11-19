@@ -1,6 +1,6 @@
 /* Every state change goes through here. */
 import type { Equipment, Exercise } from "../data/catalog";
-import { cloneWorkout, defaultName, doseFields, fromTemplate, getExercise, newItem, tidy, uid } from "../lib/workout";
+import { TIMED_DEFAULT_S, cloneWorkout, defaultName, doseFields, fromTemplate, getExercise, newItem, tidy, uid } from "../lib/workout";
 import type { Template } from "../data/templates";
 import type { Suggestion } from "../lib/progress";
 import { activeRoutine, liveRoutines, rotationNext } from "../lib/routine";
@@ -122,6 +122,17 @@ export function updateItem(workoutId: string, itemId: string, patch: Partial<Ite
   });
 }
 
+/** Make a reps item timed (seconds) for this workout only, or back to reps. */
+export function setTimed(workoutId: string, itemId: string, on: boolean) {
+  edit(workoutId, (w) => {
+    const f = findItem(w, itemId);
+    if (!f) return;
+    delete f.item.skipSuggest;
+    if (on) { f.item.mode = "hold"; f.item.seconds ||= TIMED_DEFAULT_S; }
+    else { delete f.item.mode; delete f.item.seconds; }
+  });
+}
+
 /** Switch variation; the dose resets to that variation's default (its mode may differ). */
 export function setVariation(workoutId: string, itemId: string, variationId: string) {
   edit(workoutId, (w, s) => {
@@ -132,7 +143,7 @@ export function setVariation(workoutId: string, itemId: string, variationId: str
     if (!ex || !v) return;
     const dose = v.dose ?? ex.dose;
     const kg = f.item.kg;
-    delete f.item.reps; delete f.item.seconds; delete f.item.minutes;
+    delete f.item.reps; delete f.item.seconds; delete f.item.minutes; delete f.item.mode;
     Object.assign(f.item, { variationId, sets: dose.sets, ...doseFields(dose) });
     if (!dose.kg && kg) f.item.kg = kg;
   });

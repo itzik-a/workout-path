@@ -22,7 +22,7 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
   const max = (f: (x: SetLog) => number | undefined) => Math.max(0, ...all.map((x) => f(x) ?? 0));
   const best = [
     max((x) => x.reps) && `${max((x) => x.reps)} reps`,
-    max((x) => x.seconds) && `${formatSeconds(max((x) => x.seconds))} hold`,
+    max((x) => x.seconds) && `${formatSeconds(max((x) => x.seconds))} ${all.some((x) => x.seconds && !x.mode) ? "hold" : "timed"}`,
     max((x) => x.minutes) && `${max((x) => x.minutes)} min`,
     max((x) => x.kg) && `${max((x) => x.kg)} kg`,
   ].filter(Boolean).join(" · ");
