@@ -36,18 +36,21 @@ Each exercise has: `id`, `name`, `section`, `regions`, `mode`, `perSide`, `equip
 
 `HOME_EQUIPMENT` lists what I have: wall, yoga mat, pull-up bar, dip bars, parallettes, Roman chair, spin bike, jump rope, a chair, isometric strap, the bed (anchor for Nordics) and a 12 kg kettlebell. It is the default for `settings.equipment`, and the catalog and picker can hide exercises that need anything else.
 
-Later, custom exercises added in the app are saved in state next to the built-in ones (ids prefixed `u-`, so they never clash).
+Custom exercises made in the app are saved in state next to the built-in ones (ids prefixed `u-`, so they never clash). Every exercise, built-in or custom, can carry my own note and links (videos, tutorials).
+
+Progression ladders (`src/data/progressions.ts`) cover 12 exercises: planche, L / V sit, handstand, crow, dragon flag, hollow body, Nordic, pull up, hang, push up, wall sit, glute bridge. Starter workouts (`src/data/templates.ts`): Iso strength, Push + pull, Core & skills, Legs & posterior chain, Flexibility, Cardio circuit.
 
 ## 3. Screens
 
 Tabs: **Today · Workouts · Routines · Catalog · History**
 
-- **Today**: the routine's next workout, with a Start button. Also a "quick start" for any workout.
-- **Catalog**: sections as groups, search, filters (region, mode, equipment, section). Exercise detail: cue, variations, default dose, my history and best for it.
-- **Workouts**: list + builder. Add exercises from the catalog (picker with the same filters), pick variation, edit dose, reorder (drag on Mac, handle on iPhone), group into superset / circuit blocks, duplicate a workout.
-- **Routines**: weekly or rotation schedule built from workouts; one routine is active.
-- **Player** (full screen while working out): current item, big countdown for holds, rep counter for reps, rest timer between sets, "next up" preview, skip / back / pause, and logging of what I actually did (reps done, seconds held). Audio beeps (3-2-1, start, end), and the screen stays on (Wake Lock).
-- **History**: sessions by date; per exercise: best hold, best reps, heaviest kg, volume over time (chart).
+- **Today**: the followed routine's workout for today (weekly) or next (rotation) with Start; rest days show what's next; done today shows a check. Week or rotation strip, quick start for every workout, last workout.
+- **Catalog**: sections as groups, search, filters (region, mode, equipment, section), New custom exercise. Exercise page: cue, variations, default dose, progression ladder, my notes & links, my history and best.
+- **Workouts**: list + builder, or start from a template. Add exercises from the catalog (picker with the same filters), pick variation, edit dose, reorder (drag on Mac, handle on iPhone), group into superset / circuit blocks, duplicate a workout. Suggestions ("Ready for 50 s", "Ready for Advanced tuck") under items.
+- **Routines**: weekly or rotation schedule built from workouts; one routine is followed.
+- **Player** (full screen while working out): current item, big countdown for holds, rep counter for reps, rest timer between sets, "next up" preview, skip / back / pause, and logging of what I actually did (reps done, seconds held). Audio beeps (3-2-1, start, end), and the screen stays on (Wake Lock). Summary with RPE, note and "Next time" suggestions.
+- **History**: stat tiles, 12-week activity grid, sessions by month; a session's sets, RPE and note; per exercise: best set, last time, heaviest kg, chart of best / total / weight per workout.
+- **Sync & backup** (status pill in the top bar / sidebar): connect a GitHub token, sync status, export / import a JSON backup.
 
 ## 4. Layout: iPhone and MacBook
 
@@ -60,26 +63,27 @@ Tabs: **Today · Workouts · Routines · Catalog · History**
 - Vite + React 19 + TypeScript, Node 22, plain CSS with tokens in `:root`, hash routing.
 - PWA: `manifest.webmanifest`, 180 px apple-touch-icon, service worker (network first for the page, cache first for hashed assets), runs in standalone mode from the Home Screen.
 - State: one app state in `localStorage` (`workoutPath.v1`), every change goes through `actions.ts`, `normalize()` keeps old saved copies loading.
-- Sync between iPhone and Mac: a private GitHub Gist (`workout-path.json`), same pattern as piano-path. Merge rule: sessions are a union by id minus deleted ids (a delete loses to a later restore or edit); workouts / routines / custom exercises per-item by newer `updatedAt`.
+- Sync between iPhone and Mac: a private GitHub Gist (`workout-path.json`), same pattern as piano-path. Merge rule: sessions are a union by id minus deleted ids (a delete loses to a later restore or edit); workouts / routines / custom exercises / exercise notes per item by newer `updatedAt`; settings and the followed routine from the newer copy.
 - Export / import JSON as a backup.
 - Deploy: GitHub Actions → GitHub Pages on push to `main`.
 - Timers based on timestamps (not interval counting) so they stay correct when the phone locks or the tab is in the background. Audio starts only after a tap (iOS rule).
 
-### State shape (first version)
+### State shape
 
 ```ts
 {
-  customExercises: Exercise[],
+  customExercises: (Exercise & { updatedAt?, deletedAt? })[],
+  exerciseNotes: Record<exerciseId, { note?, links?: { url, label? }[], updatedAt }>,
   workouts: { id, name, blocks: Block[], updatedAt, deletedAt? }[],
   routines: { id, name, kind: "weekly" | "rotation", days?, order?, pos?, updatedAt, deletedAt? }[],
   activeRoutine?: string,
-  sessions: { id, workoutId, workoutName?, date, startedAt, endedAt, sets: SetLog[], note?, rpe? }[],
+  sessions: { id, workoutId, workoutName?, date, startedAt, endedAt, sets: SetLog[], note?, rpe?, updatedAt? }[],
   sessionsDeleted: { id, at }[],
   settings: { restDefault, beeps, theme, equipment: Equipment[] },
   updatedAt
 }
 Block   = { id, kind: "straight" | "superset" | "circuit", rounds, restBetween, items: Item[] }
-Item    = { id, exerciseId, variationId?, sets, reps?, seconds?, minutes?, kg?, perSide?, rest }
+Item    = { id, exerciseId, variationId?, sets, reps?, seconds?, minutes?, kg?, perSide?, rest, skipSuggest? }
 SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minutes?, kg?, skipped? }
 ```
 
@@ -94,7 +98,36 @@ SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minut
 7. **Sync + backup** (done): Gist sync, JSON export / import.
 8. **Later ideas** (done except photos): custom exercises in the app, progression ladders (e.g. tuck → adv tuck → straddle planche, with "move up when you hit X s"), suggested dose increases, starter workout templates, photos / video links per exercise.
 
-## 7. Decisions (2026-11-19)
+The workout in progress lives in its own key (`workoutPath.run`, not synced); the sync token in `workoutPath.gist`.
+
+## 7. What's next (from 2026-11-19)
+
+Milestones 1–8 are done and live. Next, in order of value:
+
+9. **Field test on the iPhone and Mac.** Install from Safari (Share → Add to Home Screen), connect sync on both with the same token, run two or three real workouts, and fix what breaks. Check what the browser tests couldn't:
+   - beeps with the silent switch on and with music playing (if muted, try `navigator.audioSession` "playback" / "transient");
+   - the screen staying on through a long hold and a long rest (Wake Lock in the Home Screen app);
+   - leaving mid-workout (lock, switch apps, reload) and resuming;
+   - drag to reorder and the reps − / + with sweaty fingers; huge numbers readable from the floor;
+   - sync after editing on both devices while one is offline.
+10. **Settings screen.** Equipment I have (`settings.equipment` is in state but has no screen yet) with an "only what I have" filter in the catalog and picker; default rest; sounds on / off; theme (system / light / dark, `settings.theme` exists but is unused); first day of the week if the region's is wrong.
+11. **Fix and add history by hand.** Edit a saved workout's sets (a wrong rep count or hold), and log a workout done without the player (e.g. at a gym or outdoors).
+12. **Progression, part 2.** Edit ladder steps and targets in the app instead of in `progressions.ts`; ladders for custom exercises; weight suggestions for kg items (e.g. +1–2 kg once every set hits the reps), starting with the Jefferson curl.
+13. **Tests in the repo.** Move the checks that ran during development (merge rules, template and ladder validation) into `npm test` (Node type stripping, no new dependencies), add engine tests for `buildSteps()` / `catchUp()`, and run them in the deploy workflow before building.
+14. **Weekly goal on Today.** A target like "3 workouts a week" with progress on the week strip, and a streak of weeks hit.
+
+### Open questions
+
+- **Ladder targets**: the steps and targets in `src/data/progressions.ts` are my first guess. Which ones should change, and which exercises need a ladder too (e.g. walk press, side plank, Bulgarian split squat with weight)?
+- **Week start**: it follows the device's region; is that the day you want (Sunday or Monday)?
+- **Suggestion rule**: "two workouts in a row at target" — too fast, too slow?
+
+### Parked
+
+- **Photos per exercise**: every sync re-uploads the whole state to the gist, and photos would make it heavy. If wanted later: small downscaled images in a separate gist file, synced only when they change. Links to photos / videos work today.
+- **Apple Health / Watch**: not reachable from a web app.
+
+## 8. Decisions (2026-11-19)
 
 - **Walk press**: the start of a press to handstand; instead of going all the way up, lift the feet a little and move forward. Added to Skills & Balance.
 - **The checkbox list** (Superman … Nordic) is just part of the catalog, not a starter workout.
