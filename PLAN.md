@@ -90,7 +90,7 @@ SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minut
 3. **Workout builder** (done): create / edit / reorder / duplicate workouts, blocks (straight / superset / circuit), dose editing.
 4. **Player** (done): run a workout with countdowns, rest timer, beeps, wake lock, logging actual results → saves a session.
 5. **Routines + Today** (done): weekly / rotation schedules, Today picks the next workout.
-6. **History + progress**: session list, per-exercise bests and charts.
+6. **History + progress** (done): session list, per-exercise bests and charts.
 7. **Sync + backup**: Gist sync, JSON export / import.
 8. **Later ideas**: custom exercises in the app, progression ladders (e.g. tuck → adv tuck → straddle planche, with "move up when you hit X s"), suggested dose increases, starter workout templates, photos / video links per exercise.
 

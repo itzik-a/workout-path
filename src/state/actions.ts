@@ -291,3 +291,28 @@ export function restoreRoutine(snapshot: Routine, wasActive: boolean) {
     if (wasActive) s.activeRoutine = r.id;
   });
 }
+
+/** Delete a saved workout; its id is kept in `sessionsDeleted` so the delete sticks after sync. */
+export function deleteSession(id: string) {
+  update((s) => {
+    s.sessions = s.sessions.filter((x) => x.id !== id);
+    if (!s.sessionsDeleted.includes(id)) s.sessionsDeleted = [...s.sessionsDeleted, id].slice(-1000);
+  });
+}
+
+export function restoreSession(session: Session) {
+  update((s) => {
+    s.sessionsDeleted = s.sessionsDeleted.filter((x) => x !== session.id);
+    if (!s.sessions.some((x) => x.id === session.id)) s.sessions.push(structuredClone(session));
+  });
+}
+
+export function updateSession(id: string, patch: Partial<Pick<Session, "note" | "rpe">>) {
+  update((s) => {
+    const x = s.sessions.find((y) => y.id === id);
+    if (!x) return;
+    Object.assign(x, patch);
+    if (!x.note) delete x.note;
+    if (!x.rpe) delete x.rpe;
+  });
+}

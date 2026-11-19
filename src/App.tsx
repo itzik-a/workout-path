@@ -1,6 +1,6 @@
 import { useEffect, useState, type ComponentType, type SVGProps } from "react";
 import { Catalog } from "./views/Catalog";
-import { Placeholder } from "./views/Placeholder";
+import { History } from "./views/History";
 import { Workouts } from "./views/Workouts";
 import { Routines } from "./views/Routines";
 import { Today } from "./views/Today";
@@ -19,13 +19,13 @@ const TABS: { id: View; label: string; Icon: ComponentType<SVGProps<SVGSVGElemen
   { id: "history", label: "History", Icon: IconHistory },
 ];
 
-/** "#catalog/plank" → { view: "catalog", sub: "plank" } */
+/** "#catalog/plank" → { view: "catalog", sub: "plank" }; "#history/exercise/plank" → sub "exercise/plank" */
 export interface Route { view: Screen; sub?: string }
 
 const readHash = (): Route => {
-  const [v, sub] = decodeURIComponent(location.hash.slice(1)).split("/");
+  const [v, ...rest] = decodeURIComponent(location.hash.slice(1)).split("/");
   const view = v === "play" || TABS.some((t) => t.id === v) ? (v as Screen) : "today";
-  return { view, sub: sub || undefined };
+  return { view, sub: rest.join("/") || undefined };
 };
 
 export function App() {
@@ -89,7 +89,7 @@ export function App() {
           : view === "workouts" ? <Workouts sub={route.sub} />
           : view === "routines" ? <Routines sub={route.sub} />
           : view === "today" ? <Today />
-          : <Placeholder view={view} />}
+          : <History sub={route.sub} />}
       </main>
 
       <Toast />

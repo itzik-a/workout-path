@@ -1,5 +1,5 @@
 import { EQUIPMENT_LABEL, MODE_LABEL, REGION_LABEL, sectionById, type Exercise } from "../data/catalog";
-import { IconBack } from "../components/Icons";
+import { IconBack, IconChevronRight } from "../components/Icons";
 import { formatDose, formatSeconds, variationDose } from "../lib/format";
 import { groupSets, setsLine } from "./Player";
 import { useAppState, type SetLog } from "../state/store";
@@ -72,6 +72,9 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
               {groupSets(last.sets, customExercises).map((g) => <span key={g.name} className="last-line">{g.name}: {setsLine(g.mode, g.sets)}</span>)}
             </dd></div>
           </dl>
+        )}
+        {last && (
+          <a className="link-row" href={`#history/exercise/${ex.id}`}>Progress chart and every workout <IconChevronRight /></a>
         )}
       </section>
     </article>
