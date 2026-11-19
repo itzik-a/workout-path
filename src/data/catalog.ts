@@ -117,6 +117,8 @@ export interface Exercise {
   variations?: Variation[];
   /** One-line form cue. */
   cue?: string;
+  /** How-to videos for built-in exercises (shown on the exercise page and in the player). */
+  links?: { url: string; label?: string }[];
   aliases?: string[];
   /** Custom exercises only (ids start with `u-`): last edit, and a soft delete like workouts. */
   updatedAt?: number;
@@ -288,6 +290,7 @@ export const EXERCISES: Exercise[] = [
       { id: "strap", name: "Iso strap" },
     ],
     cue: "Elbow bent 90° at your side, palm up, wrist straight; curl up into the resistance at about 50–70% effort without moving. Pain no more than 3/10.",
+    links: [{ url: "https://www.youtube.com/watch?v=jSX3SJwFv20", label: "Video: Momenta Chiropractic" }],
     aliases: ["Golfer's elbow isometric", "Wrist flexor isometric", "Medial epicondylitis"],
   },
   {
@@ -299,6 +302,7 @@ export const EXERCISES: Exercise[] = [
     perSide: true,
     dose: { sets: 4, seconds: 30 },
     cue: "Elbow bent 90° at your side, palm up; try to turn the palm down while the other hand stops it. Steady pressure, no movement.",
+    links: [{ url: "https://www.youtube.com/watch?v=U0KDVbvhKQw", label: "Video: Rehab My Patient" }],
     aliases: ["Pronator isometric", "Golfer's elbow"],
   },
   {
@@ -314,6 +318,7 @@ export const EXERCISES: Exercise[] = [
       { id: "ball", name: "Soft ball" },
     ],
     cue: "Squeeze at a moderate, steady effort with the wrist straight or slightly back; ease off if the inner elbow flares.",
+    links: [{ url: "https://www.youtube.com/shorts/z_qWDyMF334", label: "Video: Be Mobile Physiotherapy" }],
     aliases: ["Grip isometric", "Golfer's elbow"],
   },
   {
@@ -329,6 +334,7 @@ export const EXERCISES: Exercise[] = [
       { id: "light-weight", name: "Light weight (1–2 kg bottle)" },
     ],
     cue: "Forearm on your thigh, palm up, wrist past the knee. Lower the hand slowly over 3–4 s against the resistance, then help it back up with the other hand.",
+    links: [{ url: "https://www.youtube.com/watch?v=fQl7Qao_92k", label: "Video: Momenta Chiropractic" }],
     aliases: ["Wrist flexor eccentric", "Golfer's elbow"],
   },
   {
@@ -340,6 +346,7 @@ export const EXERCISES: Exercise[] = [
     perSide: true,
     dose: { sets: 2, seconds: 30 },
     cue: "Arm straight in front, palm up; gently pull the fingers down and back until you feel a mild stretch in the inner forearm.",
+    links: [{ url: "https://www.youtube.com/watch?v=RRM63cEPGa8", label: "Video: Merck Manual" }],
     aliases: ["Forearm stretch", "Golfer's elbow"],
   },
 

@@ -248,15 +248,16 @@ function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: numbe
         <span className="ring-note">{note}</span>
       </Ring>
       <p className="player-cue">{st.kg ? <b>{st.kg} kg · </b> : null}{ex?.cue}</p>
-      <PlayerLinks id={st.exerciseId} />
+      <PlayerLinks id={st.exerciseId} builtIn={ex?.links} />
     </>
   );
 }
 
-/** My links on this exercise (e.g. a form video), small, under the cue. */
-function PlayerLinks({ id }: { id: string }) {
-  const links = useAppState().exerciseNotes[id]?.links;
-  if (!links?.length) return null;
+/** The exercise's how-to videos, then my links on it (e.g. a form video), small, under the cue. */
+function PlayerLinks({ id, builtIn }: { id: string; builtIn?: { url: string; label?: string }[] }) {
+  const mine = useAppState().exerciseNotes[id]?.links;
+  const links = [...(builtIn ?? []), ...(mine ?? [])];
+  if (!links.length) return null;
   return (
     <p className="player-links">
       {links.slice(0, 3).map((l, i) => (

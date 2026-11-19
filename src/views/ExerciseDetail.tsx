@@ -57,6 +57,17 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
 
       {ex.cue && <p className="cue">{ex.cue}</p>}
 
+      {ex.links?.length ? (
+        <section className="card" aria-labelledby="howto-title">
+          <h2 id="howto-title">How to</h2>
+          <ul className="links">
+            {ex.links.map((l) => (
+              <li key={l.url}><a href={l.url} target="_blank" rel="noopener noreferrer">{linkLabel(l)} <IconExternal /></a></li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <dl className="facts card">
         <div><dt>Default</dt><dd>{formatDose(ex.dose, ex.mode, ex.perSide)}</dd></div>
         <div><dt>Type</dt><dd>{MODE_LABEL[ex.mode]}{ex.mode === "hold" ? " (seconds)" : ex.mode === "time" ? " (minutes)" : ""}</dd></div>
