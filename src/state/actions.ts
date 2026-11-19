@@ -1,5 +1,5 @@
 /* Every state change goes through here. */
-import type { Equipment } from "../data/catalog";
+import type { Equipment, Exercise } from "../data/catalog";
 import { cloneWorkout, defaultName, doseFields, getExercise, newItem, tidy, uid } from "../lib/workout";
 import { activeRoutine, liveRoutines, rotationNext } from "../lib/routine";
 import { getState, update, type AppState, type Block, type Item, type Routine, type Session, type Workout } from "./store";
@@ -316,3 +316,45 @@ export function updateSession(id: string, patch: Partial<Pick<Session, "note" | 
     if (!x.rpe) delete x.rpe;
   });
 }
+
+// ── Custom exercises ──────────────────────────────────────────────
+
+/** Create or update a custom exercise (id `u-…`). Returns its id. */
+export function saveCustomExercise(ex: Exercise): string {
+  const id = ex.id || `u-${uid()}`;
+  update((s) => {
+    const next: Exercise = { ...structuredClone(ex), id, updatedAt: Date.now() };
+    delete next.deletedAt;
+    const i = s.customExercises.findIndex((x) => x.id === id);
+    if (i >= 0) s.customExercises[i] = next; else s.customExercises.push(next);
+  });
+  return id;
+}
+
+export function deleteCustomExercise(id: string) {
+  update((s) => {
+    const x = s.customExercises.find((e) => e.id === id);
+    if (x) { x.deletedAt = Date.now(); x.updatedAt = Date.now(); }
+  });
+}
+
+export const restoreCustomExercise = (snapshot: Exercise) => { saveCustomExercise(snapshot); };
+
+// ── My notes and links (any exercise) ─────────────────────────────
+
+function editNote(id: string, fn: (n: NonNullable<AppState["exerciseNotes"][string]>) => void) {
+  update((s) => {
+    const n = s.exerciseNotes[id] ?? { updatedAt: 0 };
+    fn(n);
+    n.updatedAt = Date.now();
+    s.exerciseNotes[id] = n;
+  });
+}
+
+export const setExerciseNote = (id: string, note: string) => editNote(id, (n) => { n.note = note.trim() || undefined; });
+
+export const addExerciseLink = (id: string, url: string, label?: string) =>
+  editNote(id, (n) => { n.links = [...(n.links ?? []), { url, ...(label?.trim() ? { label: label.trim() } : {}) }]; });
+
+export const removeExerciseLink = (id: string, i: number) =>
+  editNote(id, (n) => { n.links = (n.links ?? []).filter((_, k) => k !== i); });

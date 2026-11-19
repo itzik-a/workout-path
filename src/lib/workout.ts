@@ -6,7 +6,13 @@ import { formatDose, formatSeconds } from "./format";
 /** Short unique id. (crypto.randomUUID needs https, and the dev server runs over plain http on the LAN.) */
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-export const allExercises = (custom: Exercise[] = []) => (custom.length ? [...EXERCISES, ...custom] : EXERCISES);
+/** The catalog plus custom exercises that aren't deleted (deleted ones still resolve by id, for history). */
+export const allExercises = (custom: Exercise[] = []) => {
+  const live = custom.filter((e) => !e.deletedAt);
+  return live.length ? [...EXERCISES, ...live] : EXERCISES;
+};
+
+export const isCustom = (id: string) => id.startsWith("u-");
 
 export function getExercise(id: string, custom: Exercise[] = []): Exercise | undefined {
   return EXERCISES.find((e) => e.id === id) ?? custom.find((e) => e.id === id);

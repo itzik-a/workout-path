@@ -91,9 +91,17 @@ export interface Settings {
   equipment: Equipment[];
 }
 
+/** My own notes and links on any exercise (built-in or custom), keyed by exercise id. */
+export interface ExerciseNote {
+  note?: string;
+  links?: { url: string; label?: string }[];
+  updatedAt: number;
+}
+
 export interface AppState {
   v: 1;
   customExercises: Exercise[];
+  exerciseNotes: Record<string, ExerciseNote>;
   workouts: Workout[];
   routines: Routine[];
   activeRoutine?: string;
@@ -112,6 +120,7 @@ export function defaults(): AppState {
   return {
     v: 1,
     customExercises: [],
+    exerciseNotes: {},
     workouts: [],
     routines: [],
     sessions: [],
@@ -130,6 +139,7 @@ export function normalize(s: unknown): AppState {
   return {
     v: 1,
     customExercises: arr(x.customExercises),
+    exerciseNotes: x.exerciseNotes && typeof x.exerciseNotes === "object" ? x.exerciseNotes : {},
     workouts: arr(x.workouts),
     routines: arr(x.routines),
     activeRoutine: x.activeRoutine,

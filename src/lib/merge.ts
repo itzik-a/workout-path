@@ -3,6 +3,7 @@
      (deletes are soft, `deletedAt` + `updatedAt`, so they win the same way)
    - sessions: union by id, minus deleted ones; a delete only wins over a session
      not touched after it (so Undo after a sync still restores)
+   - notes and links per exercise: the copy edited last wins
    - settings and the followed routine: from whichever whole copy changed last
    Only type imports here, so the merge can be tested on its own. */
 import type { AppState, Session, Tombstone } from "../state/store";
@@ -20,6 +21,13 @@ function byId<T extends { id: string }>(first: T[], second: T[], pick: (a: T, b:
 const newerItem = <T extends Stamped>(a: T, b: T) => ((b.updatedAt ?? 0) > (a.updatedAt ?? 0) ? b : a);
 export const sessionStamp = (s: Session) => s.updatedAt ?? s.endedAt ?? s.startedAt;
 
+/** Per exercise, the note edited last wins. */
+function mergeNotes(a: AppState["exerciseNotes"] = {}, b: AppState["exerciseNotes"] = {}) {
+  const out = { ...b };
+  for (const [k, v] of Object.entries(a)) if (!out[k] || v.updatedAt >= out[k].updatedAt) out[k] = v;
+  return out;
+}
+
 export function merge(a: AppState, b: AppState): AppState {
   const [newer, older] = a.updatedAt >= b.updatedAt ? [a, b] : [b, a];
 
@@ -34,7 +42,8 @@ export function merge(a: AppState, b: AppState): AppState {
     ...structuredClone(newer),
     workouts: structuredClone(byId(newer.workouts, older.workouts, newerItem)),
     routines: structuredClone(byId(newer.routines, older.routines, newerItem)),
-    customExercises: structuredClone(byId(newer.customExercises, older.customExercises, (x) => x)),
+    customExercises: structuredClone(byId(newer.customExercises, older.customExercises, newerItem)),
+    exerciseNotes: structuredClone(mergeNotes(newer.exerciseNotes, older.exerciseNotes)),
     sessions: structuredClone(sessions),
     sessionsDeleted,
     updatedAt: Math.max(a.updatedAt, b.updatedAt),

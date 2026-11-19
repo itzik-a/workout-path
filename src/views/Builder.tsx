@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import type { Exercise, Mode } from "../data/catalog";
 import { FilterBar, GroupedList, rowMeta, useFilteredExercises } from "../components/ExerciseBrowser";
-import { IconBack, IconCheck, IconGrip, IconPlay, IconPlus } from "../components/Icons";
+import { IconBack, IconCheck, IconChevronRight, IconGrip, IconPlay, IconPlus } from "../components/Icons";
 import { Menu, Seg, Select, Stepper, useMedia, type MenuItem } from "../components/ui";
 import { NO_FILTERS } from "../lib/filter";
 import { showToast } from "../lib/toast";
@@ -387,6 +387,7 @@ function Picker({ open, target, counts, custom, searchRef, onAdd, onClose, onCle
           );
         }}
       />
+      <a className="link-row" href="#catalog/new">Can't find it? Create a custom exercise <IconChevronRight /></a>
     </aside>
   );
 }

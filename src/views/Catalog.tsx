@@ -3,7 +3,9 @@ import { MODE_LABEL, type Exercise } from "../data/catalog";
 import { IconChevronRight } from "../components/Icons";
 import { FilterBar, GroupedList, countLabel, rowMeta, useFilteredExercises } from "../components/ExerciseBrowser";
 import { NO_FILTERS } from "../lib/filter";
-import { allExercises, getExercise } from "../lib/workout";
+import { allExercises, getExercise, isCustom } from "../lib/workout";
+import { ExerciseEditor } from "./ExerciseEditor";
+import { IconPlus } from "../components/Icons";
 import { useAppState } from "../state/store";
 import { ExerciseDetail } from "./ExerciseDetail";
 
@@ -16,7 +18,10 @@ export function Catalog({ selected }: { selected?: string }) {
   const { f, setF, list } = useFilteredExercises("workoutPath.catalogFilters", all);
   const search = useRef<HTMLInputElement>(null);
   const detailPane = useRef<HTMLElement>(null);
-  const ex = selected ? getExercise(selected, customExercises) : undefined;
+  // sub-routes: "<id>", "new", "<id>/edit"
+  const editId = selected === "new" ? "new" : selected?.endsWith("/edit") ? selected.slice(0, -"/edit".length) : undefined;
+  const exId = editId ? (editId === "new" ? undefined : editId) : selected;
+  const ex = exId ? getExercise(exId, customExercises) : undefined;
 
   // Narrow screens show list or detail: start a detail at the top, return to where the list was.
   const prevSelected = useRef(selected);
@@ -40,7 +45,7 @@ export function Catalog({ selected }: { selected?: string }) {
         else if (selected) location.hash = "#catalog";
         return;
       }
-      if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !typing && list.length) {
+      if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !typing && !editId && list.length) {
         e.preventDefault();
         const i = list.findIndex((x) => x.id === selected);
         const next = e.key === "ArrowDown" ? Math.min(list.length - 1, i + 1) : Math.max(0, i < 0 ? 0 : i - 1);
@@ -50,21 +55,27 @@ export function Catalog({ selected }: { selected?: string }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [list, selected]);
+  }, [list, selected, editId]);
 
   return (
     <div className={`catalog${selected ? " has-detail" : ""}`}>
       <section className="pane list-pane" aria-label="Exercises">
-        <div className="page-head">
-          <h1 className="display">Catalog</h1>
-          <p className="muted small">{countLabel(list.length, all.length)}</p>
+        <div className="page-head page-head-row">
+          <div>
+            <h1 className="display">Catalog</h1>
+            <p className="muted small">{countLabel(list.length, all.length)}</p>
+          </div>
+          <a className="btn sm" href="#catalog/new"><IconPlus /> New</a>
         </div>
         <FilterBar f={f} setF={setF} searchRef={search} />
-        <GroupedList list={list} onReset={() => setF(() => NO_FILTERS)} renderRow={(e) => <Row ex={e} current={e.id === selected} />} />
+        <GroupedList list={list} onReset={() => setF(() => NO_FILTERS)} renderRow={(e) => <Row ex={e} current={e.id === exId} />} />
       </section>
 
       <section className="pane detail-pane" ref={detailPane} aria-label="Exercise">
-        {ex ? <ExerciseDetail ex={ex} /> : selected ? <NotFound /> : <Pick />}
+        {editId === "new" ? <ExerciseEditor key="new" />
+          : editId && ex && isCustom(ex.id) ? <ExerciseEditor key={ex.id} initial={ex} />
+          : ex && !editId ? <ExerciseDetail ex={ex} />
+          : selected ? <NotFound /> : <Pick />}
       </section>
     </div>
   );
@@ -80,7 +91,7 @@ function Row({ ex, current }: { ex: Exercise; current: boolean }) {
       onClick={() => { listScroll = window.scrollY; }}
     >
       <span className="ex-main">
-        <span className="ex-name">{ex.name}</span>
+        <span className="ex-name">{ex.name}{isCustom(ex.id) && <span className="tag custom-tag">Custom</span>}</span>
         <span className="ex-meta">{rowMeta(ex)}</span>
       </span>
       <span className={`tag mode-${ex.mode}`}>{MODE_LABEL[ex.mode]}</span>

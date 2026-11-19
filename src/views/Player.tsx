@@ -1,7 +1,7 @@
 /* Full-screen workout player. The run lives in src/state/run.ts; the engine is src/lib/player.ts. */
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { MODE_LABEL, type Exercise } from "../data/catalog";
-import { IconClose, IconMinus, IconMute, IconPlus, IconPrev, IconSkip, IconSound } from "../components/Icons";
+import { IconClose, IconExternal, IconMinus, IconMute, IconPlus, IconPrev, IconSkip, IconSound } from "../components/Icons";
 import { Ring } from "../components/ui";
 import { sound, unlockAudio } from "../lib/audio";
 import { formatSeconds } from "../lib/format";
@@ -247,7 +247,21 @@ function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: numbe
         <span className="ring-note">{note}</span>
       </Ring>
       <p className="player-cue">{st.kg ? <b>{st.kg} kg · </b> : null}{ex?.cue}</p>
+      <PlayerLinks id={st.exerciseId} />
     </>
+  );
+}
+
+/** My links on this exercise (e.g. a form video), small, under the cue. */
+function PlayerLinks({ id }: { id: string }) {
+  const links = useAppState().exerciseNotes[id]?.links;
+  if (!links?.length) return null;
+  return (
+    <p className="player-links">
+      {links.slice(0, 3).map((l, i) => (
+        <a key={i} className="tag" href={l.url} target="_blank" rel="noopener noreferrer">{l.label || "Video"} <IconExternal width={12} height={12} /></a>
+      ))}
+    </p>
   );
 }
 

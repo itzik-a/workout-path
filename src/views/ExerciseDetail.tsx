@@ -1,5 +1,10 @@
+import { useState, type FormEvent } from "react";
 import { EQUIPMENT_LABEL, MODE_LABEL, REGION_LABEL, sectionById, type Exercise } from "../data/catalog";
-import { IconBack, IconChevronRight } from "../components/Icons";
+import { IconBack, IconChevronRight, IconClose, IconExternal } from "../components/Icons";
+import { Menu } from "../components/ui";
+import { showToast } from "../lib/toast";
+import { isCustom } from "../lib/workout";
+import { addExerciseLink, deleteCustomExercise, removeExerciseLink, restoreCustomExercise, setExerciseNote } from "../state/actions";
 import { formatDose, formatSeconds, variationDose } from "../lib/format";
 import { groupSets, setsLine } from "./Player";
 import { useAppState, type SetLog } from "../state/store";
@@ -25,10 +30,26 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
     <article className="detail" aria-labelledby="ex-title">
       <a className="back" href="#catalog"><IconBack /> Catalog</a>
 
-      <header className="detail-head">
-        <p className="eyebrow">{section.name}</p>
-        <h1 id="ex-title" className="display">{ex.name}</h1>
-        {ex.aliases?.length ? <p className="muted small">Also called {ex.aliases.join(", ")}</p> : null}
+      <header className="builder-head">
+        <div className="detail-head">
+          <p className="eyebrow">{section.name}{isCustom(ex.id) && " · Custom"}{ex.deletedAt && " · Deleted"}</p>
+          <h1 id="ex-title" className="display">{ex.name}</h1>
+          {ex.aliases?.length ? <p className="muted small">Also called {ex.aliases.join(", ")}</p> : null}
+        </div>
+        {isCustom(ex.id) && !ex.deletedAt && (
+          <>
+            <a className="btn sm" href={`#catalog/${ex.id}/edit`}>Edit</a>
+            <Menu
+              label={`More for ${ex.name}`}
+              items={[{ label: "Delete exercise", danger: true, onSelect: () => {
+                const snap = structuredClone(ex);
+                location.hash = "#catalog";
+                deleteCustomExercise(ex.id);
+                showToast(`Deleted ${ex.name}`, { label: "Undo", run: () => restoreCustomExercise(snap) });
+              } }]}
+            />
+          </>
+        )}
       </header>
 
       {ex.cue && <p className="cue">{ex.cue}</p>}
@@ -60,6 +81,8 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
         </section>
       ) : null}
 
+      <MyNotes id={ex.id} />
+
       <section className="card" aria-labelledby="hist-title">
         <h2 id="hist-title">My history</h2>
         {!last ? (
@@ -78,5 +101,64 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
         )}
       </section>
     </article>
+  );
+}
+
+const withScheme = (u: string) => (/^[a-z][a-z0-9+.-]*:/i.test(u) ? u : `https://${u}`);
+const linkLabel = (l: { url: string; label?: string }) => {
+  if (l.label) return l.label;
+  try { return new URL(l.url).hostname.replace(/^www\./, ""); } catch { return l.url; }
+};
+
+/** My note and links on this exercise (videos, tutorials); synced with everything else. */
+function MyNotes({ id }: { id: string }) {
+  const { exerciseNotes } = useAppState();
+  const n = exerciseNotes[id];
+  const [note, setNote] = useState<string | null>(null);
+  const [url, setUrl] = useState("");
+  const [label, setLabel] = useState("");
+  const [err, setErr] = useState("");
+
+  const add = (e: FormEvent) => {
+    e.preventDefault();
+    const u = withScheme(url.trim());
+    try {
+      const p = new URL(u);
+      if (p.protocol !== "https:" && p.protocol !== "http:") throw new Error();
+    } catch { setErr("That doesn't look like a web address."); return; }
+    addExerciseLink(id, u, label);
+    setUrl(""); setLabel(""); setErr("");
+  };
+
+  return (
+    <section className="card" aria-labelledby="notes-title">
+      <h2 id="notes-title">My notes &amp; links</h2>
+      <label className="note">
+        <span className="visually-hidden">My note</span>
+        <textarea
+          rows={2}
+          value={note ?? n?.note ?? ""}
+          placeholder="Anything to remember: setup, what to feel, next goal"
+          onChange={(e) => setNote(e.target.value)}
+          onBlur={() => { if (note !== null) { setExerciseNote(id, note); setNote(null); } }}
+        />
+      </label>
+      {n?.links?.length ? (
+        <ul className="links">
+          {n.links.map((l, i) => (
+            <li key={`${i}-${l.url}`}>
+              <a href={l.url} target="_blank" rel="noopener noreferrer">{linkLabel(l)} <IconExternal /></a>
+              <button type="button" className="icon-btn subtle" aria-label={`Remove link ${linkLabel(l)}`} onClick={() => removeExerciseLink(id, i)}><IconClose /></button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <form className="link-form" onSubmit={add}>
+        <input className="text-input" type="text" inputMode="url" placeholder="Paste a link (video, tutorial)" aria-label="Link" value={url} onChange={(e) => setUrl(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} />
+        <input className="text-input" placeholder="Label (optional)" aria-label="Link label" value={label} onChange={(e) => setLabel(e.target.value)} />
+        <button type="submit" className="btn sm" disabled={!url.trim()}>Add link</button>
+      </form>
+      {err && <p className="form-error" role="alert">{err}</p>}
+    </section>
   );
 }

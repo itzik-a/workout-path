@@ -113,6 +113,9 @@ export interface Exercise {
   /** One-line form cue. */
   cue?: string;
   aliases?: string[];
+  /** Custom exercises only (ids start with `u-`): last edit, and a soft delete like workouts. */
+  updatedAt?: number;
+  deletedAt?: number;
 }
 
 export interface Section {
