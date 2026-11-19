@@ -796,6 +796,19 @@ html.playing body { padding-bottom: 0; }
 .detail .builder-head { align-items: flex-start; }
 .detail .builder-head .detail-head { flex: 1; min-width: 0; padding: 0; }
 
+/* ---------- Templates ---------- */
+.tpl-list { display: grid; gap: 8px; }
+.tpl {
+  width: 100%; display: grid; gap: 3px; padding: 14px 16px; text-align: left;
+  border: 0; border-radius: var(--radius-sm); background: var(--surface-2); color: var(--ink);
+  transition: background .15s, transform .12s;
+}
+.tpl:hover { background: var(--accent-soft); }
+.tpl:active { transform: scale(.99); }
+.tpl-name { font-weight: 700; font-size: 1.05rem; }
+.tpl-ex { font-size: .8rem; color: var(--muted); }
+.dlg { overflow-y: auto; overscroll-behavior: contain; }
+
 /* ---------- Sync & backup ---------- */
 .sync {
   display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; margin-right: -8px;

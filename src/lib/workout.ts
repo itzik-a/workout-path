@@ -1,6 +1,7 @@
 /* Helpers for workouts: exercise lookup, item naming, defaults, estimates, cleanup. */
 import { EXERCISES, type Dose, type Exercise, type Mode, type Variation } from "../data/catalog";
 import type { Block, Item, Workout } from "../state/store";
+import type { Template } from "../data/templates";
 import { formatDose, formatSeconds } from "./format";
 
 /** Short unique id. (crypto.randomUUID needs https, and the dev server runs over plain http on the LAN.) */
@@ -121,4 +122,27 @@ export function defaultName(taken: string[]): string {
     if (!taken.includes(n)) return n;
   }
   return `Workout ${taken.length + 1}`;
+}
+
+/** A new workout from a starter template (fresh ids; template doses over catalog defaults). */
+export function fromTemplate(t: Template, name: string, restDefault: number): Workout {
+  const blocks: Block[] = t.blocks.map((tb) => {
+    const items = tb.items.flatMap((ti) => {
+      const ex = getExercise(ti.ex);
+      if (!ex) return [];
+      const v = ti.v ? ex.variations?.find((x) => x.id === ti.v) : ex.variations?.[0];
+      const dose = v?.dose ?? ex.dose;
+      const item: Item = {
+        id: uid(), exerciseId: ex.id, variationId: v?.id,
+        sets: ti.sets ?? dose.sets, ...doseFields(dose), perSide: ex.perSide,
+        rest: ti.rest ?? (tb.kind === "straight" ? restDefault : 0),
+      };
+      for (const k of ["reps", "seconds", "minutes", "kg"] as const) if (ti[k] != null) item[k] = ti[k];
+      return [item];
+    });
+    return { id: uid(), kind: tb.kind, rounds: tb.rounds ?? 1, restBetween: tb.restBetween ?? 0, items };
+  });
+  const w: Workout = { id: uid(), name, blocks, updatedAt: Date.now() };
+  tidy(w);
+  return w;
 }

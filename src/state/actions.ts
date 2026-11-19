@@ -1,6 +1,7 @@
 /* Every state change goes through here. */
 import type { Equipment, Exercise } from "../data/catalog";
-import { cloneWorkout, defaultName, doseFields, getExercise, newItem, tidy, uid } from "../lib/workout";
+import { cloneWorkout, defaultName, doseFields, fromTemplate, getExercise, newItem, tidy, uid } from "../lib/workout";
+import type { Template } from "../data/templates";
 import { activeRoutine, liveRoutines, rotationNext } from "../lib/routine";
 import { getState, update, type AppState, type Block, type Item, type Routine, type Session, type Workout } from "./store";
 
@@ -49,6 +50,17 @@ export function createWorkout(): string {
     s.workouts.push({ id, name: defaultName(liveWorkouts(s).map((w) => w.name)), blocks: [], updatedAt: Date.now() });
   });
   return id;
+}
+
+/** New workout from a starter template; returns its id. */
+export function createFromTemplate(t: Template): string {
+  const s0 = getState();
+  const taken = new Set(liveWorkouts(s0).map((w) => w.name));
+  let name = t.name;
+  for (let n = 2; taken.has(name); n++) name = `${t.name} ${n}`;
+  const w = fromTemplate(t, name, s0.settings.restDefault);
+  update((s) => { s.workouts.push(w); });
+  return w.id;
 }
 
 export const renameWorkout = (id: string, name: string) => edit(id, (w) => { w.name = name; });
