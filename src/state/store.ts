@@ -32,6 +32,8 @@ export interface Workout {
   name: string;
   blocks: Block[];
   updatedAt: number;
+  /** Set instead of removing, so history keeps the name and the delete syncs. */
+  deletedAt?: number;
 }
 
 export interface Routine {

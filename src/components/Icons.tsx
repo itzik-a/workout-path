@@ -38,3 +38,23 @@ export const IconBack = (p: P) => (
 export const IconChevronRight = (p: P) => (
   <svg {...base({ width: 16, height: 16, strokeWidth: 2.2, ...p })}><path d="M9 5l7 7-7 7" /></svg>
 );
+export const IconPlus = (p: P) => (
+  <svg {...base({ width: 18, height: 18, strokeWidth: 2.2, ...p })}><path d="M12 5v14M5 12h14" /></svg>
+);
+export const IconMinus = (p: P) => (
+  <svg {...base({ width: 18, height: 18, strokeWidth: 2.2, ...p })}><path d="M5 12h14" /></svg>
+);
+export const IconMore = (p: P) => (
+  <svg {...base({ width: 20, height: 20, strokeWidth: 0, fill: "currentColor", ...p })}><circle cx="5.5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="18.5" cy="12" r="1.8" /></svg>
+);
+export const IconGrip = (p: P) => (
+  <svg {...base({ width: 18, height: 18, strokeWidth: 0, fill: "currentColor", ...p })}>
+    <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" /><circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" /><circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+  </svg>
+);
+export const IconChevronDown = (p: P) => (
+  <svg {...base({ width: 16, height: 16, strokeWidth: 2.2, ...p })}><path d="M6 9l6 6 6-6" /></svg>
+);
+export const IconCheck = (p: P) => (
+  <svg {...base({ width: 14, height: 14, strokeWidth: 2.6, ...p })}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+);

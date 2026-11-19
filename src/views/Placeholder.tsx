@@ -1,14 +1,13 @@
 import { EXERCISES, SECTIONS } from "../data/catalog";
 import type { View } from "../App";
 
-const COPY: Record<Exclude<View, "catalog">, { title: string; body: string }> = {
+const COPY: Record<Exclude<View, "catalog" | "workouts">, { title: string; body: string }> = {
   today: { title: "Today", body: "Your routine's next workout will show here, with a Start button and a quick start for any workout." },
-  workouts: { title: "Workouts", body: "Build workouts from the catalog: straight sets, supersets and circuits, with your own doses and rest." },
   routines: { title: "Routines", body: "Put workouts on a weekly schedule or a rotation (A → B → C), and pick the one you're following." },
   history: { title: "History", body: "Every finished workout, plus your bests per exercise and how they change over time." },
 };
 
-export function Placeholder({ view }: { view: Exclude<View, "catalog"> }) {
+export function Placeholder({ view }: { view: Exclude<View, "catalog" | "workouts"> }) {
   const { title, body } = COPY[view];
   return (
     <div className="placeholder">

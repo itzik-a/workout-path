@@ -1,6 +1,8 @@
 import { useEffect, useState, type ComponentType, type SVGProps } from "react";
 import { Catalog } from "./views/Catalog";
 import { Placeholder } from "./views/Placeholder";
+import { Workouts } from "./views/Workouts";
+import { Toast } from "./components/Toast";
 import { IconCatalog, IconHistory, IconRoutines, IconToday, IconWorkouts } from "./components/Icons";
 
 export type View = "today" | "workouts" | "routines" | "catalog" | "history";
@@ -60,9 +62,13 @@ export function App() {
         </a>
       </header>
 
-      <main className={`main view-${view}`} key={view}>
-        {view === "catalog" ? <Catalog selected={route.sub} /> : <Placeholder view={view} />}
+      <main className={`main view-${view}${route.sub ? " has-sub" : ""}`} key={view}>
+        {view === "catalog" ? <Catalog selected={route.sub} />
+          : view === "workouts" ? <Workouts sub={route.sub} />
+          : <Placeholder view={view} />}
       </main>
+
+      <Toast />
 
       <nav className="tabbar" aria-label="Sections">
         {TABS.map(({ id, label, Icon }) => (

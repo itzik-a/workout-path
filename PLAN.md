@@ -70,7 +70,7 @@ Tabs: **Today · Workouts · Routines · Catalog · History**
 ```ts
 {
   customExercises: Exercise[],
-  workouts: { id, name, blocks: Block[], updatedAt }[],
+  workouts: { id, name, blocks: Block[], updatedAt, deletedAt? }[],
   routines: { id, name, kind: "weekly" | "rotation", days | order, updatedAt }[],
   activeRoutine?: string,
   sessions: { id, workoutId, date, startedAt, endedAt, sets: SetLog[], note?, rpe? }[],
@@ -87,7 +87,7 @@ SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minut
 
 1. **Repo + plan + catalog**: done.
 2. **Scaffold + Catalog view** (done): Vite app, layout for both screen sizes, tab nav, catalog list / search / filters / detail. PWA manifest + icons. Deploy to Pages so it can be installed on the iPhone right away.
-3. **Workout builder**: create / edit / reorder / duplicate workouts, blocks (straight / superset / circuit), dose editing.
+3. **Workout builder** (done): create / edit / reorder / duplicate workouts, blocks (straight / superset / circuit), dose editing.
 4. **Player**: run a workout with countdowns, rest timer, beeps, wake lock, logging actual results → saves a session.
 5. **Routines + Today**: weekly / rotation schedules, Today picks the next workout.
 6. **History + progress**: session list, per-exercise bests and charts.
