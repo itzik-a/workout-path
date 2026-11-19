@@ -1,7 +1,7 @@
 /* Every state change goes through here. */
 import type { Equipment } from "../data/catalog";
 import { cloneWorkout, defaultName, doseFields, getExercise, newItem, tidy, uid } from "../lib/workout";
-import { getState, update, type AppState, type Block, type Item, type Workout } from "./store";
+import { getState, update, type AppState, type Block, type Item, type Session, type Workout } from "./store";
 
 export function toggleEquipment(e: Equipment) {
   update((s) => {
@@ -186,3 +186,9 @@ export function updateBlock(workoutId: string, blockId: string, patch: Partial<P
 
 export const deleteBlock = (workoutId: string, blockId: string) =>
   edit(workoutId, (w) => { w.blocks = w.blocks.filter((b) => b.id !== blockId); });
+
+// ── Sessions and settings ─────────────────────────────────────────
+
+export const addSession = (session: Session) => update((s) => { s.sessions.push(session); });
+
+export const setBeeps = (on: boolean) => update((s) => { s.settings.beeps = on; });

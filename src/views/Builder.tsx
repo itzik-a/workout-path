@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type DragEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import type { Exercise, Mode } from "../data/catalog";
 import { FilterBar, GroupedList, rowMeta, useFilteredExercises } from "../components/ExerciseBrowser";
-import { IconBack, IconCheck, IconGrip, IconPlus } from "../components/Icons";
+import { IconBack, IconCheck, IconGrip, IconPlay, IconPlus } from "../components/Icons";
 import { Menu, Seg, Select, Stepper, useMedia, type MenuItem } from "../components/ui";
 import { NO_FILTERS } from "../lib/filter";
 import { showToast } from "../lib/toast";
@@ -15,6 +15,7 @@ import {
 } from "../state/actions";
 import { useAppState, type Block, type Item, type Workout } from "../state/store";
 import { deleteWithUndo } from "./Workouts";
+import { startWorkout } from "./Player";
 
 /** Drag type for exercises dragged from the picker into the workout (Mac). */
 const DND = "application/x-workout-exercise";
@@ -89,6 +90,9 @@ export function Builder({ id }: { id: string }) {
               onChange={(e) => renameWorkout(w.id, e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
             />
+            <button type="button" className="btn primary sm start-btn" disabled={!w.blocks.length} onClick={() => startWorkout(w)}>
+              <IconPlay width={16} height={16} /> Start
+            </button>
             <Menu
               label="Workout options"
               items={[

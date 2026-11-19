@@ -63,6 +63,8 @@ export interface SetLog {
 export interface Session {
   id: string;
   workoutId: string;
+  /** name at the time, so history reads right after a rename or delete */
+  workoutName?: string;
   /** YYYY-MM-DD */
   date: string;
   startedAt: number;

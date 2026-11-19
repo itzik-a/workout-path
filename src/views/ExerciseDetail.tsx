@@ -1,11 +1,24 @@
 import { EQUIPMENT_LABEL, MODE_LABEL, REGION_LABEL, sectionById, type Exercise } from "../data/catalog";
 import { IconBack } from "../components/Icons";
-import { formatDose, variationDose } from "../lib/format";
-import { useAppState } from "../state/store";
+import { formatDose, formatSeconds, variationDose } from "../lib/format";
+import { groupSets, setsLine } from "./Player";
+import { useAppState, type SetLog } from "../state/store";
 
 export function ExerciseDetail({ ex }: { ex: Exercise }) {
-  const { sessions } = useAppState();
-  const logged = sessions.filter((s) => s.sets.some((x) => x.exerciseId === ex.id && !x.skipped)).length;
+  const { sessions, customExercises } = useAppState();
+  const mine = sessions
+    .map((s) => ({ s, sets: s.sets.filter((x) => x.exerciseId === ex.id && !x.skipped) }))
+    .filter((x) => x.sets.length)
+    .sort((a, b) => b.s.startedAt - a.s.startedAt);
+  const all = mine.flatMap((x) => x.sets);
+  const max = (f: (x: SetLog) => number | undefined) => Math.max(0, ...all.map((x) => f(x) ?? 0));
+  const best = [
+    max((x) => x.reps) && `${max((x) => x.reps)} reps`,
+    max((x) => x.seconds) && `${formatSeconds(max((x) => x.seconds))} hold`,
+    max((x) => x.minutes) && `${max((x) => x.minutes)} min`,
+    max((x) => x.kg) && `${max((x) => x.kg)} kg`,
+  ].filter(Boolean).join(" · ");
+  const last = mine[0];
   const section = sectionById(ex.section);
 
   return (
@@ -49,10 +62,16 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
 
       <section className="card" aria-labelledby="hist-title">
         <h2 id="hist-title">My history</h2>
-        {logged === 0 ? (
+        {!last ? (
           <p className="muted small">Nothing logged yet. After you finish a workout with this exercise, your bests and recent results show here.</p>
         ) : (
-          <p className="small">Logged in {logged} {logged === 1 ? "session" : "sessions"}.</p>
+          <dl className="facts">
+            <div><dt>Best</dt><dd>{best}</dd></div>
+            <div><dt>Workouts</dt><dd>{mine.length}</dd></div>
+            <div className="wide"><dt>Last · {last.s.date}</dt><dd>
+              {groupSets(last.sets, customExercises).map((g) => <span key={g.name} className="last-line">{g.name}: {setsLine(g.mode, g.sets)}</span>)}
+            </dd></div>
+          </dl>
         )}
       </section>
     </article>

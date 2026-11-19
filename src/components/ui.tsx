@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { IconChevronDown, IconMinus, IconMore, IconPlus } from "./Icons";
 
 /** useState that survives tab switches and reloads within this browser session. */
@@ -172,4 +172,21 @@ export function useMedia(query: string) {
     return () => mq.removeEventListener("change", on);
   }, [query]);
   return m;
+}
+
+/** Progress ring; sized by CSS (the SVG scales to its box). */
+export function Ring({ value, className, children }: { value: number; className?: string; children?: ReactNode }) {
+  const r = 92, c = 2 * Math.PI * r, v = Math.max(0, Math.min(1, value));
+  return (
+    <div className={`ring${className ? " " + className : ""}`}>
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle cx="100" cy="100" r={r} fill="none" stroke="var(--track)" strokeWidth="10" />
+        <circle
+          cx="100" cy="100" r={r} fill="none" stroke="var(--accent)" strokeWidth="10" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - v)} transform="rotate(-90 100 100)" className="ring-arc"
+        />
+      </svg>
+      <div className="ring-label">{children}</div>
+    </div>
+  );
 }

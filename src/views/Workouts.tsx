@@ -1,5 +1,6 @@
 import { Menu } from "../components/ui";
-import { IconPlus } from "../components/Icons";
+import { IconPlay, IconPlus } from "../components/Icons";
+import { startWorkout } from "./Player";
 import { showToast } from "../lib/toast";
 import { getExercise, workoutSummary } from "../lib/workout";
 import { createWorkout, deleteWorkout, duplicateWorkout, liveWorkouts, restoreWorkout } from "../state/actions";
@@ -54,6 +55,11 @@ function WorkoutList() {
                   <span className="muted small">{workoutSummary(w, s.customExercises)}</span>
                   {names.length > 0 && <span className="workout-preview">{names.join(", ")}</span>}
                 </a>
+                {w.blocks.length > 0 && (
+                  <button type="button" className="icon-btn play-btn" aria-label={`Start ${workoutName(w)}`} onClick={() => startWorkout(w)}>
+                    <IconPlay width={18} height={18} />
+                  </button>
+                )}
                 <Menu
                   label={`More for ${workoutName(w)}`}
                   items={[

@@ -58,3 +58,18 @@ export const IconChevronDown = (p: P) => (
 export const IconCheck = (p: P) => (
   <svg {...base({ width: 14, height: 14, strokeWidth: 2.6, ...p })}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
 );
+export const IconPlay = (p: P) => (
+  <svg {...base({ strokeWidth: 0, fill: "currentColor", ...p })}><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" /></svg>
+);
+export const IconSkip = (p: P) => (
+  <svg {...base({ strokeWidth: 2, ...p })}><path d="M6 6l8 6-8 6V6Z" /><path d="M18 6v12" /></svg>
+);
+export const IconPrev = (p: P) => (
+  <svg {...base({ strokeWidth: 2, ...p })}><path d="M18 6l-8 6 8 6V6Z" /><path d="M6 6v12" /></svg>
+);
+export const IconSound = (p: P) => (
+  <svg {...base(p)}><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></svg>
+);
+export const IconMute = (p: P) => (
+  <svg {...base(p)}><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M16 9.5l5 5M21 9.5l-5 5" /></svg>
+);

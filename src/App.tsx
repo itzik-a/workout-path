@@ -3,9 +3,12 @@ import { Catalog } from "./views/Catalog";
 import { Placeholder } from "./views/Placeholder";
 import { Workouts } from "./views/Workouts";
 import { Toast } from "./components/Toast";
+import { Player } from "./views/Player";
+import { useRun } from "./state/run";
 import { IconCatalog, IconHistory, IconRoutines, IconToday, IconWorkouts } from "./components/Icons";
 
 export type View = "today" | "workouts" | "routines" | "catalog" | "history";
+type Screen = View | "play";
 const TABS: { id: View; label: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
   { id: "today", label: "Today", Icon: IconToday },
   { id: "workouts", label: "Workouts", Icon: IconWorkouts },
@@ -15,11 +18,11 @@ const TABS: { id: View; label: string; Icon: ComponentType<SVGProps<SVGSVGElemen
 ];
 
 /** "#catalog/plank" → { view: "catalog", sub: "plank" } */
-export interface Route { view: View; sub?: string }
+export interface Route { view: Screen; sub?: string }
 
 const readHash = (): Route => {
   const [v, sub] = decodeURIComponent(location.hash.slice(1)).split("/");
-  const view = TABS.some((t) => t.id === v) ? (v as View) : "today";
+  const view = v === "play" || TABS.some((t) => t.id === v) ? (v as Screen) : "today";
   return { view, sub: sub || undefined };
 };
 
@@ -36,7 +39,17 @@ export function App() {
     return () => window.removeEventListener("hashchange", on);
   }, []);
 
+  const run = useRun();
   const { view } = route;
+
+  if (view === "play") {
+    return (
+      <>
+        <Player workoutId={route.sub} />
+        <Toast />
+      </>
+    );
+  }
 
   return (
     <div className="shell">
@@ -62,7 +75,14 @@ export function App() {
         </a>
       </header>
 
-      <main className={`main view-${view}${route.sub ? " has-sub" : ""}`} key={view}>
+      <main className={`main view-${view}${route.sub ? " has-sub" : ""}${run ? " has-run" : ""}`} key={view}>
+        {run && (
+          <a className="resume-bar" href={`#play/${run.workoutId}`}>
+            <span className="resume-dot" />
+            <span><b>{run.workoutName || "Workout"}</b> {run.done ? "is waiting to be saved" : "in progress"}</span>
+            <span className="resume-go">{run.done ? "Review" : "Resume"}</span>
+          </a>
+        )}
         {view === "catalog" ? <Catalog selected={route.sub} />
           : view === "workouts" ? <Workouts sub={route.sub} />
           : <Placeholder view={view} />}

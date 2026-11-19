@@ -1,4 +1,5 @@
 import { EXERCISES, SECTIONS } from "../data/catalog";
+import { useAppState } from "../state/store";
 import type { View } from "../App";
 
 const COPY: Record<Exclude<View, "catalog" | "workouts">, { title: string; body: string }> = {
@@ -9,6 +10,7 @@ const COPY: Record<Exclude<View, "catalog" | "workouts">, { title: string; body:
 
 export function Placeholder({ view }: { view: Exclude<View, "catalog" | "workouts"> }) {
   const { title, body } = COPY[view];
+  const { sessions } = useAppState();
   return (
     <div className="placeholder">
       <div className="page-head">
@@ -17,6 +19,9 @@ export function Placeholder({ view }: { view: Exclude<View, "catalog" | "workout
       <div className="card">
         <span className="tag accent">Coming soon</span>
         <p>{body}</p>
+        {view === "history" && sessions.length > 0 && (
+          <p className="small"><b>{sessions.length} {sessions.length === 1 ? "workout" : "workouts"} saved so far.</b> Each exercise page in the catalog already shows your bests and last results.</p>
+        )}
         <p className="muted small">The catalog is ready: {EXERCISES.length} exercises in {SECTIONS.length} sections.</p>
         <a className="btn primary" href="#catalog">Browse the catalog</a>
       </div>
