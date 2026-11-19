@@ -25,17 +25,33 @@ export type Mode = "reps" | "hold" | "time";
 
 export type Equipment =
   | "wall"
-  | "door-frame"
+  | "mat"
   | "pull-up-bar"
   | "dip-bars"
-  | "bench"
-  | "box"
+  | "chair"
   | "jump-rope"
   | "bike"
   | "roman-chair"
   | "strap"
   | "anchor"
-  | "parallettes";
+  | "parallettes"
+  | "kettlebell";
+
+/** What I have at home. The builder can hide exercises that need anything else. */
+export const HOME_EQUIPMENT: Equipment[] = [
+  "wall",
+  "mat",
+  "pull-up-bar",
+  "dip-bars",
+  "parallettes",
+  "roman-chair",
+  "bike",
+  "jump-rope",
+  "chair",
+  "strap",
+  "anchor", // the bed, for Nordics
+  "kettlebell", // 12 kg
+];
 
 /** Default dose when the exercise is added to a workout. */
 export interface Dose {
@@ -43,6 +59,8 @@ export interface Dose {
   reps?: number;
   seconds?: number;
   minutes?: number;
+  /** Added weight in kg (kettlebell, weighted pull ups). */
+  kg?: number;
 }
 
 export interface Variation {
@@ -125,7 +143,7 @@ export const EXERCISES: Exercise[] = [
       { id: "steady", name: "Steady" },
       { id: "intervals", name: "Intervals" },
     ],
-    aliases: ["Spin bike", "Cycling"],
+    aliases: ["Spin bike"],
   },
 
   // ── Mobility & Warm-up ─────────────────────────────────────────
@@ -331,14 +349,14 @@ export const EXERCISES: Exercise[] = [
     section: "core",
     regions: ["core"],
     mode: "reps",
-    equipment: ["bench"],
+    equipment: ["mat"],
     dose: { sets: 3, reps: 5 },
     variations: [
       { id: "tuck", name: "Tuck" },
       { id: "negative", name: "Negatives" },
       { id: "full", name: "Full" },
     ],
-    cue: "Only the upper back touches the bench; body straight from shoulders to toes; lower slowly.",
+    cue: "On the floor, grip something heavy behind your head (a bed leg); only the upper back touches down, body straight, lower slowly.",
   },
   {
     id: "roman-chair",
@@ -382,7 +400,7 @@ export const EXERCISES: Exercise[] = [
     dose: { sets: 3, reps: 8 },
     variations: [
       { id: "parallel", name: "Parallel bars" },
-      { id: "bench", name: "Bench dips", dose: { sets: 3, reps: 12 } },
+      { id: "bench", name: "Chair dips", dose: { sets: 3, reps: 12 } },
     ],
     cue: "Shoulders down and back, go to about 90° at the elbow, lock out at the top.",
   },
@@ -407,24 +425,19 @@ export const EXERCISES: Exercise[] = [
     cue: "Back to the wall, arms by your sides, press the hands backwards into it.",
   },
   {
-    id: "door-frame-sides",
-    name: "Door frame press (sides)",
+    id: "iso-strap-press",
+    name: "Iso strap press",
     section: "push",
     regions: ["upper"],
     mode: "hold",
-    equipment: ["door-frame"],
+    equipment: ["strap"],
     dose: { sets: 3, seconds: 10 },
-    cue: "Stand in the doorway and press both hands outward into the sides of the frame.",
-  },
-  {
-    id: "door-frame-top",
-    name: "Door frame press (top)",
-    section: "push",
-    regions: ["upper"],
-    mode: "hold",
-    equipment: ["door-frame"],
-    dose: { sets: 3, seconds: 10 },
-    cue: "Press up into the top of the frame like an overhead press; ribs down.",
+    variations: [
+      { id: "overhead", name: "Overhead (stand on the strap)" },
+      { id: "chest", name: "Chest press (strap behind the back)" },
+      { id: "lateral", name: "Lateral raise (stand on the strap)" },
+    ],
+    cue: "Set the strap so the joint angle is where you want it, then build tension over 2 s and push as hard as you can.",
   },
 
   // ── Upper Pull ─────────────────────────────────────────────────
@@ -489,9 +502,10 @@ export const EXERCISES: Exercise[] = [
     section: "legs",
     regions: ["lower"],
     mode: "reps",
-    equipment: ["box"],
+    equipment: ["chair"],
     dose: { sets: 3, reps: 10 },
-    cue: "Sit back to the box, touch lightly without relaxing, drive up through the heels.",
+    cue: "Sit back to the chair, touch lightly without relaxing, drive up through the heels.",
+    aliases: ["Chair squat"],
   },
   {
     id: "bulgarian",
@@ -500,9 +514,9 @@ export const EXERCISES: Exercise[] = [
     regions: ["lower"],
     mode: "reps",
     perSide: true,
-    equipment: ["bench"],
+    equipment: ["chair"],
     dose: { sets: 3, reps: 8 },
-    cue: "Back foot on the bench, front knee tracks over the toes, torso tall.",
+    cue: "Back foot on the chair, front knee tracks over the toes, torso tall.",
   },
   {
     id: "cossack",
@@ -526,7 +540,7 @@ export const EXERCISES: Exercise[] = [
       { id: "negative", name: "Negatives" },
       { id: "full", name: "Full" },
     ],
-    cue: "Ankles anchored, hips straight; lower as slowly as you can control.",
+    cue: "Ankles hooked under the bed, hips straight; lower as slowly as you can control.",
   },
   {
     id: "reverse-nordic",
@@ -545,7 +559,7 @@ export const EXERCISES: Exercise[] = [
     mode: "hold",
     equipment: ["strap"],
     dose: { sets: 3, seconds: 10 },
-    cue: "Stand on a strap or towel, hinge to grip it, pull up hard with a flat back.",
+    cue: "Stand on the strap, set the length so you hinge with a flat back, then pull up hard.",
   },
 
   // ── Skills & Balance ───────────────────────────────────────────
@@ -577,6 +591,16 @@ export const EXERCISES: Exercise[] = [
       { id: "side", name: "Side crow" },
     ],
     cue: "Knees high on the upper arms, lean forward until the feet float, look ahead.",
+  },
+  {
+    id: "walk-press",
+    name: "Walk press",
+    section: "skills",
+    regions: ["upper", "core"],
+    mode: "reps",
+    dose: { sets: 3, reps: 5 },
+    cue: "Start of a press to handstand: lean the shoulders over the hands until the feet lift a little, then move forward.",
+    aliases: ["Walk presses", "Press walk"],
   },
   {
     id: "planche",
@@ -651,9 +675,9 @@ export const EXERCISES: Exercise[] = [
     section: "flexibility",
     regions: ["core", "lower"],
     mode: "reps",
-    equipment: ["box"],
-    dose: { sets: 3, reps: 8 },
-    cue: "Roll down one vertebra at a time and back up; start with no weight or a light one.",
+    equipment: ["chair", "kettlebell"],
+    dose: { sets: 3, reps: 8, kg: 12 },
+    cue: "Stand on the chair holding the kettlebell; roll down one vertebra at a time and back up. Go slow.",
   },
 ];
 

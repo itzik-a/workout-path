@@ -10,7 +10,7 @@ A personal web app that holds my exercise catalog and lets me build workouts and
 | **Variation** | A version of an exercise that can have its own mode and dose. | Push up → static hold (hold, 3×20 s) |
 | **Workout** | An ordered list of blocks; each block holds items. | "Iso strength A" |
 | **Block** | A group within a workout: straight sets, superset or circuit, with rounds and rest. | Warm-up circuit ×2 rounds |
-| **Item** | Exercise + variation + dose (sets × reps / seconds / minutes, per side?) + rest. | Wall sit, 3×45 s, rest 60 s |
+| **Item** | Exercise + variation + dose (sets × reps / seconds / minutes, per side?, optional kg) + rest. | Wall sit, 3×45 s, rest 60 s |
 | **Routine** | A schedule of workouts: weekly (Mon/Wed/Fri) or a rotation (A → B → C → A). | "3-day iso + flexibility" |
 | **Session** | A workout I actually did: date, what I did per set, notes, RPE. | 2026-11-18, Workout A |
 
@@ -24,15 +24,17 @@ Sections are grouped **by type of training**, because a workout is built that wa
 | Mobility & Warm-up | Cat cow, Upward / downward dog, Glute bridge / reverse tabletop, Kneeling backbend, Hip flexor stretch, Deep squat hold |
 | Stances | Horse stance, Wall sit, Bow stance, Crane stance |
 | Core | Plank, Side plank, Hollow body, Superman, L / V sit, Dragon flag, Roman chair |
-| Upper Push | Push up (standard / static / fingertip / one arm), Dips, Wall push, Wall push backwards, Door frame press (sides), Door frame press (top) |
+| Upper Push | Push up (standard / static / fingertip / one arm), Dips, Wall push, Wall push backwards, Iso strap press (overhead / chest / lateral) |
 | Upper Pull | Pull up, Chin up, Hang (dead / active / L-sit), Iso pull up |
 | Legs & Posterior Chain | Box squat, Bulgarian split squat, Cossack squat, Nordic curl, Reverse nordic, Iso deadlift |
-| Skills & Balance | Handstand, Crow, Planche |
+| Skills & Balance | Handstand, Crow, Walk press, Planche |
 | Flexibility | Wall split, Front split, Side split, Pancake, Pigeon, Jefferson curl |
 
-45 exercises. Duplicates across my lists were merged (Superman, Hollow body, Handstand, Bow stance, L/V sit, Wall sit, Horse stance). Items written as "A / B" became one exercise with variations when they are versions of the same movement (Hang, Push up, Glute bridge), and separate exercises when they train different things (Horse stance vs Wall sit, the four wall / door-frame presses).
+45 exercises. Duplicates across my lists were merged (Superman, Hollow body, Handstand, Bow stance, L/V sit, Wall sit, Horse stance). Items written as "A / B" became one exercise with variations when they are versions of the same movement (Hang, Push up, Glute bridge), and separate exercises when they train different things (Horse stance vs Wall sit, Wall push vs Wall push backwards). The door-frame presses were dropped in favour of the isometric strap.
 
-Each exercise has: `id`, `name`, `section`, `regions`, `mode`, `perSide`, `equipment`, default `dose`, `variations`, a one-line `cue`, `aliases`.
+Each exercise has: `id`, `name`, `section`, `regions`, `mode`, `perSide`, `equipment`, default `dose` (optional `kg`), `variations`, a one-line `cue`, `aliases`.
+
+`HOME_EQUIPMENT` lists what I have: wall, yoga mat, pull-up bar, dip bars, parallettes, Roman chair, spin bike, jump rope, a chair, isometric strap, the bed (anchor for Nordics) and a 12 kg kettlebell. It is the default for `settings.equipment`, and the catalog and picker can hide exercises that need anything else.
 
 Later, custom exercises added in the app are saved in state next to the built-in ones (ids prefixed `u-`, so they never clash).
 
@@ -45,7 +47,7 @@ Tabs: **Today · Workouts · Routines · Catalog · History**
 - **Workouts**: list + builder. Add exercises from the catalog (picker with the same filters), pick variation, edit dose, reorder (drag on Mac, handle on iPhone), group into superset / circuit blocks, duplicate a workout.
 - **Routines**: weekly or rotation schedule built from workouts; one routine is active.
 - **Player** (full screen while working out): current item, big countdown for holds, rep counter for reps, rest timer between sets, "next up" preview, skip / back / pause, and logging of what I actually did (reps done, seconds held). Audio beeps (3-2-1, start, end), and the screen stays on (Wake Lock).
-- **History**: sessions by date; per exercise: best hold, best reps, volume over time (chart).
+- **History**: sessions by date; per exercise: best hold, best reps, heaviest kg, volume over time (chart).
 
 ## 4. Layout: iPhone and MacBook
 
@@ -73,12 +75,12 @@ Tabs: **Today · Workouts · Routines · Catalog · History**
   activeRoutine?: string,
   sessions: { id, workoutId, date, startedAt, endedAt, sets: SetLog[], note?, rpe? }[],
   sessionsDeleted: string[],
-  settings: { restDefault, beeps, theme },
+  settings: { restDefault, beeps, theme, equipment: Equipment[] },
   updatedAt
 }
 Block   = { id, kind: "straight" | "superset" | "circuit", rounds, restBetween, items: Item[] }
-Item    = { id, exerciseId, variationId?, sets, reps?, seconds?, minutes?, perSide?, rest }
-SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minutes?, skipped? }
+Item    = { id, exerciseId, variationId?, sets, reps?, seconds?, minutes?, kg?, perSide?, rest }
+SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minutes?, kg?, skipped? }
 ```
 
 ## 6. Milestones
@@ -92,12 +94,15 @@ SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minut
 7. **Sync + backup**: Gist sync, JSON export / import.
 8. **Later ideas**: custom exercises in the app, progression ladders (e.g. tuck → adv tuck → straddle planche, with "move up when you hit X s"), suggested dose increases, starter workout templates, photos / video links per exercise.
 
-## 7. Open questions
+## 7. Decisions (2026-11-19)
 
-- **"Walk presses"**: what is this? Wall presses (same as Wall push?), or something else? Left out of the catalog until clear.
-- **The checkbox list** (Superman … Nordic): is it a current routine / favorites to seed as the first workout, or just part of the catalog?
-- **Spinning**: assumed a spin bike. Correct?
-- **Iso deadlift**: assumed pulling on a strap / towel you stand on. Or a fixed bar?
-- **Door frame press (sides)**: assumed pressing outward. Or squeezing inward?
-- Equipment at home (parallettes, dip bars, Roman chair, Nordic anchor)? Lets the builder hide what I can't do.
-- Want weight tracking (for Jefferson curl, weighted pull ups)? Easy to add as an optional `kg` on items and sets.
+- **Walk press**: the start of a press to handstand; instead of going all the way up, lift the feet a little and move forward. Added to Skills & Balance.
+- **The checkbox list** (Superman … Nordic) is just part of the catalog, not a starter workout.
+- **Spinning** is a spin bike.
+- **Iso deadlift** uses the isometric strap.
+- **Door-frame presses** dropped; replaced by the Iso strap press (overhead / chest / lateral).
+- **Equipment at home**: see `HOME_EQUIPMENT` above.
+- **Chair**: used for the Bulgarian split squat (back foot), the Jefferson curl (stand on it) and the Box squat (sit back to it).
+- **Dragon flag** is done on the floor, gripping something heavy behind the head (a bed leg).
+- **Kettlebell (12 kg)**: only for the Jefferson curl for now (its default dose is 12 kg).
+- **Weight tracking**: yes. Optional `kg` on doses, items and logged sets.
