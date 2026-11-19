@@ -5,6 +5,7 @@
 export type SectionId =
   | "cardio"
   | "mobility"
+  | "physio"
   | "stances"
   | "core"
   | "push"
@@ -131,6 +132,7 @@ export interface Section {
 export const SECTIONS: Section[] = [
   { id: "cardio", name: "Cardio & Plyo", blurb: "Heart rate and jumping." },
   { id: "mobility", name: "Mobility & Warm-up", blurb: "Joint prep, spine and hips." },
+  { id: "physio", name: "Physio & Prehab", blurb: "Tendon isometrics and rehab work, e.g. for the elbow." },
   { id: "stances", name: "Stances", blurb: "Static leg strength and balance." },
   { id: "core", name: "Core", blurb: "Front, side and back of the trunk." },
   { id: "push", name: "Upper Push", blurb: "Chest, shoulders, triceps, incl. isometric presses." },
@@ -268,6 +270,77 @@ export const EXERCISES: Exercise[] = [
     mode: "hold",
     dose: { sets: 2, seconds: 60 },
     cue: "Heels down, chest up, knees track over the toes.",
+  },
+
+  // ── Physio & Prehab ────────────────────────────────────────────
+  // Golfer's elbow (wrist flexors / pronators at the inner elbow). Moderate effort, pain at most 3/10.
+  {
+    id: "wrist-flexion-iso",
+    name: "Wrist flexion hold",
+    section: "physio",
+    regions: ["upper"],
+    mode: "hold",
+    perSide: true,
+    dose: { sets: 5, seconds: 45 },
+    variations: [
+      { id: "hand", name: "Against other hand" },
+      { id: "table", name: "Under a table" },
+      { id: "strap", name: "Iso strap" },
+    ],
+    cue: "Elbow bent 90° at your side, palm up, wrist straight; curl up into the resistance at about 50–70% effort without moving. Pain no more than 3/10.",
+    aliases: ["Golfer's elbow isometric", "Wrist flexor isometric", "Medial epicondylitis"],
+  },
+  {
+    id: "pronation-iso",
+    name: "Forearm pronation hold",
+    section: "physio",
+    regions: ["upper"],
+    mode: "hold",
+    perSide: true,
+    dose: { sets: 4, seconds: 30 },
+    cue: "Elbow bent 90° at your side, palm up; try to turn the palm down while the other hand stops it. Steady pressure, no movement.",
+    aliases: ["Pronator isometric", "Golfer's elbow"],
+  },
+  {
+    id: "grip-squeeze",
+    name: "Grip squeeze",
+    section: "physio",
+    regions: ["upper"],
+    mode: "hold",
+    perSide: true,
+    dose: { sets: 3, seconds: 30 },
+    variations: [
+      { id: "towel", name: "Rolled towel" },
+      { id: "ball", name: "Soft ball" },
+    ],
+    cue: "Squeeze at a moderate, steady effort with the wrist straight or slightly back; ease off if the inner elbow flares.",
+    aliases: ["Grip isometric", "Golfer's elbow"],
+  },
+  {
+    id: "wrist-curl-eccentric",
+    name: "Eccentric wrist curl",
+    section: "physio",
+    regions: ["upper"],
+    mode: "reps",
+    perSide: true,
+    dose: { sets: 3, reps: 15 },
+    variations: [
+      { id: "manual", name: "Other hand resists" },
+      { id: "light-weight", name: "Light weight (1–2 kg bottle)" },
+    ],
+    cue: "Forearm on your thigh, palm up, wrist past the knee. Lower the hand slowly over 3–4 s against the resistance, then help it back up with the other hand.",
+    aliases: ["Wrist flexor eccentric", "Golfer's elbow"],
+  },
+  {
+    id: "wrist-flexor-stretch",
+    name: "Wrist flexor stretch",
+    section: "physio",
+    regions: ["upper"],
+    mode: "hold",
+    perSide: true,
+    dose: { sets: 2, seconds: 30 },
+    cue: "Arm straight in front, palm up; gently pull the fingers down and back until you feel a mild stretch in the inner forearm.",
+    aliases: ["Forearm stretch", "Golfer's elbow"],
   },
 
   // ── Stances ────────────────────────────────────────────────────

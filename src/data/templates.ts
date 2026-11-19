@@ -34,6 +34,18 @@ export const TEMPLATES: Template[] = [
     ],
   },
   {
+    id: "golfers-elbow",
+    name: "Golfer's elbow rehab",
+    blurb: "Wrist flexor and pronator isometrics, grip, slow eccentrics, stretch. Moderate effort, pain at most 3/10.",
+    blocks: [
+      one({ ex: "wrist-flexion-iso", v: "hand", sets: 5, seconds: 45, rest: 60 }),
+      one({ ex: "pronation-iso", sets: 4, seconds: 30, rest: 45 }),
+      one({ ex: "grip-squeeze", v: "towel", sets: 3, seconds: 30, rest: 45 }),
+      one({ ex: "wrist-curl-eccentric", v: "manual", sets: 3, reps: 15, rest: 60 }),
+      one({ ex: "wrist-flexor-stretch", sets: 2, seconds: 30, rest: 15 }),
+    ],
+  },
+  {
     id: "push-pull",
     name: "Push + pull",
     blurb: "Warm-up, then push / pull supersets on the bar and dip bars.",
