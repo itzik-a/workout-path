@@ -1,14 +1,11 @@
 import { EXERCISES, SECTIONS } from "../data/catalog";
 import { useAppState } from "../state/store";
-import type { View } from "../App";
 
-const COPY: Record<Exclude<View, "catalog" | "workouts">, { title: string; body: string }> = {
-  today: { title: "Today", body: "Your routine's next workout will show here, with a Start button and a quick start for any workout." },
-  routines: { title: "Routines", body: "Put workouts on a weekly schedule or a rotation (A → B → C), and pick the one you're following." },
+const COPY: Record<"history", { title: string; body: string }> = {
   history: { title: "History", body: "Every finished workout, plus your bests per exercise and how they change over time." },
 };
 
-export function Placeholder({ view }: { view: Exclude<View, "catalog" | "workouts"> }) {
+export function Placeholder({ view }: { view: "history" }) {
   const { title, body } = COPY[view];
   const { sessions } = useAppState();
   return (

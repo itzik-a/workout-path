@@ -659,6 +659,69 @@ html.playing body { padding-bottom: 0; }
 .facts .wide { grid-column: 1 / -1; }
 .last-line { display: block; font-weight: 500; }
 
+/* ---------- Routines ---------- */
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.routine-card.active { box-shadow: var(--shadow), inset 0 0 0 1.5px var(--accent); }
+.routine-card .workout-name { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.routine-card .workout-preview { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.routine-editor { display: grid; gap: 12px; }
+.routine-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.following { padding: 6px 12px; font-size: .8rem; }
+.days { padding: 4px 16px; gap: 0; }
+.day-row { display: grid; grid-template-columns: minmax(7.5em, 1fr) minmax(0, 1.6fr); align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.day-row:first-child { border-top: 0; }
+.day-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.day-row .select-box { max-width: none; }
+.day-row select, .add-rot select {
+  width: 100%; min-height: 44px; padding: 0 40px 0 14px;
+  border: 0; border-radius: var(--radius-sm); background: var(--surface-2);
+  font-weight: 600; -webkit-appearance: none; appearance: none;
+}
+.day-row.rest select { color: var(--muted); font-weight: 500; }
+.rot-row.next { box-shadow: var(--shadow), inset 0 0 0 1.5px var(--accent); }
+.rot-main { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 52px; }
+.rot-num {
+  width: 26px; height: 26px; flex: none; display: grid; place-items: center; border-radius: 50%;
+  background: var(--surface-2); color: var(--muted); font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.rot-row.next .rot-num { background: var(--accent); color: var(--on-accent); }
+.rot-main .item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.add-rot { max-width: 420px; }
+
+/* ---------- Today ---------- */
+.today { display: grid; gap: 16px; }
+.today-card { gap: 10px; justify-items: start; }
+.today-card .eyebrow a { color: inherit; }
+.today-title { display: flex; align-items: center; gap: 8px; font-size: 1.6rem; font-weight: 750; letter-spacing: -0.03em; }
+.today-start { min-width: 140px; }
+.done-mark {
+  width: 28px; height: 28px; flex: none; display: inline-grid; place-items: center; border-radius: 50%;
+  background: var(--good); color: var(--on-accent);
+}
+.done-line { display: flex; align-items: center; gap: 6px; }
+.done-line .done-mark { width: 20px; height: 20px; }
+.ex-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ex-chips .tag { font-weight: 550; }
+.strip { justify-self: stretch; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 4px; }
+.strip li {
+  display: grid; justify-items: center; gap: 4px; padding: 8px 2px;
+  border-radius: 12px; background: var(--surface-2); min-width: 0;
+}
+.strip-day { font-size: .7rem; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.strip-mark { height: 20px; display: grid; place-items: center; font-size: .76rem; font-weight: 700; max-width: 100%; overflow: hidden; }
+.strip li.rest .strip-mark { color: var(--muted); }
+.strip li.done { background: var(--good-soft); }
+.strip li.done .strip-mark { color: var(--good); }
+.strip li.today { box-shadow: inset 0 0 0 2px var(--accent); }
+.strip li.today .strip-day { color: var(--accent); }
+.strip li.missed { opacity: .55; }
+.rot-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; font-size: .84rem; }
+.rot-strip li { padding: 3px 10px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-weight: 600; }
+.rot-strip li.rot-arrow { padding: 0; background: none; font-weight: 400; }
+.rot-strip li.next { background: var(--accent-soft); color: var(--accent); }
+.qs-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding-right: 10px; }
+.last-workout { padding: 0 4px; }
+
 /* ---------- Placeholder views ---------- */
 .placeholder { display: grid; gap: 14px; }
 .placeholder .card { justify-items: start; }

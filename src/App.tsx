@@ -2,6 +2,8 @@ import { useEffect, useState, type ComponentType, type SVGProps } from "react";
 import { Catalog } from "./views/Catalog";
 import { Placeholder } from "./views/Placeholder";
 import { Workouts } from "./views/Workouts";
+import { Routines } from "./views/Routines";
+import { Today } from "./views/Today";
 import { Toast } from "./components/Toast";
 import { Player } from "./views/Player";
 import { useRun } from "./state/run";
@@ -85,6 +87,8 @@ export function App() {
         )}
         {view === "catalog" ? <Catalog selected={route.sub} />
           : view === "workouts" ? <Workouts sub={route.sub} />
+          : view === "routines" ? <Routines sub={route.sub} />
+          : view === "today" ? <Today />
           : <Placeholder view={view} />}
       </main>
 

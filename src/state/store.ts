@@ -40,11 +40,15 @@ export interface Routine {
   id: string;
   name: string;
   kind: "weekly" | "rotation";
-  /** weekly: workout id per weekday, 0 = Monday */
+  /** weekly: workout id per weekday, 0 = Monday … 6 = Sunday; null = rest day */
   days?: (string | null)[];
-  /** rotation: workout ids in order */
+  /** rotation: workout ids in order (a workout can appear more than once) */
   order?: string[];
+  /** rotation: index in `order` of the next workout */
+  pos?: number;
   updatedAt: number;
+  /** Set instead of removing, like workouts. */
+  deletedAt?: number;
 }
 
 export interface SetLog {

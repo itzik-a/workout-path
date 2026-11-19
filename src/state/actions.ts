@@ -1,7 +1,8 @@
 /* Every state change goes through here. */
 import type { Equipment } from "../data/catalog";
 import { cloneWorkout, defaultName, doseFields, getExercise, newItem, tidy, uid } from "../lib/workout";
-import { getState, update, type AppState, type Block, type Item, type Session, type Workout } from "./store";
+import { activeRoutine, liveRoutines, rotationNext } from "../lib/routine";
+import { getState, update, type AppState, type Block, type Item, type Routine, type Session, type Workout } from "./store";
 
 export function toggleEquipment(e: Equipment) {
   update((s) => {
@@ -189,6 +190,104 @@ export const deleteBlock = (workoutId: string, blockId: string) =>
 
 // ── Sessions and settings ─────────────────────────────────────────
 
-export const addSession = (session: Session) => update((s) => { s.sessions.push(session); });
+/** Save a finished workout. If it was the active rotation's next workout and at least one set was done, the rotation moves on. */
+export function addSession(session: Session) {
+  update((s) => {
+    s.sessions.push(session);
+    const r = activeRoutine(s);
+    if (r?.kind === "rotation" && session.sets.some((x) => !x.skipped)) {
+      const nx = rotationNext(s, r);
+      if (nx && nx.w.id === session.workoutId) { r.pos = (nx.i + 1) % (r.order?.length || 1); r.updatedAt = Date.now(); }
+    }
+  });
+}
 
 export const setBeeps = (on: boolean) => update((s) => { s.settings.beeps = on; });
+
+// ── Routines ──────────────────────────────────────────────────────
+
+function editRoutine(id: string, fn: (r: Routine, s: AppState) => void) {
+  update((s) => {
+    const r = s.routines.find((x) => x.id === id);
+    if (!r) return;
+    fn(r, s);
+    r.updatedAt = Date.now();
+  });
+}
+
+/** New weekly routine; it becomes the one followed if none is. */
+export function createRoutine(): string {
+  const id = uid();
+  update((s) => {
+    const n = liveRoutines(s).length;
+    s.routines.push({ id, name: n ? `Routine ${n + 1}` : "My routine", kind: "weekly", days: Array(7).fill(null), order: [], pos: 0, updatedAt: Date.now() });
+    if (!activeRoutine(s)) s.activeRoutine = id;
+  });
+  return id;
+}
+
+export const renameRoutine = (id: string, name: string) => editRoutine(id, (r) => { r.name = name; });
+export const setRoutineKind = (id: string, kind: Routine["kind"]) => editRoutine(id, (r) => { r.kind = kind; });
+
+export const setRoutineDay = (id: string, day: number, workoutId: string | null) =>
+  editRoutine(id, (r) => { const days = r.days?.length === 7 ? r.days : Array(7).fill(null); days[day] = workoutId; r.days = days; });
+
+export const addToRotation = (id: string, workoutId: string) =>
+  editRoutine(id, (r) => { r.order = [...(r.order ?? []), workoutId]; });
+
+export function removeFromRotation(id: string, i: number) {
+  editRoutine(id, (r) => {
+    const order = r.order ?? [];
+    order.splice(i, 1);
+    const pos = r.pos ?? 0;
+    r.pos = order.length ? (i < pos ? pos - 1 : pos) % order.length : 0;
+  });
+}
+
+/** Reorder; the "next" marker stays on the same workout. */
+export function moveInRotation(id: string, from: number, to: number) {
+  editRoutine(id, (r) => {
+    const order = r.order ?? [];
+    if (from === to || from < 0 || to < 0 || from >= order.length || to >= order.length) return;
+    const [x] = order.splice(from, 1);
+    order.splice(to, 0, x);
+    const pos = r.pos ?? 0;
+    if (from === pos) r.pos = to;
+    else if (from < pos && to >= pos) r.pos = pos - 1;
+    else if (from > pos && to <= pos) r.pos = pos + 1;
+  });
+}
+
+export const setRotationNext = (id: string, i: number) =>
+  editRoutine(id, (r) => { const n = r.order?.length ?? 0; r.pos = n ? ((i % n) + n) % n : 0; });
+
+export const setActiveRoutine = (id: string | undefined) => update((s) => { s.activeRoutine = id; });
+
+export function duplicateRoutine(id: string): string | undefined {
+  const src = getState().routines.find((r) => r.id === id);
+  if (!src) return;
+  const copy: Routine = { ...structuredClone(src), id: uid(), name: `${src.name || "Routine"} copy`, updatedAt: Date.now() };
+  delete copy.deletedAt;
+  update((s) => { s.routines.push(copy); });
+  return copy.id;
+}
+
+export function deleteRoutine(id: string) {
+  update((s) => {
+    const r = s.routines.find((x) => x.id === id);
+    if (!r) return;
+    r.deletedAt = Date.now();
+    r.updatedAt = Date.now();
+    if (s.activeRoutine === id) s.activeRoutine = undefined;
+  });
+}
+
+export function restoreRoutine(snapshot: Routine, wasActive: boolean) {
+  update((s) => {
+    const r: Routine = { ...structuredClone(snapshot), updatedAt: Date.now() };
+    delete r.deletedAt;
+    const i = s.routines.findIndex((x) => x.id === r.id);
+    if (i >= 0) s.routines[i] = r; else s.routines.push(r);
+    if (wasActive) s.activeRoutine = r.id;
+  });
+}

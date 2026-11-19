@@ -71,7 +71,7 @@ Tabs: **Today · Workouts · Routines · Catalog · History**
 {
   customExercises: Exercise[],
   workouts: { id, name, blocks: Block[], updatedAt, deletedAt? }[],
-  routines: { id, name, kind: "weekly" | "rotation", days | order, updatedAt }[],
+  routines: { id, name, kind: "weekly" | "rotation", days?, order?, pos?, updatedAt, deletedAt? }[],
   activeRoutine?: string,
   sessions: { id, workoutId, workoutName?, date, startedAt, endedAt, sets: SetLog[], note?, rpe? }[],
   sessionsDeleted: string[],
@@ -89,7 +89,7 @@ SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minut
 2. **Scaffold + Catalog view** (done): Vite app, layout for both screen sizes, tab nav, catalog list / search / filters / detail. PWA manifest + icons. Deploy to Pages so it can be installed on the iPhone right away.
 3. **Workout builder** (done): create / edit / reorder / duplicate workouts, blocks (straight / superset / circuit), dose editing.
 4. **Player** (done): run a workout with countdowns, rest timer, beeps, wake lock, logging actual results → saves a session.
-5. **Routines + Today**: weekly / rotation schedules, Today picks the next workout.
+5. **Routines + Today** (done): weekly / rotation schedules, Today picks the next workout.
 6. **History + progress**: session list, per-exercise bests and charts.
 7. **Sync + backup**: Gist sync, JSON export / import.
 8. **Later ideas**: custom exercises in the app, progression ladders (e.g. tuck → adv tuck → straddle planche, with "move up when you hit X s"), suggested dose increases, starter workout templates, photos / video links per exercise.
