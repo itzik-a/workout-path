@@ -53,6 +53,34 @@ export const HOME_EQUIPMENT: Equipment[] = [
   "kettlebell", // 12 kg
 ];
 
+export const REGION_LABEL: Record<Region, string> = {
+  upper: "Upper body",
+  lower: "Lower body",
+  core: "Core",
+  full: "Full body",
+};
+
+export const MODE_LABEL: Record<Mode, string> = {
+  reps: "Reps",
+  hold: "Hold",
+  time: "Time",
+};
+
+export const EQUIPMENT_LABEL: Record<Equipment, string> = {
+  wall: "Wall",
+  mat: "Yoga mat",
+  "pull-up-bar": "Pull-up bar",
+  "dip-bars": "Dip bars",
+  "jump-rope": "Jump rope",
+  bike: "Spin bike",
+  "roman-chair": "Roman chair",
+  strap: "Iso strap",
+  anchor: "Bed (anchor)",
+  parallettes: "Parallettes",
+  kettlebell: "Kettlebell",
+  chair: "Chair",
+};
+
 /** Default dose when the exercise is added to a workout. */
 export interface Dose {
   sets: number;
@@ -682,3 +710,4 @@ export const EXERCISES: Exercise[] = [
 ];
 
 export const exerciseById = (id: string) => EXERCISES.find((e) => e.id === id);
+export const sectionById = (id: SectionId) => SECTIONS.find((s) => s.id === id)!;

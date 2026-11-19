@@ -86,7 +86,7 @@ SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minut
 ## 6. Milestones
 
 1. **Repo + plan + catalog**: done.
-2. **Scaffold + Catalog view**: Vite app, layout for both screen sizes, tab nav, catalog list / search / filters / detail. PWA manifest + icons. Deploy to Pages so it can be installed on the iPhone right away.
+2. **Scaffold + Catalog view** (done): Vite app, layout for both screen sizes, tab nav, catalog list / search / filters / detail. PWA manifest + icons. Deploy to Pages so it can be installed on the iPhone right away.
 3. **Workout builder**: create / edit / reorder / duplicate workouts, blocks (straight / superset / circuit), dose editing.
 4. **Player**: run a workout with countdowns, rest timer, beeps, wake lock, logging actual results → saves a session.
 5. **Routines + Today**: weekly / rotation schedules, Today picks the next workout.

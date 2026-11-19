@@ -2,9 +2,22 @@
 
 A personal workout web app (React, built with Vite, hosted on GitHub Pages), used on a MacBook and an iPhone (installed to the Home Screen). See `PLAN.md` for the concepts, screens and milestones.
 
+## How the site is built
+
+Vite + React 19 + TypeScript. Node 22 (`.nvmrc`). On this Mac `npm start` runs `nvm use` and then the dev server; `npm run dev` alone runs the local server (also reachable from the iPhone on the same Wi-Fi); `npm run build` typechecks and builds into `dist/`.
+
+- Routing is the URL hash: `#today`, `#workouts`, `#routines`, `#catalog`, `#catalog/<exercise id>`, `#history` (`readHash()` in `src/App.tsx`).
+- `src/views/`: `Catalog` (list, search, filters; renders the list pane and the detail pane), `ExerciseDetail`, `Placeholder` (Today / Workouts / Routines / History until their milestones). `src/components/`: icons, `ChipGroup`, `useSessionState`.
+- `src/lib/filter.ts`: catalog search + filters (OR within a group, AND across groups; search words must all match name, aliases, variations, section or equipment). The mode filter also matches variations that override the mode. Filters live in `sessionStorage` (`workoutPath.catalogFilters`), not in app state.
+- `src/lib/format.ts`: `formatDose()` ("3 × 45 s", "10 reps", "20 min", "per side", "· 12 kg").
+- `src/state/store.ts`: the single app state (shape in `PLAN.md`), `useAppState()`, `update(fn)`; saved to `localStorage` key `workoutPath.v1`. `src/state/actions.ts`: every state change goes through here.
+- Layout: below 768 px a top bar + bottom tab bar (5 tabs) and one pane (list or detail); from 768 px a sidebar; from 1024 px the catalog is two panes that scroll on their own. Catalog keyboard on the Mac: `/` search, ↑ ↓ move, Esc close.
+- PWA: `public/manifest.webmanifest`, `public/icon.svg`, PNG icons in `public/icons/` (180 px is the iOS apple-touch-icon; the PNGs are full-bleed with the kettlebell inside the maskable safe zone), `public/sw.js` (production only; network first for the page, cache first for hashed assets).
+- Deploy: `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main` (Pages source = GitHub Actions). Live at https://itzik-a.github.io/workout-path/.
+
 ## Data
 
-- `src/data/catalog.ts`: `SECTIONS` and `EXERCISES` (the built-in catalog). Sections group by type of training; `regions` (upper / lower / core / full) is the body-region filter.
+- `src/data/catalog.ts`: `SECTIONS` and `EXERCISES` (the built-in catalog), label maps (`REGION_LABEL`, `MODE_LABEL`, `EQUIPMENT_LABEL`) and `HOME_EQUIPMENT` (what I have; default for `settings.equipment`). Sections group by type of training; `regions` (upper / lower / core / full) is the body-region filter.
 - **Never rename or reuse an exercise or variation `id`**: workouts, routines and sessions are keyed by id. Add new ids instead. Custom exercises made in the app use ids prefixed `u-`.
 - Modes: `reps` (count), `hold` (seconds), `time` (minutes). A variation can override the exercise's mode and dose. `perSide` means the dose is per side.
 
