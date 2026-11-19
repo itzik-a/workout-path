@@ -1,6 +1,6 @@
 /* History: #history (workouts / exercises), #history/<session id>, #history/exercise/<exercise id>. */
 import { useState } from "react";
-import { MODE_LABEL, sectionById } from "../data/catalog";
+import { MODE_LABEL, modeLabel, sectionById } from "../data/catalog";
 import { IconBack, IconChevronRight } from "../components/Icons";
 import { LineChart } from "../components/LineChart";
 import { Menu, Seg, useSessionState } from "../components/ui";
@@ -329,7 +329,7 @@ function ExerciseProgress({ id }: { id: string }) {
         <div className="chips" role="group" aria-label="Variation">
           {tracks.map((t) => (
             <button type="button" key={t.key} className="chip" aria-pressed={t.key === track.key} onClick={() => setPick((p) => ({ ...p, track: t.key }))}>
-              {t.label}{t.key !== "all" && !t.override && tracks.some((u) => u.mode !== t.mode) ? ` · ${MODE_LABEL[t.mode].toLowerCase()}` : ""}
+              {t.label}{t.key !== "all" && !t.override && tracks.some((u) => u.mode !== t.mode) ? ` · ${modeLabel(t.mode, ex).toLowerCase()}` : ""}
             </button>
           ))}
         </div>

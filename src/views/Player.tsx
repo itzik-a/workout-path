@@ -1,6 +1,6 @@
 /* Full-screen workout player. The run lives in src/state/run.ts; the engine is src/lib/player.ts. */
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { MODE_LABEL, type Exercise } from "../data/catalog";
+import { isTimedWork, modeLabel, type Exercise } from "../data/catalog";
 import { IconClose, IconExternal, IconMinus, IconMute, IconPlus, IconPrev, IconSkip, IconSound } from "../components/Icons";
 import { Ring } from "../components/ui";
 import { sound, unlockAudio } from "../lib/audio";
@@ -230,11 +230,11 @@ function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: numbe
     note = n === st.reps ? "reps" : `reps · target ${st.reps}`;
   } else if (!t) {
     big = <span className="big-clock">{clock((st.mode === "hold" ? st.seconds ?? 0 : (st.minutes ?? 0) * 60) * 1000)}</span>;
-    note = `${st.override ? "Timed" : MODE_LABEL[st.mode]} · tap Start`;
+    note = `${st.override ? "Timed" : modeLabel(st.mode, ex)} · tap Start`;
   } else {
     const p = phaseOf(t, now);
     if (p.lead) { big = <span className="big-num">{p.sec}</span>; note = "Get ready"; }
-    else { big = <span className="big-clock">{clock(p.ms)}</span>; ring = p.frac; note = t.left != null ? "Paused" : st.mode === "hold" && !st.override ? "Hold" : "Go"; }
+    else { big = <span className="big-clock">{clock(p.ms)}</span>; ring = p.frac; note = t.left != null ? "Paused" : st.mode === "hold" && !st.override && !isTimedWork(st.mode, ex) ? "Hold" : "Go"; }
   }
   return (
     <>

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { EQUIPMENT_LABEL, MODE_LABEL, REGION_LABEL, sectionById, type Exercise } from "../data/catalog";
+import { EQUIPMENT_LABEL, MODE_LABEL, REGION_LABEL, modeLabel, sectionById, type Exercise } from "../data/catalog";
 import { IconBack, IconChevronRight, IconClose, IconExternal } from "../components/Icons";
 import { Menu } from "../components/ui";
 import { showToast } from "../lib/toast";
@@ -22,7 +22,7 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
   const max = (f: (x: SetLog) => number | undefined) => Math.max(0, ...all.map((x) => f(x) ?? 0));
   const best = [
     max((x) => x.reps) && `${max((x) => x.reps)} reps`,
-    max((x) => x.seconds) && `${formatSeconds(max((x) => x.seconds))} ${all.some((x) => x.seconds && !x.mode) ? "hold" : "timed"}`,
+    max((x) => x.seconds) && `${formatSeconds(max((x) => x.seconds))} ${ex.section !== "cardio" && all.some((x) => x.seconds && !x.mode) ? "hold" : "timed"}`,
     max((x) => x.minutes) && `${max((x) => x.minutes)} min`,
     max((x) => x.kg) && `${max((x) => x.kg)} kg`,
   ].filter(Boolean).join(" · ");
@@ -75,7 +75,7 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
                   <span className="var-name">{v.name}</span>
                   <span className={overridden ? "var-dose" : "var-dose muted"}>
                     {formatDose(dose, mode, ex.perSide)}
-                    {mode !== ex.mode && <span className={`tag mode-${mode}`}>{MODE_LABEL[mode]}</span>}
+                    {mode !== ex.mode && <span className={`tag mode-${mode}`}>{modeLabel(mode, ex)}</span>}
                   </span>
                 </li>
               );

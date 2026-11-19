@@ -66,6 +66,10 @@ export const MODE_LABEL: Record<Mode, string> = {
   time: "Time",
 };
 
+/** Seconds in Cardio are work time (sprints), not a static hold. */
+export const isTimedWork = (mode: Mode, ex?: Pick<Exercise, "section">) => mode === "hold" && ex?.section === "cardio";
+export const modeLabel = (mode: Mode, ex?: Pick<Exercise, "section">) => (isTimedWork(mode, ex) ? "Timed" : MODE_LABEL[mode]);
+
 export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   wall: "Wall",
   mat: "Yoga mat",
@@ -187,6 +191,7 @@ export const EXERCISES: Exercise[] = [
       { id: "easy", name: "Easy run" },
       { id: "tempo", name: "Tempo run", dose: { sets: 1, minutes: 20 } },
       { id: "intervals", name: "Intervals", dose: { sets: 6, minutes: 1 } },
+      { id: "sprints", name: "Sprints", mode: "hold", dose: { sets: 6, seconds: 30 } },
     ],
     cue: "Tall posture, short quick steps landing under the hips, relaxed shoulders.",
     aliases: ["Run", "Jogging", "Jog"],
