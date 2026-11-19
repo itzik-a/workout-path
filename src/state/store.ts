@@ -76,7 +76,12 @@ export interface Session {
   sets: SetLog[];
   note?: string;
   rpe?: number;
+  /** set when the note / RPE is edited or the session is restored, so sync keeps the newer copy */
+  updatedAt?: number;
 }
+
+/** A deleted session; `at` lets a later restore (Undo) win over the delete when syncing. */
+export interface Tombstone { id: string; at: number }
 
 export interface Settings {
   /** default rest between sets, seconds */
@@ -93,8 +98,8 @@ export interface AppState {
   routines: Routine[];
   activeRoutine?: string;
   sessions: Session[];
-  /** ids of deleted sessions, so a delete sticks after sync */
-  sessionsDeleted: string[];
+  /** deleted sessions, so a delete sticks after sync */
+  sessionsDeleted: Tombstone[];
   settings: Settings;
   updatedAt: number;
 }
@@ -129,7 +134,7 @@ export function normalize(s: unknown): AppState {
     routines: arr(x.routines),
     activeRoutine: x.activeRoutine,
     sessions: arr(x.sessions),
-    sessionsDeleted: arr(x.sessionsDeleted),
+    sessionsDeleted: arr<Tombstone | string>(x.sessionsDeleted).map((t) => (typeof t === "string" ? { id: t, at: 0 } : t)),
     settings: { ...d.settings, ...(x.settings || {}) },
     updatedAt: x.updatedAt || 0,
   };
@@ -145,6 +150,7 @@ function load(): AppState {
 
 let state: AppState = load();
 const listeners = new Set<() => void>();
+const localListeners = new Set<() => void>();
 
 function emit() { listeners.forEach((l) => l()); }
 function saveLocal() {
@@ -166,6 +172,21 @@ export function update(fn: (draft: AppState) => void) {
   state = next;
   saveLocal();
   emit();
+  localListeners.forEach((l) => l());
+}
+
+/** Called after changes made on this device (not after sync replaces state). */
+export function onLocalChange(l: () => void) {
+  localListeners.add(l);
+  return () => { localListeners.delete(l); };
+}
+
+/** Replace state wholesale: sync (a newer copy arrived) or a backup import (`local`, so it syncs out). */
+export function replaceState(s: unknown, opts: { local?: boolean } = {}) {
+  state = normalize(s);
+  saveLocal();
+  emit();
+  if (opts.local) localListeners.forEach((l) => l());
 }
 
 export function useAppState() {

@@ -296,14 +296,14 @@ export function restoreRoutine(snapshot: Routine, wasActive: boolean) {
 export function deleteSession(id: string) {
   update((s) => {
     s.sessions = s.sessions.filter((x) => x.id !== id);
-    if (!s.sessionsDeleted.includes(id)) s.sessionsDeleted = [...s.sessionsDeleted, id].slice(-1000);
+    s.sessionsDeleted = [...s.sessionsDeleted.filter((t) => t.id !== id), { id, at: Date.now() }].slice(-1000);
   });
 }
 
 export function restoreSession(session: Session) {
   update((s) => {
-    s.sessionsDeleted = s.sessionsDeleted.filter((x) => x !== session.id);
-    if (!s.sessions.some((x) => x.id === session.id)) s.sessions.push(structuredClone(session));
+    s.sessionsDeleted = s.sessionsDeleted.filter((t) => t.id !== session.id);
+    if (!s.sessions.some((x) => x.id === session.id)) s.sessions.push({ ...structuredClone(session), updatedAt: Date.now() });
   });
 }
 
@@ -311,7 +311,7 @@ export function updateSession(id: string, patch: Partial<Pick<Session, "note" | 
   update((s) => {
     const x = s.sessions.find((y) => y.id === id);
     if (!x) return;
-    Object.assign(x, patch);
+    Object.assign(x, patch, { updatedAt: Date.now() });
     if (!x.note) delete x.note;
     if (!x.rpe) delete x.rpe;
   });

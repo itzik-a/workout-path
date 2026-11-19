@@ -60,7 +60,7 @@ Tabs: **Today · Workouts · Routines · Catalog · History**
 - Vite + React 19 + TypeScript, Node 22, plain CSS with tokens in `:root`, hash routing.
 - PWA: `manifest.webmanifest`, 180 px apple-touch-icon, service worker (network first for the page, cache first for hashed assets), runs in standalone mode from the Home Screen.
 - State: one app state in `localStorage` (`workoutPath.v1`), every change goes through `actions.ts`, `normalize()` keeps old saved copies loading.
-- Sync between iPhone and Mac: a private GitHub Gist (`workout-path.json`), same pattern as piano-path. Merge rule: sessions are a union by id minus deleted ids; workouts / routines / custom exercises per-item by newer `updatedAt`.
+- Sync between iPhone and Mac: a private GitHub Gist (`workout-path.json`), same pattern as piano-path. Merge rule: sessions are a union by id minus deleted ids (a delete loses to a later restore or edit); workouts / routines / custom exercises per-item by newer `updatedAt`.
 - Export / import JSON as a backup.
 - Deploy: GitHub Actions → GitHub Pages on push to `main`.
 - Timers based on timestamps (not interval counting) so they stay correct when the phone locks or the tab is in the background. Audio starts only after a tap (iOS rule).
@@ -74,7 +74,7 @@ Tabs: **Today · Workouts · Routines · Catalog · History**
   routines: { id, name, kind: "weekly" | "rotation", days?, order?, pos?, updatedAt, deletedAt? }[],
   activeRoutine?: string,
   sessions: { id, workoutId, workoutName?, date, startedAt, endedAt, sets: SetLog[], note?, rpe? }[],
-  sessionsDeleted: string[],
+  sessionsDeleted: { id, at }[],
   settings: { restDefault, beeps, theme, equipment: Equipment[] },
   updatedAt
 }
@@ -91,7 +91,7 @@ SetLog  = { itemId, exerciseId, variationId?, set, side?, reps?, seconds?, minut
 4. **Player** (done): run a workout with countdowns, rest timer, beeps, wake lock, logging actual results → saves a session.
 5. **Routines + Today** (done): weekly / rotation schedules, Today picks the next workout.
 6. **History + progress** (done): session list, per-exercise bests and charts.
-7. **Sync + backup**: Gist sync, JSON export / import.
+7. **Sync + backup** (done): Gist sync, JSON export / import.
 8. **Later ideas**: custom exercises in the app, progression ladders (e.g. tuck → adv tuck → straddle planche, with "move up when you hit X s"), suggested dose increases, starter workout templates, photos / video links per exercise.
 
 ## 7. Decisions (2026-11-19)

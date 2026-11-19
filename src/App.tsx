@@ -7,6 +7,7 @@ import { Today } from "./views/Today";
 import { Toast } from "./components/Toast";
 import { Player } from "./views/Player";
 import { useRun } from "./state/run";
+import { DataSheet, SyncPill } from "./components/DataSheet";
 import { IconCatalog, IconHistory, IconRoutines, IconToday, IconWorkouts } from "./components/Icons";
 
 export type View = "today" | "workouts" | "routines" | "catalog" | "history";
@@ -42,6 +43,7 @@ export function App() {
   }, []);
 
   const run = useRun();
+  const [dataOpen, setDataOpen] = useState(false);
   const { view } = route;
 
   if (view === "play") {
@@ -49,6 +51,7 @@ export function App() {
       <>
         <Player workoutId={route.sub} />
         <Toast />
+      {dataOpen && <DataSheet onClose={() => setDataOpen(false)} />}
       </>
     );
   }
@@ -68,6 +71,7 @@ export function App() {
             </a>
           ))}
         </nav>
+        <div className="side-foot"><SyncPill onOpen={() => setDataOpen(true)} /></div>
       </aside>
 
       <header className="topbar">
@@ -75,6 +79,7 @@ export function App() {
           <img src="./icon.svg" alt="" width={28} height={28} />
           <span>Workout Path</span>
         </a>
+        <SyncPill onOpen={() => setDataOpen(true)} />
       </header>
 
       <main className={`main view-${view}${route.sub ? " has-sub" : ""}${run ? " has-run" : ""}`} key={view}>
@@ -93,6 +98,7 @@ export function App() {
       </main>
 
       <Toast />
+      {dataOpen && <DataSheet onClose={() => setDataOpen(false)} />}
 
       <nav className="tabbar" aria-label="Sections">
         {TABS.map(({ id, label, Icon }) => (
