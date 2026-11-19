@@ -8,6 +8,8 @@ export interface TemplateItem {
   seconds?: number;
   minutes?: number;
   kg?: number;
+  /** a reps exercise done for `seconds` instead (intervals, Tabata) */
+  timed?: boolean;
   /** rest after each set (single) or after this exercise in a round (group), seconds */
   rest?: number;
 }
@@ -98,6 +100,18 @@ export const TEMPLATES: Template[] = [
         { ex: "push-up", v: "standard", reps: 10 },
         { ex: "plank", v: "forearm", seconds: 30 },
         { ex: "horse-stance", seconds: 30 },
+      ] },
+    ],
+  },
+  {
+    id: "tabata",
+    name: "Tabata",
+    blurb: "Jump rope warm-up, then the classic 4 minutes: 8 × 20 s on, 10 s off, alternating frog jumps and push ups.",
+    blocks: [
+      one({ ex: "jump-rope", v: "basic", sets: 1, minutes: 3, rest: 60 }),
+      { kind: "superset", rounds: 4, restBetween: 10, items: [
+        { ex: "frog-jump", seconds: 20, timed: true, rest: 10 },
+        { ex: "push-up", v: "standard", seconds: 20, timed: true },
       ] },
     ],
   },

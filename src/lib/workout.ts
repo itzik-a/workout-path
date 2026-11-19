@@ -142,6 +142,7 @@ export function fromTemplate(t: Template, name: string, restDefault: number): Wo
         rest: ti.rest ?? (tb.kind === "straight" ? restDefault : 0),
       };
       for (const k of ["reps", "seconds", "minutes", "kg"] as const) if (ti[k] != null) item[k] = ti[k];
+      if (ti.timed) { item.mode = "hold"; item.seconds ??= TIMED_DEFAULT_S; }
       return [item];
     });
     return { id: uid(), kind: tb.kind, rounds: tb.rounds ?? 1, restBetween: tb.restBetween ?? 0, items };
