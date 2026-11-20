@@ -969,5 +969,12 @@ code { font: .85em ui-monospace, "SF Mono", Menlo, monospace; background: var(--
 .move figcaption span { color: var(--muted); font-size: .82rem; line-height: 1.35; }
 .player-anim { width: min(60vw, 26vh, 230px); }
 .player-ring.with-anim { width: min(64vw, 28vh, 270px); }
-.garmin-usb { display: grid; gap: 12px; padding-top: 4px; border-top: 1px solid var(--line); }
-.garmin-usb h3 { margin: 8px 0 0; font-size: 1rem; }
+.garmin-summary { display: grid; gap: 6px; }
+.garmin-summary p { margin: 0; }
+.garmin-more { border-top: 1px solid var(--line); padding-top: 10px; }
+.garmin-more summary { cursor: pointer; font-weight: 600; font-size: .9rem; min-height: 32px; display: flex; align-items: center; }
+.garmin-more-body { display: grid; gap: 10px; padding-top: 6px; }
+.garmin-more-body p { margin: 0; }
+.btn.bookmarklet { justify-self: start; cursor: grab; border: 1.5px dashed var(--accent); color: var(--accent); }
+.train-days { display: grid; gap: 8px; margin-top: 12px; }
+.train-days p { margin: 0; }

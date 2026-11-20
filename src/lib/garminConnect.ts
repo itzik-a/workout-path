@@ -2,11 +2,14 @@
    Garmin's official workout API is only for approved companies, so this uses what the
    connect.garmin.com website itself calls (unofficial, may change): POST
    /gc-api/workout-service/workout with the page's CSRF token and the signed-in cookies.
-   That only works on that site, so the app copies a small script with the workouts in it,
-   pasted into the browser console on connect.garmin.com. Nothing is sent from here. */
+   That only works on that site, so the app copies the workouts (src/lib/garminRunner.ts runs
+   them there, from a bookmark or the console). Nothing is sent from here. */
 import type { Exercise } from "../data/catalog";
-import type { Workout } from "../state/store";
+import { liveWorkouts } from "../state/actions";
+import type { AppState, Workout } from "../state/store";
 import { garminSeconds, garminTree, type GarminStep } from "./garmin";
+import { calendarPlan, type CalendarPlan } from "./garminPlan";
+import { RUNNER_VERSION, type GarminPayload } from "./garminRunner";
 
 const STRENGTH = { sportTypeId: 5, sportTypeKey: "strength_training", displayOrder: 5 };
 const STEP = {
@@ -63,27 +66,14 @@ export function connectWorkout(w: Workout, custom?: Exercise[]) {
   };
 }
 
-/** The script to paste into the console on connect.garmin.com: adds the workouts there. */
-export function connectScript(workouts: Workout[], custom?: Exercise[]): string {
-  const data = JSON.stringify(workouts.map((w) => connectWorkout(w, custom)));
-  return `// Workout Path → Garmin Connect: adds ${workouts.length === 1 ? `"${workouts[0].name}"` : `${workouts.length} workouts`} to your Workouts list.
-(async () => {
-  const say = (m) => { console.log("Workout Path:", m); alert("Workout Path: " + m); };
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-  if (!/(^|\\.)connect\\.garmin\\.com$/.test(location.hostname) || !csrf) return say("open connect.garmin.com, sign in, then paste this there.");
-  const added = [];
-  for (const w of ${data}) {
-    const r = await fetch("/gc-api/workout-service/workout", {
-      method: "POST", credentials: "include", body: JSON.stringify(w),
-      headers: { "Content-Type": "application/json; charset=UTF-8", Accept: "application/json", "connect-csrf-token": csrf, "x-requested-with": "XMLHttpRequest" },
-    });
-    const text = await r.text();
-    if (!r.ok) { console.error("Workout Path: Garmin answered", r.status, text); return say("Garmin refused \\"" + w.workoutName + "\\" (" + r.status + "). The console has the details."); }
-    added.push(JSON.parse(text));
-  }
-  console.log("Workout Path: added", added);
-  say("added " + added.map((a) => "\\"" + a.workoutName + "\\"").join(", ") + " to your Garmin workouts.");
-  if (added.length === 1) location.href = "/modern/workout/" + added[0].workoutId;
-})();
-`;
+/** What to send: one workout, or every workout plus the calendar from my followed routines. */
+export function garminPayload(s: AppState, which: Workout | "all", now = new Date()): { payload: GarminPayload; plan?: CalendarPlan } {
+  const custom = s.customExercises;
+  const item = (w: Workout) => ({ tag: connectTag(w), name: w.name || "Workout", body: connectWorkout(w, custom) });
+  if (which !== "all") return { payload: { v: RUNNER_VERSION, all: false, workouts: [item(which)] } };
+  const list = liveWorkouts(s).filter((w) => w.blocks.length);
+  const plan = calendarPlan(s, now);
+  const tags = new Map(list.map((w) => [w.id, connectTag(w)]));
+  const days = plan.days.flatMap((d) => (tags.has(d.workoutId) ? [{ date: d.date, tag: tags.get(d.workoutId)! }] : []));
+  return { payload: { v: RUNNER_VERSION, all: true, workouts: list.map(item), calendar: { from: plan.from, to: plan.to, days } }, plan };
 }

@@ -1,93 +1,107 @@
-import { useState } from "react";
-import type { Exercise } from "../data/catalog";
+import { useMemo, useState } from "react";
 import { saveFile } from "../lib/backup";
 import { fitFileName, workoutFit } from "../lib/garmin";
-import { connectScript } from "../lib/garminConnect";
-import type { Workout } from "../state/store";
+import { garminPayload } from "../lib/garminConnect";
+import { garminBookmarklet, garminScript } from "../lib/garminRunner";
+import { setGarminAnchors } from "../state/actions";
+import { useAppState, type Workout } from "../state/store";
 import { IconExternal } from "./Icons";
 
 const CONNECT_URL = "https://connect.garmin.com/modern/workouts";
 const OPENMTP_URL = "https://openmtp.ganeshrvel.com";
 
-/** Send a workout to Garmin: into Garmin Connect's Workouts list (a script pasted on
-    connect.garmin.com), or as a workout file copied to the watch over USB. */
-export function GarminSheet({ workout, custom, onClose }: { workout: Workout; custom: Exercise[]; onClose: () => void }) {
+const fmtDate = (s: string) => {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+};
+
+/** Send to Garmin Connect: one workout, or every workout plus the calendar from my followed
+    routines. Copies the data; on connect.garmin.com the bookmark (or the console) sends it. */
+export function GarminSheet({ which, onClose }: { which: Workout | "all"; onClose: () => void }) {
+  const s = useAppState();
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
-  const [usb, setUsb] = useState(false);
+  const [more, setMore] = useState(false);
   const touch = window.matchMedia("(pointer: coarse)").matches;
+  const { payload, plan } = useMemo(() => garminPayload(s, which), [s, which]);
+  const one = which !== "all" ? which : null;
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(connectScript([workout], custom));
+      await navigator.clipboard.writeText(garminScript(payload));
+      if (plan) setGarminAnchors(plan.anchors);
       setCopied(true);
     } catch {
-      setCopied(false);
       alert("Couldn't copy. Try again from the Mac.");
     }
   }
 
   async function save() {
-    const name = fitFileName(workout);
-    const res = await saveFile(new File([workoutFit(workout, custom) as BlobPart], name, { type: "application/octet-stream" }));
+    if (!one) return;
+    const name = fitFileName(one);
+    const res = await saveFile(new File([workoutFit(one, s.customExercises) as BlobPart], name, { type: "application/octet-stream" }));
     if (res !== "cancelled") setSaved(name);
   }
 
+  const n = payload.workouts.length;
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet card garmin-sheet" role="dialog" aria-modal="true" aria-labelledby="garmin-title" onClick={(e) => e.stopPropagation()}>
-        <h2 id="garmin-title">Send to Garmin</h2>
-        <p className="muted small">
-          Adds “{workout.name || "Workout"}” to your Workouts in Garmin Connect, so the watch runs it with its own
-          workout player (vibration, rep counting, heart rate) and Connect saves the sets.
-          {touch && " This needs a browser on the Mac."}
-        </p>
+        <h2 id="garmin-title">{one ? "Send to Garmin" : "Send everything to Garmin"}</h2>
+        {one ? (
+          <p className="muted small">“{one.name || "Workout"}” goes to your Workouts in Garmin Connect; if it was sent before, that one is updated.</p>
+        ) : (
+          <div className="garmin-summary small">
+            <p><b>{n} {n === 1 ? "workout" : "workouts"}</b> to your Workouts in Garmin Connect. Ones sent before are updated; ones deleted here are removed there.</p>
+            {plan && (plan.days.length ? (
+              <p><b>{plan.days.length} on the calendar</b>, {fmtDate(plan.from)} – {fmtDate(plan.to)}, from your followed routines. The watch offers the day's workout.</p>
+            ) : (
+              <p className="muted">Nothing for the calendar: follow a weekly routine, or give a rotation its training days.</p>
+            ))}
+            {plan?.skipped.map((r) => (
+              <p key={r.id} className="muted">“{r.name}” is a rotation without training days, so it's left off the calendar. <a href={`#routines/${r.id}`} onClick={onClose}>Set its days</a></p>
+            ))}
+          </div>
+        )}
+        {touch && <p className="muted small">The sending happens in a browser on the Mac.</p>}
+
         <ol className="steps">
           <li>
             <b>Copy it{copied ? ": done" : ""}</b>
-            <span className="muted small">A short script with the workout in it.</span>
           </li>
           <li>
-            <b>Open Garmin Connect on the Mac, signed in</b>
+            <b>On Garmin Connect, click the Workout Path bookmark</b>
+            <span className="muted small">Signed in, any page. The first time, Chrome asks to see the clipboard: allow it.</span>
             <a className="link" href={CONNECT_URL} target="_blank" rel="noopener noreferrer">connect.garmin.com <IconExternal /></a>
           </li>
-          <li>
-            <b>Paste it into the browser console and press Return</b>
-            <span className="muted small">
-              Chrome: ⌥⌘J. The first time it asks you to type <code>allow pasting</code>. Safari: turn on “Show features for
-              web developers” in Settings › Advanced, then ⌥⌘C. It only talks to Garmin, from that page.
-            </span>
-          </li>
-          <li>
-            <b>Send it to the watch</b>
-            <span className="muted small">The workout opens in Connect: choose Send to Device (or schedule it on the calendar). On the watch: Strength › Workouts.</span>
-          </li>
         </ol>
-        <button type="button" className="btn primary" onClick={() => void copy()}>{copied ? "Copy again" : "Copy for Garmin Connect"}</button>
-        <p className="muted small">Each paste adds a new copy; delete old ones in Connect for now.</p>
+        <button type="button" className="btn primary" onClick={() => void copy()}>{copied ? "Copy again" : "Copy for Garmin"}</button>
 
-        {!usb ? (
-          <button type="button" className="btn ghost" onClick={() => setUsb(true)}>Or copy a file to the watch over USB</button>
-        ) : (
-          <div className="garmin-usb">
-            <h3>Workout file over USB</h3>
-            <ol className="steps">
-              <li>
-                <b>Save the file{saved ? ": done" : ""}</b>
-                <span className="muted small">{saved ? <>Saved as <code>{saved}</code>.</> : <>A <code>.fit</code> workout file.</>}</span>
-              </li>
-              <li>
-                <b>Plug the watch into the Mac and open it with OpenMTP</b>
-                <a className="link" href={OPENMTP_URL} target="_blank" rel="noopener noreferrer">Get OpenMTP (free) <IconExternal /></a>
-              </li>
-              <li>
-                <b>Copy the file to GARMIN › NewFiles, then unplug</b>
-                <span className="muted small">It stays on the watch only; it doesn't show in Garmin Connect.</span>
-              </li>
-            </ol>
-            <button type="button" className="btn" onClick={() => void save()}>{saved ? "Save again" : "Save Garmin file"}</button>
+        <details className="garmin-more" open={more} onToggle={(e) => setMore(e.currentTarget.open)}>
+          <summary>The bookmark, and other ways</summary>
+          <div className="garmin-more-body">
+            <p className="small">
+              <b>Set up the bookmark once:</b> drag this to the bookmarks bar (⇧⌘B shows it). When the app changes, it may ask you to drag it again.
+            </p>
+            <a
+              className="btn bookmarklet"
+              ref={(el) => { el?.setAttribute("href", garminBookmarklet()); }}
+              onClick={(e) => { e.preventDefault(); alert("Drag this button to the bookmarks bar, then click it on connect.garmin.com."); }}
+            >
+              Workout Path → Garmin
+            </a>
+            <p className="small">
+              <b>No bookmark?</b> Paste what you copied into the browser console on connect.garmin.com and press Return
+              (Chrome: ⌥⌘J; Safari: ⌥⌘C after turning on “Show features for web developers” in Settings › Advanced).
+            </p>
+            {one && (
+              <>
+                <p className="small"><b>Or a workout file over USB</b> (stays on the watch only): save it, open the watch with <a href={OPENMTP_URL} target="_blank" rel="noopener noreferrer">OpenMTP</a>, and copy it to GARMIN › NewFiles.</p>
+                <button type="button" className="btn" onClick={() => void save()}>{saved ? `Saved ${saved}` : "Save Garmin file"}</button>
+              </>
+            )}
           </div>
-        )}
+        </details>
         <button type="button" className="btn ghost" onClick={onClose}>Done</button>
       </div>
     </div>

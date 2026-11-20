@@ -53,6 +53,10 @@ export interface Routine {
   order?: string[];
   /** rotation: index in `order` of the next workout */
   pos?: number;
+  /** rotation: weekdays it's trained on (0 = Monday), so it can go on the Garmin calendar */
+  trainDays?: number[];
+  /** rotation on the Garmin calendar: on `date` the workout was `order[pos]` (set on each send) */
+  garminFrom?: { date: string; pos: number };
   updatedAt: number;
   /** Set instead of removing, like workouts. */
   deletedAt?: number;

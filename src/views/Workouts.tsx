@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Menu } from "../components/ui";
 import { TemplatesSheet } from "../components/TemplatesSheet";
+import { GarminSheet } from "../components/GarminSheet";
 import { IconPlay, IconPlus } from "../components/Icons";
 import { startWorkout } from "./Player";
 import { showToast } from "../lib/toast";
@@ -30,6 +31,7 @@ function WorkoutList() {
   const s = useAppState();
   const list = liveWorkouts(s);
   const [tpl, setTpl] = useState(false);
+  const [garmin, setGarmin] = useState(false);
 
   return (
     <div className="workouts">
@@ -40,6 +42,7 @@ function WorkoutList() {
         </div>
         {list.length > 0 && (
           <div className="row-btns">
+            <button type="button" className="btn ghost" onClick={() => setGarmin(true)}>Send to Garmin</button>
             <button type="button" className="btn ghost" onClick={() => setTpl(true)}>Templates</button>
             <button type="button" className="btn primary" onClick={newWorkout}><IconPlus /> New</button>
           </div>
@@ -84,6 +87,7 @@ function WorkoutList() {
         </ul>
       )}
       {tpl && <TemplatesSheet onClose={() => setTpl(false)} />}
+      {garmin && <GarminSheet which="all" onClose={() => setGarmin(false)} />}
     </div>
   );
 }

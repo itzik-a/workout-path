@@ -154,14 +154,14 @@ The `.fit` file over USB (done) stays as a fallback; those workouts live on the 
 
 ### Milestones
 
-G1. **Test (done 2026-11-20, waiting for the first real paste).** "Send to Garmin" in the workout menu copies the script for one workout; it adds a new workout to Connect each time. Check: Garmin accepts it, what the watch shows (Garmin's exercise names, my names and cues in the notes, reps / timed steps, rests, sets), and what Connect saves after doing it.
-G2. **Update instead of duplicate.** The script lists my Connect workouts, finds the ones made here (`wp:<id>` in the description) and updates them (`PUT …/workout/<id>`); "Send all workouts" for every workout at once; deleted ones are removed from Connect.
-G3. **Routines on the Garmin calendar.** Weekly routines → their workouts scheduled for the next 4 weeks (`POST …/schedule/<workoutId>`), replacing what was scheduled before by this app; rotations → the next workouts on my training days (open question). The watch then shows today's workout.
-G4. **Smoother sending.** A bookmark ("Workout Path → Garmin") instead of the console, if Garmin's site allows it; the app remembers what was sent and shows "changed since last send".
+G1. **Test (done 2026-11-20; the first paste worked).** "Send to Garmin" in the workout menu copies the script for one workout; it adds a new workout to Connect each time. Check: Garmin accepts it, what the watch shows (Garmin's exercise names, my names and cues in the notes, reps / timed steps, rests, sets), and what Connect saves after doing it.
+G2. **Update instead of duplicate (done 2026-11-21).** The script lists my Connect workouts, finds the ones made here (`wp:<id>` in the description) and updates them (`PUT …/workout/<id>`); "Send all workouts" for every workout at once; deleted ones are removed from Connect.
+G3. **Routines on the Garmin calendar (done 2026-11-21).** Weekly routines → their workouts scheduled for the next 4 weeks (`POST …/schedule/<workoutId>`), replacing what was scheduled before by this app; rotations → the next workouts on their training days (chosen under the rotation; the order moves on with the calendar). The watch then shows today's workout.
+G4. **Smoother sending (bookmark done 2026-11-21, waiting for a real click).** A bookmark ("Workout Path → Garmin") reads the copied data from the clipboard; the console stays as the fallback. Later: remember what was sent and show "changed since last send".
 G5. **Tidy the web app for watch training.** Hide History and the phone player behind a setting, if I still don't use them.
 
 ### Open questions
 
-1. **Rotations on the calendar.** A rotation has no days. Put the next workouts on chosen weekdays (e.g. Sun / Tue / Thu), or only send the workouts and pick them on the watch?
+1. **Rotations on the calendar** (decided: training days per rotation; a missed day isn't caught up, the calendar just moves on).
 2. **Edits in Connect.** A send overwrites workouts made here, so edits made in Connect are lost. Fine to always edit in the web app?
 3. **Exercise names.** The watch shows Garmin's name for each exercise (`src/data/garminCodes.ts` picks the closest; some are generic, like "Total Body" for the planche). Is that readable enough with my name in the step's note?

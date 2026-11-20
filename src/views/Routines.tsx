@@ -1,13 +1,13 @@
 /* Routines: list (#routines) and editor (#routines/<id>). */
 import { IconBack, IconCheck, IconGrip, IconPlus } from "../components/Icons";
-import { Menu, Seg } from "../components/ui";
+import { ChipGroup, Menu, Seg } from "../components/ui";
 import { displayDays, dayName, liveRoutines, liveWorkout, rotationNext, routineSummary, weekday } from "../lib/routine";
 import { showToast } from "../lib/toast";
 import { useDragSort } from "../lib/useDragSort";
 import { liveWorkouts } from "../state/actions";
 import {
   addToRotation, createRoutine, deleteRoutine, duplicateRoutine, moveInRotation, removeFromRotation, renameRoutine,
-  restoreRoutine, setFollowing, setRotationNext, setRoutineDay, setRoutineKind,
+  restoreRoutine, setFollowing, setRotationNext, setRoutineDay, setRoutineKind, setTrainDays,
 } from "../state/actions";
 import { getState, useAppState, type AppState, type Routine } from "../state/store";
 
@@ -131,6 +131,7 @@ function RoutineEditor({ id }: { id: string }) {
         {r.kind === "weekly"
           ? "Pick a workout for each day you train; leave the others as rest days."
           : "Workouts in order. Today shows the next one; saving it moves the rotation on, whatever day it is."}
+        {active && r.kind === "weekly" && " Send to Garmin (on Workouts) puts it on the Garmin calendar."}
       </p>
 
       {workouts.length === 0 ? (
@@ -141,7 +142,10 @@ function RoutineEditor({ id }: { id: string }) {
       ) : r.kind === "weekly" ? (
         <WeeklyDays s={s} r={r} />
       ) : (
-        <RotationList s={s} r={r} />
+        <>
+          <RotationList s={s} r={r} />
+          <TrainDays r={r} />
+        </>
       )}
     </div>
   );
@@ -168,6 +172,25 @@ function WeeklyDays({ s, r }: { s: AppState; r: Routine }) {
         );
       })}
     </ul>
+  );
+}
+
+/** A rotation's training days, so Send to Garmin can put it on the Garmin calendar. */
+function TrainDays({ r }: { r: Routine }) {
+  return (
+    <div className="card train-days">
+      <ChipGroup
+        label="Training days, for the Garmin calendar"
+        options={displayDays().map((d) => ({ value: String(d), label: dayName(d, "short") }))}
+        value={(r.trainDays ?? []).map(String)}
+        onChange={(v) => setTrainDays(r.id, v.map(Number))}
+      />
+      <p className="muted small">
+        {r.trainDays?.length
+          ? "Send to Garmin puts the next workout on each of these days for 4 weeks; the order moves on with the calendar."
+          : "Pick the days you train, and Send to Garmin puts the next workout on each of them."}
+      </p>
+    </div>
   );
 }
 

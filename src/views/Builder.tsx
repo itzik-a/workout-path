@@ -130,7 +130,7 @@ export function Builder({ id }: { id: string }) {
         onClose={() => setPicker({ open: false })}
         onClearTarget={() => setPicker((p) => ({ ...p, blockId: undefined }))}
       />
-      {garmin && <GarminSheet workout={w} custom={custom} onClose={() => setGarmin(false)} />}
+      {garmin && <GarminSheet which={w} onClose={() => setGarmin(false)} />}
     </div>
   );
 }

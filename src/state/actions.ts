@@ -285,6 +285,21 @@ export function moveInRotation(id: string, from: number, to: number) {
   });
 }
 
+export const setTrainDays = (id: string, days: number[]) =>
+  editRoutine(id, (r) => { r.trainDays = [...new Set(days)].sort((a, b) => a - b); });
+
+/** After a send to Garmin: where each rotation on the calendar stands today (also its "next"). */
+export const setGarminAnchors = (anchors: Record<string, { date: string; pos: number }>) =>
+  update((s) => {
+    for (const r of s.routines) {
+      const a = anchors[r.id];
+      if (!a || (r.garminFrom?.date === a.date && r.garminFrom.pos === a.pos && r.pos === a.pos)) continue;
+      r.garminFrom = a;
+      r.pos = a.pos;
+      r.updatedAt = Date.now();
+    }
+  });
+
 export const setRotationNext = (id: string, i: number) =>
   editRoutine(id, (r) => { const n = r.order?.length ?? 0; r.pos = n ? ((i % n) + n) % n : 0; });
 
