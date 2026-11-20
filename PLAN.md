@@ -105,7 +105,7 @@ The workout in progress lives in its own key (`workoutPath.run`, not synced); th
 Milestones 1–8 are done and live. Next, in order of value:
 
 9. **Field test on the iPhone and Mac.** Install from Safari (Share → Add to Home Screen), connect sync on both with the same token, run two or three real workouts, and fix what breaks. Check what the browser tests couldn't:
-   - beeps with the silent switch on and with music playing (if muted, try `navigator.audioSession` "playback" / "transient");
+   - beeps with music playing (audio session is now "ambient", so music should keep going; beeps are silent while the silent switch is on);
    - the screen staying on through a long hold and a long rest (Wake Lock in the Home Screen app);
    - leaving mid-workout (lock, switch apps, reload) and resuming;
    - drag to reorder and the reps − / + with sweaty fingers; huge numbers readable from the floor;

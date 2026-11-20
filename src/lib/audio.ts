@@ -2,8 +2,17 @@
    inside a tap handler (Start workout, any tap in the player). */
 let ctx: AudioContext | null = null;
 
+/* Mix with other audio (music, podcasts) instead of pausing it. Safari 17+ (iOS / macOS);
+   without this, iOS gives the page a "playback" session, which stops the music. "ambient"
+   follows the silent switch, so beeps are muted while it's on. */
+function mixWithOtherAudio() {
+  const s = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+  if (s && s.type !== "ambient") s.type = "ambient";
+}
+
 export function unlockAudio() {
   try {
+    mixWithOtherAudio();
     ctx ??= new AudioContext();
     if (ctx.state === "suspended") void ctx.resume();
     // A silent buffer played inside the tap fully unlocks output on iOS.
