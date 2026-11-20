@@ -143,8 +143,9 @@ function Live({ run, custom, beeps }: { run: Run; custom: Exercise[]; beeps: boo
   const paused = t?.left != null;
   const act = (fn: (r: Run, now: number) => void) => () => { unlockAudio(); void keepAwake(true); mutateRun((r) => fn(r, Date.now())); };
 
+  const togglePause = t ? act(paused ? resume : pause) : undefined;
   const primary =
-    st.kind === "rest" ? { label: "Skip rest", run: act(skip) }
+    st.kind === "rest" ? (paused ? { label: "Resume", run: act(resume) } : { label: "Skip rest", run: act(skip) })
     : st.mode === "reps" ? { label: "Done", run: act(finishSet) }
     : !t ? { label: "Start", run: act(startSet) }
     : paused ? { label: "Resume", run: act(resume) }
@@ -188,9 +189,9 @@ function Live({ run, custom, beeps }: { run: Run; custom: Exercise[]; beeps: boo
 
       <main className="player-main">
         {st.kind === "rest" ? (
-          <RestView run={run} now={now} next={nextWork} custom={custom} />
+          <RestView run={run} now={now} next={nextWork} custom={custom} onToggle={togglePause} />
         ) : (
-          <WorkView run={run} st={st} now={now} custom={custom} />
+          <WorkView run={run} st={st} now={now} custom={custom} onToggle={st.mode === "reps" ? undefined : togglePause} />
         )}
       </main>
 
@@ -215,7 +216,18 @@ function Live({ run, custom, beeps }: { run: Run; custom: Exercise[]; beeps: boo
   );
 }
 
-function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: number; custom: Exercise[] }) {
+/** The ring; while a timer runs (or is paused), tapping it pauses / resumes. */
+function TimerRing({ value, className, paused, onToggle, children }: { value: number; className: string; paused: boolean; onToggle?: () => void; children: ReactNode }) {
+  const ring = <Ring value={value} className={`${className}${paused ? " paused" : ""}`}>{children}</Ring>;
+  if (!onToggle) return ring;
+  return (
+    <button type="button" className="ring-btn" onClick={onToggle} aria-label={paused ? "Resume the timer" : "Pause the timer"}>
+      {ring}
+    </button>
+  );
+}
+
+function WorkView({ run, st, now, custom, onToggle }: { run: Run; st: WorkStep; now: number; custom: Exercise[]; onToggle?: () => void }) {
   const { main, sub, ex } = stepTitle(st, custom);
   const move = moveFor(st.exerciseId, st.variationId);
   const t = run.timer;
@@ -236,8 +248,8 @@ function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: numbe
     note = `${st.override ? "Timed" : modeLabel(st.mode, ex)} · tap Start`;
   } else {
     const p = phaseOf(t, now);
-    if (p.lead) { big = <span className="big-num">{p.sec}</span>; note = "Get ready"; }
-    else { big = <span className="big-clock">{clock(p.ms)}</span>; ring = p.frac; note = t.left != null ? "Paused" : st.mode === "hold" && !st.override && !isTimedWork(st.mode, ex) ? "Hold" : "Go"; }
+    if (p.lead) { big = <span className="big-num">{p.sec}</span>; note = t.left != null ? "Paused · tap to resume" : "Get ready"; }
+    else { big = <span className="big-clock">{clock(p.ms)}</span>; ring = p.frac; note = t.left != null ? "Paused · tap to resume" : st.mode === "hold" && !st.override && !isTimedWork(st.mode, ex) ? "Hold" : "Go"; }
   }
   return (
     <>
@@ -246,10 +258,10 @@ function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: numbe
         <h1 className="player-title">{main}</h1>
         {sub && <p className="player-sub">{sub}</p>}
       </div>
-      <Ring value={ring} className={`player-ring${t?.left != null ? " paused" : ""}${st.mode === "reps" ? " static" : ""}${move ? " with-anim" : ""}`}>
+      <TimerRing value={ring} paused={t?.left != null} onToggle={t ? onToggle : undefined} className={`player-ring${st.mode === "reps" ? " static" : ""}${move ? " with-anim" : ""}`}>
         {big}
         <span className="ring-note">{note}</span>
-      </Ring>
+      </TimerRing>
       {move && <MoveAnim id={move} className="player-anim" />}
       <p className="player-cue">{st.kg ? <b>{st.kg} kg · </b> : null}{ex?.cue}</p>
       <PlayerLinks id={st.exerciseId} builtIn={ex?.links} />
@@ -271,7 +283,7 @@ function PlayerLinks({ id, builtIn }: { id: string; builtIn?: { url: string; lab
   );
 }
 
-function RestView({ run, now, next, custom }: { run: Run; now: number; next?: WorkStep; custom: Exercise[] }) {
+function RestView({ run, now, next, custom, onToggle }: { run: Run; now: number; next?: WorkStep; custom: Exercise[]; onToggle?: () => void }) {
   const t = run.timer!;
   const ms = remaining(t, now);
   const label = (current(run) as { label: string }).label;
@@ -282,10 +294,10 @@ function RestView({ run, now, next, custom }: { run: Run; now: number; next?: Wo
         <p className="eyebrow">{t.left != null ? "Paused" : "Rest"}</p>
         <h1 className="player-title">{label}</h1>
       </div>
-      <Ring value={t.dur ? ms / t.dur : 0} className={`player-ring rest${t.left != null ? " paused" : ""}`}>
+      <TimerRing value={t.dur ? ms / t.dur : 0} paused={t.left != null} onToggle={onToggle} className="player-ring rest">
         <span className="big-clock">{clock(ms)}</span>
-        <span className="ring-note">of {clock(t.dur)}</span>
-      </Ring>
+        <span className="ring-note">{t.left != null ? "Paused · tap to resume" : `of ${clock(t.dur)}`}</span>
+      </TimerRing>
       {next && title && (
         <div className="up-next card">
           <span className="eyebrow">Up next</span>

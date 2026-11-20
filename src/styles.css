@@ -616,6 +616,12 @@ html.playing body { padding-bottom: 0; }
 .player-ring.static .ring-arc { stroke: var(--track); }
 .player-ring.rest .ring-arc { stroke: var(--time); }
 .player-ring.paused { opacity: .55; }
+.ring-btn { display: block; padding: 0; border: 0; background: none; color: inherit; font: inherit; border-radius: 50%; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.ring-btn:active .player-ring { transform: scale(.98); }
+.ring-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.player-ring.paused .big-clock, .player-ring.paused .big-num { animation: paused-blink 1.6s ease-in-out infinite; }
+@keyframes paused-blink { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .player-ring.paused .big-clock, .player-ring.paused .big-num { animation: none; } }
 .big-clock, .big-num {
   font-family: var(--font-display); font-weight: 750; letter-spacing: -0.04em; line-height: 1;
   font-variant-numeric: tabular-nums;
