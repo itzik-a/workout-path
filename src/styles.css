@@ -857,6 +857,7 @@ html.playing body { padding-bottom: 0; }
 .dot.ok { background: var(--good); }
 .dot.busy { background: var(--accent-2); animation: pulse 1.2s ease-in-out infinite; }
 .dot.err { background: var(--danger); }
+.dot.pending { background: var(--accent-2); } /* changes saved here, waiting for the next batched sync */
 .side-foot { margin-top: auto; }
 .side-foot .sync { margin: 0; width: 100%; justify-content: flex-start; padding: 4px 12px; }
 

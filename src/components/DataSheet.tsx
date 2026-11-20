@@ -14,7 +14,7 @@ function ago(t?: number) {
   return new Date(t).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
-const dotClass = (s: SyncStatus) => (s.kind === "ok" ? "ok" : s.kind === "busy" ? "busy" : s.kind === "error" ? "err" : "");
+const dotClass = (s: SyncStatus) => (s.kind === "ok" ? "ok" : s.kind === "busy" ? "busy" : s.kind === "pending" ? "pending" : s.kind === "error" ? "err" : "");
 
 export function SyncPill({ onOpen }: { onOpen: () => void }) {
   const s = useSyncStatus();
@@ -106,7 +106,7 @@ export function DataSheet({ onClose }: { onClose: () => void }) {
               )}
               <p className="muted small">
                 Workouts, routines and history are saved to a private gist on your GitHub account. It syncs when you open the app,
-                a couple of seconds after each change, and whenever you come back to it. A workout in progress stays on this device.
+                after you make changes (at most once a minute while you edit, right away when you leave the app), and whenever you come back to it. A workout in progress stays on this device.
               </p>
               <div className="dlg-actions">
                 <button type="button" className="btn primary" disabled={s.kind === "busy"} onClick={() => void syncNow(true)}>Sync now</button>
