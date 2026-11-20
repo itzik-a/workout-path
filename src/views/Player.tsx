@@ -12,6 +12,7 @@ import {
 import { showToast } from "../lib/toast";
 import { keepAwake } from "../lib/wakeLock";
 import { GROUP_LABEL, getExercise, itemTitle, uid, workoutSummary } from "../lib/workout";
+import { MoveAnim, moveFor } from "../components/MoveAnim";
 import { addSession, applySuggestion, dismissSuggestion, setBeeps } from "../state/actions";
 import { activeSuggestion } from "../lib/progress";
 import { getRun, mutateRun, setRun, useRun } from "../state/run";
@@ -216,6 +217,7 @@ function Live({ run, custom, beeps }: { run: Run; custom: Exercise[]; beeps: boo
 
 function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: number; custom: Exercise[] }) {
   const { main, sub, ex } = stepTitle(st, custom);
+  const move = moveFor(st.exerciseId, st.variationId);
   const t = run.timer;
   let big: ReactNode, ring = 1, note = "";
   if (st.mode === "reps") {
@@ -244,10 +246,11 @@ function WorkView({ run, st, now, custom }: { run: Run; st: WorkStep; now: numbe
         <h1 className="player-title">{main}</h1>
         {sub && <p className="player-sub">{sub}</p>}
       </div>
-      <Ring value={ring} className={`player-ring${t?.left != null ? " paused" : ""}${st.mode === "reps" ? " static" : ""}`}>
+      <Ring value={ring} className={`player-ring${t?.left != null ? " paused" : ""}${st.mode === "reps" ? " static" : ""}${move ? " with-anim" : ""}`}>
         {big}
         <span className="ring-note">{note}</span>
       </Ring>
+      {move && <MoveAnim id={move} className="player-anim" />}
       <p className="player-cue">{st.kg ? <b>{st.kg} kg · </b> : null}{ex?.cue}</p>
       <PlayerLinks id={st.exerciseId} builtIn={ex?.links} />
     </>

@@ -10,6 +10,7 @@ import { READY_STREAK } from "../data/progressions";
 import { addExerciseLink, deleteCustomExercise, removeExerciseLink, restoreCustomExercise, setExerciseNote } from "../state/actions";
 import { formatDose, formatSeconds, variationDose } from "../lib/format";
 import { groupSets, setsLine } from "./Player";
+import { MoveAnim, movesOf } from "../components/MoveAnim";
 import { useAppState, type SetLog } from "../state/store";
 
 export function ExerciseDetail({ ex }: { ex: Exercise }) {
@@ -54,6 +55,20 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
           </>
         )}
       </header>
+
+      {movesOf(ex).length > 0 && (
+        <section className="card" aria-labelledby="moves-title">
+          <h2 id="moves-title">How it moves</h2>
+          <div className="moves">
+            {movesOf(ex).map((m) => (
+              <figure key={m.id} className="move">
+                <MoveAnim id={m.id} />
+                <figcaption>{movesOf(ex).length > 1 && <b>{m.label}</b>}<span>{m.hint}</span></figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
 
       {ex.cue && <p className="cue">{ex.cue}</p>}
 

@@ -36,13 +36,17 @@ export const TEMPLATES: Template[] = [
   {
     id: "golfers-elbow",
     name: "Golfer's elbow rehab",
-    blurb: "Wrist flexor and pronator isometrics, grip, slow eccentrics, stretch. Moderate effort, pain at most 3/10.",
+    blurb: "Wrist flexors, deviation, forearm rotation, extensors, fingers and grip. Light load, slow and controlled, pain at most 3/10.",
     blocks: [
-      one({ ex: "wrist-flexion-iso", v: "hand", sets: 5, seconds: 45, rest: 60 }),
-      one({ ex: "pronation-iso", sets: 4, seconds: 30, rest: 45 }),
-      one({ ex: "grip-squeeze", v: "towel", sets: 3, seconds: 30, rest: 45 }),
-      one({ ex: "wrist-curl-eccentric", v: "manual", sets: 3, reps: 15, rest: 60 }),
-      one({ ex: "wrist-flexor-stretch", sets: 2, seconds: 30, rest: 15 }),
+      one({ ex: "wrist-curl-eccentric", v: "full", sets: 3, reps: 15, rest: 30 }),
+      one({ ex: "wrist-deviation", v: "radial", sets: 3, reps: 15, rest: 30 }),
+      one({ ex: "wrist-deviation", v: "ulnar", sets: 3, reps: 15, rest: 30 }),
+      one({ ex: "forearm-rotation", v: "pronation", sets: 3, reps: 12, rest: 30 }),
+      one({ ex: "forearm-rotation", v: "supination", sets: 3, reps: 12, rest: 30 }),
+      one({ ex: "wrist-extension-curl", sets: 3, reps: 15, rest: 30 }),
+      one({ ex: "finger-extension", v: "band", sets: 3, reps: 15, rest: 30 }),
+      one({ ex: "finger-extension", v: "hand-hold", sets: 3, seconds: 20, rest: 30 }),
+      one({ ex: "grip-squeeze", v: "ball-reps", sets: 3, reps: 15, rest: 30 }),
     ],
   },
   {

@@ -26,6 +26,12 @@
   --time: #15803D;
   --time-soft: #E2F4E7;
   --chart: #C2410C;
+  /* movement animations (MoveAnim) */
+  --mv-skin: #F1E9E1;
+  --mv-line: #57534E;
+  --mv-prop: #78716C;
+  --mv-ground: #ECE7E1;
+  --mv-ball: #CDDC39;
   --toast-bg: #1F1B17;
   --toast-ink: #F6F5F3;
   --toast-action: #FDBA74;
@@ -75,6 +81,11 @@
     --glass-line: rgba(255, 255, 255, .07);
     --shadow: 0 1px 2px rgba(0, 0, 0, .3);
     --shadow-chip: 0 1px 3px rgba(0, 0, 0, .4);
+    --mv-skin: #3A332D;
+    --mv-line: #D6D3D1;
+    --mv-prop: #A8A29E;
+    --mv-ground: #26221F;
+    --mv-ball: #A4B23A;
     color-scheme: dark;
   }
 }
@@ -904,3 +915,54 @@ code { font: .85em ui-monospace, "SF Mono", Menlo, monospace; background: var(--
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Movement animations (src/components/MoveAnim.tsx) ---------- */
+.mv { display: block; width: 100%; height: auto; overflow: visible; }
+.mv-limb { fill: var(--mv-skin); stroke: var(--mv-line); stroke-width: 2; }
+.mv-palm { fill: var(--accent); }
+.mv-prop { fill: var(--mv-prop); }
+.mv-prop-line { stroke: var(--mv-prop); stroke-width: 6; stroke-linecap: round; fill: none; }
+.mv-ground { fill: var(--mv-ground); }
+.mv-guide { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 5; fill: none; opacity: .7; }
+.mv-label { fill: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .02em; font-family: var(--font); }
+.mv-arrow { stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; opacity: .55; }
+.mv-arrow-head { fill: var(--accent); opacity: .55; }
+.mv-band { fill: none; stroke: var(--accent); stroke-width: 3; transform-box: view-box; transform-origin: 121px 54px; animation: mv-band 4s ease-in-out infinite; }
+.mv-ballfill { fill: var(--mv-ball); stroke: var(--mv-line); stroke-width: 2; }
+.mv-ballseam { fill: none; stroke: var(--surface); stroke-width: 2; opacity: .8; }
+.mv-fingers-line { fill: none; stroke: var(--mv-line); stroke-width: 18; stroke-linecap: round; }
+.mv-fingers { fill: none; stroke: var(--mv-skin); stroke-width: 14; stroke-linecap: round; }
+.mv-joint { transform-box: view-box; }
+
+.mv-curl { animation: mv-curl 5s ease-in-out infinite; }
+@keyframes mv-curl { 0% { transform: rotate(28deg); } 20%, 30% { transform: rotate(-42deg); } 90%, 100% { transform: rotate(28deg); } }
+.mv-radial { animation: mv-radial 4.5s ease-in-out infinite; }
+@keyframes mv-radial { 0% { transform: rotate(22deg); } 25%, 35% { transform: rotate(-28deg); } 90%, 100% { transform: rotate(22deg); } }
+.mv-ulnar { animation: mv-ulnar 4.5s ease-in-out infinite; }
+@keyframes mv-ulnar { 0% { transform: rotate(-22deg); } 25%, 35% { transform: rotate(28deg); } 90%, 100% { transform: rotate(-22deg); } }
+.mv-pronate { animation: mv-pronate 5s ease-in-out infinite; }
+@keyframes mv-pronate { 0%, 8% { transform: rotate(0deg); } 45%, 55% { transform: rotate(-75deg); } 92%, 100% { transform: rotate(0deg); } }
+.mv-supinate { animation: mv-supinate 5s ease-in-out infinite; }
+@keyframes mv-supinate { 0%, 8% { transform: rotate(0deg); } 45%, 55% { transform: rotate(75deg); } 92%, 100% { transform: rotate(0deg); } }
+/* open wide ~1 s, hold, close slowly ~2 s; each finger has its own --open / --closed angle */
+.mv-finger { animation: mv-finger 4s ease-in-out infinite; }
+@keyframes mv-finger { 0% { transform: rotate(var(--closed)); } 25%, 40% { transform: rotate(var(--open)); } 92%, 100% { transform: rotate(var(--closed)); } }
+@keyframes mv-band { 0% { transform: scaleX(.9); } 25%, 40% { transform: scaleX(1.9); } 92%, 100% { transform: scaleX(.9); } }
+/* isometric: only the arrows pulse */
+.mv-push { animation: mv-push 2.4s ease-in-out infinite; }
+@keyframes mv-push { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+/* squeeze ~0.5 s, hold ~2 s, let go slowly */
+.mv-ball { animation: mv-ball 5s ease-in-out infinite; }
+@keyframes mv-ball { 0% { transform: scale(1, 1); } 10%, 50% { transform: scale(.8, 1.06); } 90%, 100% { transform: scale(1, 1); } }
+.mv-grip { animation: mv-grip 5s ease-in-out infinite; }
+@keyframes mv-grip { 0% { transform: scale(1); } 10%, 50% { transform: scale(.9, .96); } 90%, 100% { transform: scale(1); } }
+/* Reduced motion: keep them (they're the content) but much slower. */
+@media (prefers-reduced-motion: reduce) { .mv * { animation-duration: 14s !important; } }
+
+.moves { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.move { display: grid; gap: 6px; }
+.move figcaption { display: grid; gap: 1px; }
+.move figcaption b { font-weight: 600; font-size: .92rem; }
+.move figcaption span { color: var(--muted); font-size: .82rem; line-height: 1.35; }
+.player-anim { width: min(60vw, 26vh, 230px); }
+.player-ring.with-anim { width: min(64vw, 28vh, 270px); }
