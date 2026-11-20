@@ -22,9 +22,16 @@ interface Cfg { token: string; gistId?: string }
 
 export interface SyncStatus {
   kind: "off" | "busy" | "ok" | "error" | "offline";
+  /** short, for the pill */
   text: string;
+  /** what went wrong, in full (shown in the Sync & backup sheet) */
+  detail?: string;
+  /** automatic syncs wait until then (GitHub asked us to back off) */
+  retryAt?: number;
   last?: number;
   gistId?: string;
+  /** GitHub API requests left in this hour's window, from the last response */
+  quota?: { remaining: number; limit: number; reset: number };
 }
 
 // ── status store ──────────────────────────────────────────────
@@ -57,10 +64,24 @@ function saveCfg() {
 // ── GitHub API ────────────────────────────────────────────────
 
 class HttpError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(
+    public status: number,
+    /** GitHub's own error message, e.g. "Bad credentials", "API rate limit exceeded for user ID …" */
+    public ghMessage: string,
+    public headers: Headers,
+  ) { super(`GitHub ${status}: ${ghMessage}`); }
 }
 
-async function gh<T>(path: string, init: RequestInit = {}): Promise<T> {
+const num = (h: Headers, name: string) => { const v = h.get(name); return v == null || v === "" ? null : Number(v); };
+
+/** Remember how much of the hourly allowance is left (shared by every app using this GitHub account). */
+function noteQuota(h: Headers) {
+  const remaining = num(h, "x-ratelimit-remaining"), limit = num(h, "x-ratelimit-limit"), reset = num(h, "x-ratelimit-reset");
+  if (remaining != null && limit != null && reset != null) status = { ...status, quota: { remaining, limit, reset: reset * 1000 } };
+}
+
+/** One API call. A 304 (gist unchanged since our ETag) is returned, not thrown. */
+async function ghFetch(path: string, init: RequestInit = {}, extra: Record<string, string> = {}): Promise<Response> {
   const res = await fetch(API + path, {
     ...init,
     cache: "no-store", // the API sends max-age=60; always read the latest copy
@@ -69,10 +90,20 @@ async function gh<T>(path: string, init: RequestInit = {}): Promise<T> {
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
       ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...extra,
     },
   });
-  if (!res.ok) throw new HttpError(res.status, `GitHub ${res.status}`);
-  return res.json() as Promise<T>;
+  noteQuota(res.headers);
+  if (!res.ok && res.status !== 304) {
+    let msg = res.statusText;
+    try { msg = (await res.json()).message || msg; } catch { /* not JSON */ }
+    throw new HttpError(res.status, msg, res.headers);
+  }
+  return res;
+}
+
+async function gh<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return (await ghFetch(path, init)).json() as Promise<T>;
 }
 
 interface GistFile { content?: string; truncated?: boolean; raw_url?: string }
@@ -93,17 +124,37 @@ async function findOrCreateGist(): Promise<string> {
   return g.id;
 }
 
+/** The gist as last read or written: its ETag and our file's text. Reads send the ETag
+    (If-None-Match); GitHub answers 304 when nothing changed, and a 304 doesn't count
+    toward the hourly API limit, so polling an unchanged gist is free. */
+let lastRead: { gistId: string; etag: string; text: string } | null = null;
+
 async function readRemote(): Promise<AppState | null> {
-  const g = await gh<Gist>(`/gists/${cfg!.gistId}`);
-  const f = g.files[FILE];
-  if (!f) return null;
-  let text = f.content ?? "";
-  if (f.truncated && f.raw_url) text = await (await fetch(f.raw_url, { cache: "no-store" })).text();
+  const gistId = cfg!.gistId!;
+  const known = lastRead?.gistId === gistId ? lastRead : null;
+  const res = await ghFetch(`/gists/${gistId}`, {}, known ? { "If-None-Match": known.etag } : {});
+  let text: string;
+  if (res.status === 304 && known) {
+    text = known.text;
+  } else {
+    const g = (await res.json()) as Gist;
+    const f = g.files[FILE];
+    if (!f) { lastRead = null; return null; }
+    text = f.content ?? "";
+    if (f.truncated && f.raw_url) text = await (await fetch(f.raw_url, { cache: "no-store" })).text();
+    const etag = res.headers.get("etag");
+    lastRead = etag ? { gistId, etag, text } : null;
+  }
   try { return normalize(JSON.parse(text)); } catch { return null; }
 }
 
 async function writeRemote(s: AppState) {
-  await gh(`/gists/${cfg!.gistId}`, { method: "PATCH", body: JSON.stringify({ files: { [FILE]: { content: serialize(s) } } }) });
+  const gistId = cfg!.gistId!;
+  const text = serialize(s);
+  const res = await ghFetch(`/gists/${gistId}`, { method: "PATCH", body: JSON.stringify({ files: { [FILE]: { content: text } } }) });
+  // The reply carries the new version's ETag: the next read is a free 304 unless another device wrote since.
+  const etag = res.headers.get("etag");
+  lastRead = etag ? { gistId, etag, text } : null;
 }
 
 // ── sync loop ─────────────────────────────────────────────────
@@ -111,15 +162,64 @@ async function writeRemote(s: AppState) {
 let chain: Promise<void> = Promise.resolve();
 let dirty = false;
 let debounce: ReturnType<typeof setTimeout> | undefined;
+/** Consecutive "slow down" answers without a Retry-After, for doubling the wait. */
+let slowDowns = 0;
 
-/** Run one sync after any sync already in progress. */
-export function syncNow(): Promise<void> {
-  chain = chain.then(doSync, doSync);
+const hhmm = (t: number) => new Date(t).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+
+/** Run one sync after any sync already in progress. `manual` (the Sync now button) ignores a back-off. */
+export function syncNow(manual = false): Promise<void> {
+  const run = () => doSync(manual);
+  chain = chain.then(run, run);
   return chain;
 }
 
-async function doSync() {
+/** Turn a GitHub error into a short line, a full explanation and, for limits, when to try again. */
+function explain(e: HttpError): Pick<SyncStatus, "text" | "detail" | "retryAt"> {
+  const said = `GitHub says: "${e.ghMessage}".`;
+  const h = e.headers;
+  const remaining = num(h, "x-ratelimit-remaining");
+  const reset = num(h, "x-ratelimit-reset");
+  const retryAfter = num(h, "retry-after");
+  const scopes = h.get("x-oauth-scopes");
+  if (e.status === 401) {
+    return { text: "Sync token rejected", detail: `${said} The token may have expired or been revoked. Disconnect, then connect again with a new token.` };
+  }
+  if ((e.status === 403 || e.status === 429) && remaining === 0 && reset) {
+    const at = reset * 1000;
+    const limit = num(h, "x-ratelimit-limit");
+    return {
+      text: `GitHub limit hit · back at ${hhmm(at)}`,
+      detail: `${said} All ${limit ?? ""} GitHub requests for this hour are used up. They're shared by every app using your GitHub account with any token (Piano Path too). Sync starts again by itself at ${hhmm(at)}; everything is saved on this device meanwhile.`,
+      retryAt: at,
+    };
+  }
+  if (e.status === 429 || (e.status === 403 && (retryAfter != null || /rate limit|abuse/i.test(e.ghMessage)))) {
+    const wait = retryAfter != null ? retryAfter * 1000 : Math.min(15, 2 ** slowDowns) * 60_000;
+    if (retryAfter == null) slowDowns++;
+    const at = Date.now() + wait;
+    return {
+      text: `GitHub asked to slow down · retry at ${hhmm(at)}`,
+      detail: `${said} This is GitHub's short-term limit on how often an account can write (e.g. many gist updates in a few minutes), not the hourly one. Sync tries again at ${hhmm(at)}; everything is saved on this device meanwhile.`,
+      retryAt: at,
+    };
+  }
+  if (e.status === 403 && scopes != null && !scopes.split(",").map((x) => x.trim()).includes("gist")) {
+    return {
+      text: "Token can't use gists",
+      detail: `${said} This token's permissions are: ${scopes || "none"}. Make a classic token with the gist scope, then disconnect and connect again with it.`,
+    };
+  }
+  if (e.status >= 500) return { text: `GitHub is having trouble (${e.status})`, detail: `${said} Sync tries again in a couple of minutes.` };
+  return { text: `Sync failed (${e.status})`, detail: said };
+}
+
+async function doSync(manual = false) {
   if (!cfg) return;
+  if (!manual && status.retryAt && Date.now() < status.retryAt) {
+    schedule(status.retryAt - Date.now() + 1000); // keep any change queued for when GitHub lets us back in
+    return;
+  }
   if (!navigator.onLine) { setStatus({ kind: "offline", text: "Offline · saved here" }); return; }
   setStatus({ kind: "busy", text: "Syncing…" });
   const wasDirty = dirty;
@@ -140,13 +240,19 @@ async function doSync() {
     const merged = remote ? merge(local, remote) : local;
     if (serialize(merged) !== serialize(local)) replaceState(merged);
     if (!remote || serialize(merged) !== serialize(remote)) await writeRemote(merged);
-    setStatus({ kind: "ok", text: "Synced", last: Date.now() });
+    slowDowns = 0;
+    setStatus({ kind: "ok", text: "Synced", detail: undefined, retryAt: undefined, last: Date.now() });
   } catch (e) {
     if (wasDirty) dirty = true; // keep the change queued for the next try
-    if (e instanceof HttpError && e.status === 401) setStatus({ kind: "error", text: "Sync token rejected" });
-    else if (e instanceof HttpError && (e.status === 403 || e.status === 429)) setStatus({ kind: "error", text: "GitHub limit hit · retrying later" });
-    else if (e instanceof HttpError) setStatus({ kind: "error", text: `Sync failed (${e.status})` });
-    else setStatus({ kind: "offline", text: "Can't reach GitHub · saved here" });
+    if (e instanceof HttpError) {
+      console.warn("[sync]", e.message, Object.fromEntries(e.headers));
+      const x = explain(e);
+      setStatus({ kind: "error", detail: undefined, retryAt: undefined, ...x });
+      if (x.retryAt) schedule(x.retryAt - Date.now() + 1000);
+    } else {
+      console.warn("[sync]", e);
+      setStatus({ kind: "offline", text: "Can't reach GitHub · saved here", retryAt: undefined, detail: "Couldn't reach api.github.com (offline, or the connection dropped). Changes are saved on this device and sync when it's reachable again." });
+    }
   }
 }
 
@@ -163,6 +269,7 @@ export function startSync() {
   onLocalChange(() => {
     if (!cfg) return;
     dirty = true;
+    if (status.retryAt && Date.now() < status.retryAt) { schedule(status.retryAt - Date.now() + 1000); return; } // keep the limit message up
     setStatus({ kind: "busy", text: "Saving…" });
     schedule(2000);
   });
@@ -199,5 +306,5 @@ export function disconnect() {
   saveCfg();
   clearTimeout(debounce);
   dirty = false;
-  setStatus({ kind: "off", text: "On this device", last: undefined });
+  setStatus({ kind: "off", text: "On this device", last: undefined, detail: undefined, retryAt: undefined, quota: undefined });
 }

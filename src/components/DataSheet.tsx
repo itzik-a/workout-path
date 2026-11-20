@@ -97,15 +97,19 @@ export function DataSheet({ onClose }: { onClose: () => void }) {
                   <span className="muted small">Last synced {ago(s.last)}</span>
                 </div>
               </div>
-              {s.kind === "error" && s.text === "Sync token rejected" && (
-                <p className="small">The token may have expired or been revoked. Disconnect, then connect again with a new token.</p>
+              {s.detail && (s.kind === "error" || s.kind === "offline") && <p className="small">{s.detail}</p>}
+              {s.quota && (
+                <p className="muted small">
+                  GitHub requests left this hour: {s.quota.remaining.toLocaleString()} of {s.quota.limit.toLocaleString()}
+                  {" "}(resets {new Date(s.quota.reset).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })})
+                </p>
               )}
               <p className="muted small">
                 Workouts, routines and history are saved to a private gist on your GitHub account. It syncs when you open the app,
                 a couple of seconds after each change, and whenever you come back to it. A workout in progress stays on this device.
               </p>
               <div className="dlg-actions">
-                <button type="button" className="btn primary" disabled={s.kind === "busy"} onClick={() => void syncNow()}>Sync now</button>
+                <button type="button" className="btn primary" disabled={s.kind === "busy"} onClick={() => void syncNow(true)}>Sync now</button>
                 {s.gistId && (
                   <a className="btn ghost" href={`https://gist.github.com/${s.gistId}`} target="_blank" rel="noopener">View the gist <IconExternal /></a>
                 )}
