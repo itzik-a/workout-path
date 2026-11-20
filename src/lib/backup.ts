@@ -7,7 +7,11 @@ export const backupName = () => `workout-path-backup-${todayStr()}.json`;
 /** Save the backup: the share sheet on a touch device (Save to Files), a download elsewhere. */
 export async function exportBackup(): Promise<"shared" | "downloaded" | "cancelled"> {
   const text = serialize({ app: "workout-path", exportedAt: new Date().toISOString(), ...getState() });
-  const file = new File([text], backupName(), { type: "application/json" });
+  return saveFile(new File([text], backupName(), { type: "application/json" }));
+}
+
+/** Save a file: the share sheet on a touch device (Save to Files), a download elsewhere. */
+export async function saveFile(file: File): Promise<"shared" | "downloaded" | "cancelled"> {
   const touch = window.matchMedia("(pointer: coarse)").matches;
   if (touch && navigator.canShare?.({ files: [file] })) {
     try { await navigator.share({ files: [file] }); return "shared"; }

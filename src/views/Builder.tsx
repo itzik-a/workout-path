@@ -18,6 +18,7 @@ import { useAppState, type Block, type Item, type Session, type Workout } from "
 import { activeSuggestion } from "../lib/progress";
 import { deleteWithUndo } from "./Workouts";
 import { startWorkout } from "./Player";
+import { GarminSheet } from "../components/GarminSheet";
 
 /** Drag type for exercises dragged from the picker into the workout (Mac). */
 const DND = "application/x-workout-exercise";
@@ -40,6 +41,7 @@ export function Builder({ id }: { id: string }) {
   const w = s.workouts.find((x) => x.id === id && !x.deletedAt);
   const [open, setOpen] = useState<string | null>(null);
   const [picker, setPicker] = useState<{ open: boolean; blockId?: string }>({ open: false });
+  const [garmin, setGarmin] = useState(false);
   const search = useRef<HTMLInputElement>(null);
   const wide = useMedia("(min-width: 1024px)");
   const sheet = picker.open && !wide;
@@ -103,6 +105,7 @@ export function Builder({ id }: { id: string }) {
                   const nid = duplicateWorkout(w.id);
                   if (nid) { location.hash = `#workouts/${nid}`; showToast("Duplicated. You're editing the copy."); }
                 } },
+                { label: "Send to Garmin watch", hidden: !w.blocks.length, onSelect: () => setGarmin(true) },
                 { label: "Delete workout", danger: true, onSelect: () => { location.hash = "#workouts"; deleteWithUndo(w); } },
               ]}
             />
@@ -127,6 +130,7 @@ export function Builder({ id }: { id: string }) {
         onClose={() => setPicker({ open: false })}
         onClearTarget={() => setPicker((p) => ({ ...p, blockId: undefined }))}
       />
+      {garmin && <GarminSheet workout={w} custom={custom} onClose={() => setGarmin(false)} />}
     </div>
   );
 }
