@@ -969,3 +969,5 @@ code { font: .85em ui-monospace, "SF Mono", Menlo, monospace; background: var(--
 .move figcaption span { color: var(--muted); font-size: .82rem; line-height: 1.35; }
 .player-anim { width: min(60vw, 26vh, 230px); }
 .player-ring.with-anim { width: min(64vw, 28vh, 270px); }
+.garmin-usb { display: grid; gap: 12px; padding-top: 4px; border-top: 1px solid var(--line); }
+.garmin-usb h3 { margin: 8px 0 0; font-size: 1rem; }

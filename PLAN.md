@@ -139,3 +139,29 @@ Milestones 1–8 are done and live. Next, in order of value:
 - **Dragon flag** is done on the floor, gripping something heavy behind the head (a bed leg).
 - **Kettlebell (12 kg)**: only for the Jefferson curl for now (its default dose is 12 kg).
 - **Weight tracking**: yes. Optional `kg` on doses, items and logged sets.
+
+## 9. Workouts on the Garmin watch (from 2026-11-20)
+
+I train almost only with the Forerunner 970. The web app stays the place to keep the catalog and build workouts and routines; the watch runs them with **Garmin's own workout player**, and Garmin Connect keeps the record (no history needed here). No watch app of our own (a Connect IQ app was planned first and dropped: much more work, and as far as I know it couldn't fill Connect's sets table).
+
+### How workouts get to Garmin
+
+Garmin's official workout API is only for approved companies. The connect.garmin.com website saves workouts with its own unofficial requests (`/gc-api/workout-service/…`, signed-in cookies + the page's CSRF token), and those only work from that site. So the web app copies a short script with the workouts in it, and I paste it into the browser console on connect.garmin.com on the Mac. Nothing goes through a server of ours and the web app never sees my Garmin password. It can break if Garmin changes its site.
+
+Once a workout is in Connect it's an ordinary Garmin workout: editable in the Connect app, sent to the watch through the phone, and it can be put on the calendar so the watch offers it as today's workout.
+
+The `.fit` file over USB (done) stays as a fallback; those workouts live on the watch only.
+
+### Milestones
+
+G1. **Test (done 2026-11-20, waiting for the first real paste).** "Send to Garmin" in the workout menu copies the script for one workout; it adds a new workout to Connect each time. Check: Garmin accepts it, what the watch shows (Garmin's exercise names, my names and cues in the notes, reps / timed steps, rests, sets), and what Connect saves after doing it.
+G2. **Update instead of duplicate.** The script lists my Connect workouts, finds the ones made here (`wp:<id>` in the description) and updates them (`PUT …/workout/<id>`); "Send all workouts" for every workout at once; deleted ones are removed from Connect.
+G3. **Routines on the Garmin calendar.** Weekly routines → their workouts scheduled for the next 4 weeks (`POST …/schedule/<workoutId>`), replacing what was scheduled before by this app; rotations → the next workouts on my training days (open question). The watch then shows today's workout.
+G4. **Smoother sending.** A bookmark ("Workout Path → Garmin") instead of the console, if Garmin's site allows it; the app remembers what was sent and shows "changed since last send".
+G5. **Tidy the web app for watch training.** Hide History and the phone player behind a setting, if I still don't use them.
+
+### Open questions
+
+1. **Rotations on the calendar.** A rotation has no days. Put the next workouts on chosen weekdays (e.g. Sun / Tue / Thu), or only send the workouts and pick them on the watch?
+2. **Edits in Connect.** A send overwrites workouts made here, so edits made in Connect are lost. Fine to always edit in the web app?
+3. **Exercise names.** The watch shows Garmin's name for each exercise (`src/data/garminCodes.ts` picks the closest; some are generic, like "Total Body" for the planche). Is that readable enough with my name in the step's note?

@@ -1,71 +1,12 @@
-/* Export a workout as a Garmin workout file (.fit), so the watch can run it on its own:
-   copy the file to GARMIN/NewFiles on the watch over USB. A small FIT encoder (no
-   library): file_id, workout, workout_step and exercise_title messages, codes from the
-   Garmin FIT SDK profile (21.x). Sets / rounds use Garmin's "repeat" steps, the same
-   shape as strength workouts made in Garmin Connect. */
-import type { Exercise, SectionId } from "../data/catalog";
+/* Garmin export. garminTree() turns a workout into Garmin steps (work, rest, repeats); two
+   outputs use it: a FIT workout file (.fit, copied to GARMIN/NewFiles on the watch over USB;
+   below, a small encoder with no library) and a Garmin Connect workout
+   (src/lib/garminConnect.ts). Exercise codes: src/data/garminCodes.ts. */
+import type { Exercise } from "../data/catalog";
+import { GARMIN_EXERCISES, garminCode } from "../data/garminCodes";
 import type { Item, Workout } from "../state/store";
 import { SWITCH_SIDES_S } from "./player";
 import { itemParts, itemTitle, repeatsOf } from "./workout";
-
-// ── Garmin exercise codes ───────────────────────────────────────────
-// [category, name]: the name number is per category (FIT profile `<category>ExerciseName`).
-// Category only when Garmin has nothing close; the step name still says what it is.
-const C = {
-  benchPress: 0, cardio: 2, core: 5, crunch: 6, curl: 7, deadlift: 8, hipRaise: 10, hipStability: 11,
-  hyperextension: 13, lateralRaise: 14, legCurl: 15, lunge: 17, plank: 19, plyo: 20, pullUp: 21,
-  pushUp: 22, shoulderPress: 24, shoulderStability: 25, squat: 28, totalBody: 29, tricepsExtension: 30,
-  warmUp: 31, run: 32, bike: 33, move: 35, pose: 36, unknown: 65534,
-} as const;
-
-type Code = [category: number, name?: number];
-
-/** Keyed by exercise id, or "exercise:variation" when a variation is a different movement. */
-const CODES: Record<string, Code> = {
-  "frog-jump": [C.plyo, 37], // jump squat
-  "jump-rope": [C.cardio, 6],
-  spinning: [C.bike, 0],
-  running: [C.run, 0], "running:sprints": [C.run, 3],
-  "cat-cow": [C.warmUp, 38],
-  "dog-flow": [C.pose, 114], "dog-flow:up-hold": [C.pose, 80], "dog-flow:down-hold": [C.pose, 21],
-  "glute-bridge": [C.hipRaise, 11], "glute-bridge:reverse-tabletop": [C.pose, 74],
-  "kneeling-backbend": [C.pose],
-  "hip-flexor-stretch": [C.warmUp, 45],
-  "deep-squat-hold": [C.warmUp],
-  "wrist-flexion-iso": [C.curl], "pronation-iso": [C.curl], "grip-squeeze": [C.curl],
-  "wrist-curl-eccentric": [C.curl, 18], "wrist-extension-curl": [C.curl, 17],
-  "wrist-deviation": [C.curl], "forearm-rotation": [C.curl], "finger-extension": [C.curl],
-  "wrist-flexor-stretch": [C.warmUp, 41],
-  "horse-stance": [C.squat], "wall-sit": [C.squat, 20], "bow-stance": [C.lunge], "crane-stance": [C.hipStability],
-  plank: [C.plank, 43], "side-plank": [C.plank, 66],
-  "hollow-body": [C.core], "hollow-body:rock": [C.crunch, 24],
-  superman: [C.hyperextension, 29],
-  "l-v-sit": [C.core, 88], "l-v-sit:v-sit": [C.move, 65],
-  "dragon-flag": [C.core],
-  "roman-chair": [C.core, 41], "roman-chair:obliques": [C.core], "roman-chair:glutes": [C.hyperextension],
-  "push-up": [C.pushUp, 77],
-  dips: [C.tricepsExtension, 2], "dips:bench": [C.tricepsExtension, 0],
-  "iso-strap-press": [C.shoulderPress], "iso-strap-press:chest": [C.benchPress],
-  "iso-strap-press:lateral": [C.lateralRaise], "iso-strap-press:press-back": [C.shoulderStability],
-  "pull-up": [C.pullUp, 38], "chin-up": [C.pullUp, 39], hang: [C.pullUp], "hang:l-sit": [C.core, 75], "iso-pull-up": [C.pullUp],
-  "box-squat": [C.squat, 61], bulgarian: [C.lunge], cossack: [C.lunge, 61],
-  nordic: [C.legCurl], "reverse-nordic": [C.squat], "iso-deadlift": [C.deadlift],
-  handstand: [C.totalBody], crow: [C.totalBody], "walk-press": [C.pushUp], planche: [C.totalBody],
-  "front-lever": [C.core, 20],
-  "wall-split": [C.warmUp], "front-split": [C.warmUp, 43], "side-split": [C.warmUp, 68],
-  pancake: [C.pose, 57], pigeon: [C.warmUp, 59], "jefferson-curl": [C.deadlift],
-};
-
-/** Custom exercises (and anything not in CODES): a category from the section. */
-const BY_SECTION: Record<SectionId, number> = {
-  cardio: C.cardio, mobility: C.warmUp, physio: C.unknown, stances: C.squat, core: C.core,
-  push: C.pushUp, pull: C.pullUp, legs: C.squat, skills: C.totalBody, flexibility: C.warmUp,
-};
-
-function codeFor(ex: Exercise | undefined, variationId?: string): Code {
-  if (!ex) return [C.unknown];
-  return CODES[`${ex.id}:${variationId}`] ?? CODES[ex.id] ?? [BY_SECTION[ex.section] ?? C.unknown];
-}
 
 // ── Workout → Garmin steps ──────────────────────────────────────────
 /** Short enough for a watch: no "(…)" asides, and the variation only if it still fits. */
@@ -75,10 +16,77 @@ function stepName(t: { main: string; sub?: string }) {
   const main = clean(t.main), sub = t.sub && clean(t.sub);
   return sub && main.length + sub.length + 3 <= NAME_FIT ? `${main} · ${sub}` : main;
 }
+
+export interface GarminStep {
+  kind: "work" | "rest";
+  name: string;
+  /** reps: a count; time: seconds; open: ends on the lap button */
+  end: { reps: number } | { seconds: number } | { open: true };
+  /** work: Garmin Connect code, "CATEGORY/EXERCISE" */
+  code?: string;
+  cue?: string;
+  kg?: number;
+}
+export interface GarminRepeat {
+  kind: "repeat";
+  times: number;
+  /** the last block: no rest after its final round (Garmin Connect only; the FIT file keeps it) */
+  skipLastRest: boolean;
+  steps: GarminStep[];
+}
+export type GarminNode = GarminStep | GarminRepeat;
+
+export function garminTree(w: Workout, custom?: Exercise[]): GarminNode[] {
+  const out: GarminNode[] = [];
+  w.blocks.forEach((b, bi) => {
+    const last = bi === w.blocks.length - 1;
+    const body: GarminStep[] = [];
+    const rest = (s: number, name: string) => { if (s > 0) body.push({ kind: "rest", name, end: { seconds: s } }); };
+    const work = (it: Item) => {
+      const { ex, v, mode } = itemParts(it, custom);
+      const name = stepName(itemTitle(ex, v));
+      const end: GarminStep["end"] =
+        mode === "reps" ? (it.reps ? { reps: it.reps } : { open: true })
+        : mode === "hold" ? (it.seconds ? { seconds: it.seconds } : { open: true })
+        : it.minutes ? { seconds: it.minutes * 60 } : { open: true };
+      const n = repeatsOf(it, mode);
+      const sides = it.perSide ? (["left", "right"] as const) : [undefined];
+      sides.forEach((side, si) => {
+        if (si && mode !== "reps") rest(SWITCH_SIDES_S, "Switch sides");
+        for (let k = 1; k <= n; k++) {
+          if (k > 1) rest(it.repeatRest ?? 0, "Short rest");
+          body.push({ kind: "work", name: side ? `${name} · ${side}` : name, end, code: garminCode(ex, it.variationId), cue: ex?.cue, kg: it.kg });
+        }
+      });
+    };
+    let times: number;
+    if (b.kind === "straight") {
+      const it = b.items[0];
+      work(it);
+      rest(it.rest, "Rest"); // after each set; after the last one, the rest before the next exercise
+      times = it.sets;
+    } else {
+      b.items.forEach((it, ii) => { work(it); if (ii < b.items.length - 1) rest(it.rest, "Rest"); });
+      rest(b.restBetween, "Rest between rounds");
+      times = b.rounds;
+    }
+    if (times > 1) out.push({ kind: "repeat", times, skipLastRest: last, steps: body });
+    else out.push(...(last && body.at(-1)?.kind === "rest" ? body.slice(0, -1) : body));
+  });
+  return out;
+}
+
+/** Rough length in seconds (reps at 3 s each), for Garmin's estimate. */
+export function garminSeconds(nodes: GarminNode[]): number {
+  const one = (s: GarminStep) => ("seconds" in s.end ? s.end.seconds : "reps" in s.end ? s.end.reps * 3 : 30);
+  return nodes.reduce((t, n) => t + (n.kind === "repeat" ? n.times * n.steps.reduce((a, s) => a + one(s), 0) : one(n)), 0);
+}
+
+// ── FIT steps (flat: a repeat step points back to its first step) ───
 const DUR = { time: 0, open: 5, repeat: 6, reps: 29 } as const;
 const INTENSITY = { active: 0, rest: 1 } as const;
 
-export interface GarminStep {
+interface FitStep {
   name?: string;
   notes?: string;
   durationType: number;
@@ -87,54 +95,29 @@ export interface GarminStep {
   /** repeat: how many times in all */
   repeatTimes?: number;
   intensity?: number;
-  code?: Code;
+  /** [FIT exercise category, name] */
+  code?: [number, number?];
   kg?: number;
 }
 
-export function garminSteps(w: Workout, custom?: Exercise[]): GarminStep[] {
-  const out: GarminStep[] = [];
-  const rest = (s: number, name: string) => {
-    if (s > 0) out.push({ name, durationType: DUR.time, durationValue: s * 1000, intensity: INTENSITY.rest });
-  };
-  const repeat = (from: number, times: number) => {
-    if (times > 1 && out.length > from) out.push({ durationType: DUR.repeat, durationValue: from, repeatTimes: times });
-  };
-  const work = (it: Item) => {
-    const { ex, v, mode } = itemParts(it, custom);
-    const name = stepName(itemTitle(ex, v));
-    const code = codeFor(ex, it.variationId);
-    const n = repeatsOf(it, mode);
-    const sides = it.perSide ? (["left", "right"] as const) : [undefined];
+export function garminSteps(w: Workout, custom?: Exercise[]): FitStep[] {
+  const out: FitStep[] = [];
+  const step = (s: GarminStep) => {
     const [durationType, durationValue] =
-      mode === "reps" ? (it.reps ? [DUR.reps, it.reps] : [DUR.open, undefined])
-      : mode === "hold" ? (it.seconds ? [DUR.time, it.seconds * 1000] : [DUR.open, undefined])
-      : it.minutes ? [DUR.time, it.minutes * 60_000] : [DUR.open, undefined];
-    sides.forEach((side, si) => {
-      if (si && mode !== "reps") rest(SWITCH_SIDES_S, "Switch sides");
-      for (let k = 1; k <= n; k++) {
-        if (k > 1) rest(it.repeatRest ?? 0, "Short rest");
-        out.push({
-          name: side ? `${name} · ${side}` : name, notes: ex?.cue,
-          durationType, durationValue, intensity: INTENSITY.active, code, kg: it.kg,
-        });
-      }
+      "reps" in s.end ? [DUR.reps, s.end.reps] : "seconds" in s.end ? [DUR.time, s.end.seconds * 1000] : [DUR.open, undefined];
+    const g = s.code ? GARMIN_EXERCISES[s.code] : undefined;
+    out.push({
+      name: s.name, notes: s.cue, durationType, durationValue,
+      intensity: s.kind === "rest" ? INTENSITY.rest : INTENSITY.active,
+      code: g ? [g[1], g[2]] : undefined, kg: s.kg,
     });
   };
-  w.blocks.forEach((b, bi) => {
-    const last = bi === w.blocks.length - 1;
+  for (const n of garminTree(w, custom)) {
+    if (n.kind !== "repeat") { step(n); continue; }
     const from = out.length;
-    if (b.kind === "straight") {
-      const it = b.items[0];
-      work(it);
-      // The rest after each set; after the last set it's the rest before the next exercise.
-      if (!(last && it.sets <= 1)) rest(it.rest, "Rest");
-      repeat(from, it.sets);
-    } else {
-      b.items.forEach((it, ii) => { work(it); if (ii < b.items.length - 1) rest(it.rest, "Rest"); });
-      if (!(last && b.rounds <= 1)) rest(b.restBetween, "Rest between rounds");
-      repeat(from, b.rounds);
-    }
-  });
+    n.steps.forEach(step);
+    out.push({ durationType: DUR.repeat, durationValue: from, repeatTimes: n.times });
+  }
   return out;
 }
 
