@@ -1,8 +1,8 @@
 /* Search + filters + list grouped by section. Used by the Catalog and the workout builder's picker. */
 import { useState, type ReactNode, type RefObject } from "react";
 import {
-  EQUIPMENT_LABEL, EXERCISES, MODE_LABEL, REGION_LABEL, SECTIONS,
-  type Equipment, type Exercise, type Mode, type Region, type SectionId,
+  EQUIPMENT_LABEL, EXERCISES, FOCUS_LABEL, MODE_LABEL, REGION_LABEL, SECTIONS,
+  type Equipment, type Exercise, type Focus, type Mode, type Region, type SectionId,
 } from "../data/catalog";
 import { ChipGroup, useSessionState } from "./ui";
 import { IconClose, IconFilter, IconSearch } from "./Icons";
@@ -11,12 +11,13 @@ import { formatDose, plural } from "../lib/format";
 
 const REGIONS = (Object.keys(REGION_LABEL) as Region[]).map((value) => ({ value, label: REGION_LABEL[value] }));
 const MODES = (Object.keys(MODE_LABEL) as Mode[]).map((value) => ({ value, label: MODE_LABEL[value] }));
+const FOCUSES = Object.keys(FOCUS_LABEL) as Focus[];
 const SECTION_OPTS = SECTIONS.map((s) => ({ value: s.id as SectionId, label: s.name }));
 /** Only equipment some exercise actually uses, in label order, plus "none". */
 const EQUIPMENT_OPTS: { value: Equipment | "none"; label: string }[] = [
   { value: "none", label: "No equipment" },
   ...(Object.keys(EQUIPMENT_LABEL) as Equipment[])
-    .filter((q) => EXERCISES.some((e) => e.equipment?.includes(q)))
+    .filter((q) => EXERCISES.some((e) => !e.retired && e.equipment?.includes(q)))
     .map((value) => ({ value, label: EQUIPMENT_LABEL[value] })),
 ];
 
@@ -74,6 +75,19 @@ export function FilterBar({ f, setF, searchRef }: {
         </button>
       </div>
 
+      <div className="focus-row" role="group" aria-label="Focus">
+        <button type="button" className="chip" aria-pressed={!f.focus.length} onClick={() => set({ focus: [] })}>All</button>
+        {FOCUSES.map((x) => (
+          <button
+            type="button" key={x} className="chip"
+            aria-pressed={f.focus.includes(x)}
+            onClick={() => set({ focus: f.focus.length === 1 && f.focus[0] === x ? [] : [x] })}
+          >
+            {FOCUS_LABEL[x]}
+          </button>
+        ))}
+      </div>
+
       {show && (
         <div className="filters">
           <ChipGroup label="Body" options={REGIONS} value={f.regions} onChange={(regions) => set({ regions })} />
@@ -81,7 +95,7 @@ export function FilterBar({ f, setF, searchRef }: {
           <ChipGroup label="Equipment" options={EQUIPMENT_OPTS} value={f.equipment} onChange={(equipment) => set({ equipment })} />
           <ChipGroup label="Section" options={SECTION_OPTS} value={f.sections} onChange={(sections) => set({ sections })} />
           {n > 0 && (
-            <button type="button" className="btn ghost sm" onClick={() => setF((prev) => ({ ...NO_FILTERS, q: prev.q }))}>Clear filters</button>
+            <button type="button" className="btn ghost sm" onClick={() => setF((prev) => ({ ...NO_FILTERS, q: prev.q, focus: prev.focus }))}>Clear filters</button>
           )}
         </div>
       )}

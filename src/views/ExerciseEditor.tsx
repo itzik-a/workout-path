@@ -1,8 +1,8 @@
 /* Create / edit a custom exercise: #catalog/new, #catalog/<u-id>/edit. Saved on "Save" (a draft until then). */
 import { useState } from "react";
 import {
-  EQUIPMENT_LABEL, MODE_LABEL, REGION_LABEL, SECTIONS,
-  type Dose, type Equipment, type Exercise, type Mode, type Region, type SectionId, type Variation,
+  EQUIPMENT_LABEL, FOCUS_LABEL, MODE_LABEL, REGION_LABEL, SECTIONS, focusOf,
+  type Dose, type Equipment, type Exercise, type Focus, type Mode, type Region, type SectionId, type Variation,
 } from "../data/catalog";
 import { IconBack, IconClose, IconPlus } from "../components/Icons";
 import { ChipGroup, Seg, Select, Stepper } from "../components/ui";
@@ -11,6 +11,7 @@ import { saveCustomExercise } from "../state/actions";
 
 const MODES = (Object.keys(MODE_LABEL) as Mode[]).map((value) => ({ value, label: MODE_LABEL[value] }));
 const REGIONS = (Object.keys(REGION_LABEL) as Region[]).map((value) => ({ value, label: REGION_LABEL[value] }));
+const FOCUSES = (Object.keys(FOCUS_LABEL) as Focus[]).map((value) => ({ value, label: FOCUS_LABEL[value] }));
 const EQUIPMENT = (Object.keys(EQUIPMENT_LABEL) as Equipment[]).map((value) => ({ value, label: EQUIPMENT_LABEL[value] }));
 
 /** Default amount when the mode changes. */
@@ -86,6 +87,7 @@ export function ExerciseEditor({ initial }: { initial?: Exercise }) {
         <div className="chips">
           <button type="button" className="chip" aria-pressed={!!ex.perSide} onClick={() => set({ perSide: !ex.perSide })}>Per side</button>
         </div>
+        <ChipGroup label="Focus" options={FOCUSES} value={focusOf(ex)} onChange={(focus) => set({ focus })} />
         <ChipGroup label="Equipment" options={EQUIPMENT} value={ex.equipment ?? []} onChange={(equipment) => set({ equipment })} />
         <label className="field">
           <span className="stepper-label">Form cue</span>

@@ -119,6 +119,7 @@ export function updateItem(workoutId: string, itemId: string, patch: Partial<Ite
     if (!f) return;
     Object.assign(f.item, patch);
     if (!f.item.kg) delete f.item.kg;
+    if (!f.item.repeats || f.item.repeats < 2) { delete f.item.repeats; delete f.item.repeatRest; }
   });
 }
 
@@ -129,7 +130,7 @@ export function setTimed(workoutId: string, itemId: string, on: boolean) {
     if (!f) return;
     delete f.item.skipSuggest;
     if (on) { f.item.mode = "hold"; f.item.seconds ||= TIMED_DEFAULT_S; }
-    else { delete f.item.mode; delete f.item.seconds; }
+    else { delete f.item.mode; delete f.item.seconds; delete f.item.repeats; delete f.item.repeatRest; }
   });
 }
 
@@ -143,7 +144,7 @@ export function setVariation(workoutId: string, itemId: string, variationId: str
     if (!ex || !v) return;
     const dose = v.dose ?? ex.dose;
     const kg = f.item.kg;
-    delete f.item.reps; delete f.item.seconds; delete f.item.minutes; delete f.item.mode;
+    delete f.item.reps; delete f.item.seconds; delete f.item.minutes; delete f.item.mode; delete f.item.repeats; delete f.item.repeatRest;
     Object.assign(f.item, { variationId, sets: dose.sets, ...doseFields(dose) });
     if (!dose.kg && kg) f.item.kg = kg;
   });

@@ -18,6 +18,9 @@ export interface Item {
   mode?: Mode;
   /** rest after each set, seconds */
   rest: number;
+  /** hold / timed items: each set is `repeats` holds (≥ 2) with `repeatRest` seconds between, e.g. 6 × 10 s on / 5 s off */
+  repeats?: number;
+  repeatRest?: number;
   /** a suggestion the user said "Not now" to (its key), so it stays hidden */
   skipSuggest?: string;
 }
@@ -68,6 +71,8 @@ export interface SetLog {
   skipped?: boolean;
   /** set when the item overrode the exercise's mode (timed reps), so history reads the right field */
   mode?: Mode;
+  /** interval holds: which hold of the set (1-based); each hold is its own log */
+  rep?: number;
 }
 
 export interface Session {

@@ -1,12 +1,14 @@
 import type { Dose, Exercise, Mode, Variation } from "../data/catalog";
 
-/** "3 × 10", "3 × 45 s", "10 reps", "20 min", "3 × 8 · 12 kg". */
+/** "3 × 10", "3 × 45 s", "10 reps", "20 min", "3 × 8 · 12 kg", "3 × (5 × 10 s on / 5 s off)". */
 export function formatDose(dose: Dose, mode: Mode, perSide?: boolean): string {
+  const intervals = mode === "hold" && (dose.repeats ?? 0) > 1;
   const amount =
     mode === "reps" ? `${dose.reps ?? "?"}` :
+    intervals ? `${dose.repeats} × ${formatSeconds(dose.seconds ?? 0)} on / ${formatSeconds(dose.repeatRest ?? 0)} off` :
     mode === "hold" ? formatSeconds(dose.seconds ?? 0) :
     `${dose.minutes ?? "?"} min`;
-  let out = dose.sets > 1 ? `${dose.sets} × ${amount}` : mode === "reps" ? `${amount} reps` : amount;
+  let out = dose.sets > 1 ? `${dose.sets} × ${intervals ? `(${amount})` : amount}` : mode === "reps" ? `${amount} reps` : amount;
   if (perSide) out += " per side";
   if (dose.kg) out += ` · ${dose.kg} kg`;
   return out;

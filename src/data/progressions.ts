@@ -8,6 +8,7 @@ export const READY_STREAK = 2;
 
 export const LADDERS: Ladder[] = [
   { ex: "planche", steps: [{ v: "lean", target: 30 }, { v: "tuck", target: 15 }, { v: "adv-tuck", target: 15 }, { v: "straddle", target: 10 }] },
+  { ex: "front-lever", steps: [{ v: "tuck", target: 20 }, { v: "adv-tuck", target: 15 }, { v: "one-leg", target: 10 }, { v: "straddle", target: 10 }, { v: "full", target: 5 }] },
   { ex: "l-v-sit", steps: [{ v: "tuck", target: 20 }, { v: "one-leg", target: 15 }, { v: "l-sit", target: 15 }, { v: "v-sit", target: 10 }] },
   { ex: "handstand", steps: [{ v: "back-to-wall", target: 45 }, { v: "chest-to-wall", target: 60 }, { v: "freestanding", target: 30 }] },
   { ex: "crow", steps: [{ v: "crow", target: 30 }, { v: "crane", target: 20 }] },

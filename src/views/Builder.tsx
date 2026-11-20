@@ -340,6 +340,10 @@ function ItemEditor({ wid, item, ex, mode, base, inGroup }: { wid: string; item:
         {!inGroup && <Stepper label="Sets" value={item.sets} min={1} max={20} onChange={(sets) => set({ sets })} />}
         {mode === "reps" && <Stepper label={`Reps${side}`} value={item.reps ?? 0} min={1} max={300} onChange={(reps) => set({ reps })} />}
         {mode === "hold" && <Stepper label={`Hold${side}`} value={item.seconds ?? 0} min={1} max={900} step={5} unit="s" onChange={(seconds) => set({ seconds })} />}
+        {mode === "hold" && item.repeats ? <>
+          <Stepper label={mode !== base ? "Intervals" : "Holds"} value={item.repeats} min={2} max={30} onChange={(repeats) => set({ repeats })} />
+          <Stepper label={mode !== base ? "Rest between" : "Rest between holds"} value={item.repeatRest ?? 0} min={0} max={120} step={5} unit="s" onChange={(repeatRest) => set({ repeatRest })} />
+        </> : null}
         {mode === "time" && <Stepper label={`Time${side}`} value={item.minutes ?? 0} min={1} max={240} unit="min" onChange={(minutes) => set({ minutes })} />}
         <Stepper label={inGroup ? "Rest after" : "Rest"} value={item.rest} min={0} max={900} step={restStep} unit="s" onChange={(rest) => set({ rest })} />
         <Stepper label="Weight" value={item.kg ?? 0} min={0} max={300} unit="kg" decimal onChange={(kg) => set({ kg })} />
@@ -349,6 +353,11 @@ function ItemEditor({ wid, item, ex, mode, base, inGroup }: { wid: string; item:
         {base === "reps" && (
           <button type="button" className="chip" aria-pressed={mode !== base} onClick={() => setTimed(wid, item.id, mode === base)}
             title="Work for a set time instead of counting reps (intervals, Tabata)">Timed</button>
+        )}
+        {mode === "hold" && (
+          <button type="button" className="chip" aria-pressed={!!item.repeats}
+            onClick={() => set(item.repeats ? { repeats: undefined, repeatRest: undefined } : { repeats: 5, repeatRest: 5 })}
+            title="Each set is several short holds with a short rest between, e.g. 5 × 10 s on / 5 s off">Intervals</button>
         )}
       </div>
     </div>

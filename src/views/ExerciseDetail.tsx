@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { EQUIPMENT_LABEL, MODE_LABEL, REGION_LABEL, modeLabel, sectionById, type Exercise } from "../data/catalog";
+import { EQUIPMENT_LABEL, FOCUS_LABEL, MODE_LABEL, REGION_LABEL, focusOf, modeLabel, sectionById, type Exercise } from "../data/catalog";
 import { IconBack, IconChevronRight, IconClose, IconExternal } from "../components/Icons";
 import { Menu } from "../components/ui";
 import { showToast } from "../lib/toast";
@@ -35,7 +35,7 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
 
       <header className="builder-head">
         <div className="detail-head">
-          <p className="eyebrow">{section.name}{isCustom(ex.id) && " · Custom"}{ex.deletedAt && " · Deleted"}</p>
+          <p className="eyebrow">{section.name}{isCustom(ex.id) && " · Custom"}{ex.deletedAt && " · Deleted"}{ex.retired && " · Retired"}</p>
           <h1 id="ex-title" className="display">{ex.name}</h1>
           {ex.aliases?.length ? <p className="muted small">Also called {ex.aliases.join(", ")}</p> : null}
         </div>
@@ -72,6 +72,7 @@ export function ExerciseDetail({ ex }: { ex: Exercise }) {
         <div><dt>Default</dt><dd>{formatDose(ex.dose, ex.mode, ex.perSide)}</dd></div>
         <div><dt>Type</dt><dd>{MODE_LABEL[ex.mode]}{ex.mode === "hold" ? " (seconds)" : ex.mode === "time" ? " (minutes)" : ""}</dd></div>
         <div><dt>Body</dt><dd>{ex.regions.map((r) => REGION_LABEL[r]).join(", ")}</dd></div>
+        {focusOf(ex).length > 0 && <div><dt>Focus</dt><dd>{focusOf(ex).map((x) => FOCUS_LABEL[x]).join(", ")}</dd></div>}
         <div><dt>Equipment</dt><dd>{ex.equipment?.length ? ex.equipment.map((q) => EQUIPMENT_LABEL[q]).join(", ") : "None"}</dd></div>
       </dl>
 

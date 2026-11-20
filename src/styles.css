@@ -232,7 +232,8 @@ kbd {
 
 /* ---------- Catalog ---------- */
 .catalog { display: grid; gap: 14px; }
-.pane { display: grid; gap: 14px; align-content: start; min-width: 0; }
+/* max-content rows: in a fixed-height pane, auto rows let a scroll container (the focus chips) shrink to 0. */
+.pane { display: grid; grid-auto-rows: max-content; gap: 14px; align-content: start; min-width: 0; }
 
 .search-row { display: flex; gap: 8px; }
 .search {
@@ -259,6 +260,13 @@ kbd {
 }
 .search-clear::after { content: ""; position: absolute; inset: -6px; }
 .filter-btn { flex: none; padding: 10px 14px; }
+/* Focus chips: one line that scrolls sideways on narrow screens. */
+.focus-row {
+  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+  margin: -4px 0; padding: 4px 0; /* room for the chips' 44px tap targets */
+}
+.focus-row::-webkit-scrollbar { display: none; }
+.focus-row .chip { flex: none; }
 .filter-btn.on { background: var(--accent-soft); color: var(--accent); }
 
 .filters {

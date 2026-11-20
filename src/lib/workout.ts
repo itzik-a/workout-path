@@ -8,9 +8,12 @@ import { formatDose, formatSeconds } from "./format";
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 /** The catalog plus custom exercises that aren't deleted (deleted ones still resolve by id, for history). */
+const OFFERED = EXERCISES.filter((e) => !e.retired);
+
+/** What the catalog and the picker list: built-ins that aren't retired + custom ones that aren't deleted. */
 export const allExercises = (custom: Exercise[] = []) => {
   const live = custom.filter((e) => !e.deletedAt);
-  return live.length ? [...EXERCISES, ...live] : EXERCISES;
+  return live.length ? [...OFFERED, ...live] : OFFERED;
 };
 
 export const isCustom = (id: string) => id.startsWith("u-");
@@ -39,7 +42,10 @@ export function itemTitle(ex: Exercise | undefined, v: Variation | undefined): {
 }
 
 /** Dose fields to copy onto an item. */
-export const doseFields = (d: Dose) => ({ reps: d.reps, seconds: d.seconds, minutes: d.minutes, kg: d.kg });
+export const doseFields = (d: Dose) => ({ reps: d.reps, seconds: d.seconds, minutes: d.minutes, kg: d.kg, repeats: d.repeats, repeatRest: d.repeatRest });
+
+/** Holds per set for an item (1 unless it's an interval hold). */
+export const repeatsOf = (it: Pick<Item, "repeats">, mode: Mode) => (mode === "hold" && (it.repeats ?? 0) > 1 ? it.repeats! : 1);
 
 export function newItem(ex: Exercise, rest: number): Item {
   const v = ex.variations?.[0];
@@ -68,7 +74,8 @@ export const countItems = (w: Workout) => w.blocks.reduce((n, b) => n + b.items.
 export function estimateMinutes(w: Workout, custom?: Exercise[]): number {
   const work = (it: Item) => {
     const { mode } = itemParts(it, custom);
-    const one = mode === "reps" ? (it.reps ?? 0) * 3 : mode === "hold" ? it.seconds ?? 0 : (it.minutes ?? 0) * 60;
+    const n = repeatsOf(it, mode);
+    const one = mode === "reps" ? (it.reps ?? 0) * 3 : mode === "hold" ? n * (it.seconds ?? 0) + (n - 1) * (it.repeatRest ?? 0) : (it.minutes ?? 0) * 60;
     return it.perSide ? one * 2 : one;
   };
   let t = 0;

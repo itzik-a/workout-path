@@ -24,6 +24,29 @@ export type Region = "upper" | "lower" | "core" | "full";
  */
 export type Mode = "reps" | "hold" | "time";
 
+/**
+ * What an exercise trains, across sections (search + the focus chips above the list).
+ * An exercise can have several, e.g. a plank is strength and isometric.
+ */
+export type Focus = "strength" | "isometric" | "mobility" | "flexibility" | "cardio";
+
+export const FOCUS_LABEL: Record<Focus, string> = {
+  strength: "Strength",
+  isometric: "Isometric",
+  mobility: "Mobility",
+  flexibility: "Flexibility",
+  cardio: "Cardio",
+};
+
+/** Extra words the search box matches for each focus. */
+export const FOCUS_TERMS: Record<Focus, string[]> = {
+  strength: ["Strength", "Strengthening"],
+  isometric: ["Isometric", "Isometrics", "Static"],
+  mobility: ["Mobility"],
+  flexibility: ["Flexibility", "Stretch", "Stretches", "Stretching"],
+  cardio: ["Cardio", "Conditioning"],
+};
+
 export type Equipment =
   | "wall"
   | "mat"
@@ -94,6 +117,9 @@ export interface Dose {
   minutes?: number;
   /** Added weight in kg (kettlebell, weighted pull ups). */
   kg?: number;
+  /** Interval holds: each set is `repeats` holds of `seconds`, with `repeatRest` s between them. */
+  repeats?: number;
+  repeatRest?: number;
 }
 
 export interface Variation {
@@ -120,6 +146,11 @@ export interface Exercise {
   /** How-to videos for built-in exercises (shown on the exercise page and in the player). */
   links?: { url: string; label?: string }[];
   aliases?: string[];
+  /** Built-in exercise no longer offered: hidden from the catalog and picker, but kept so
+      workouts and history that use it still resolve. Never delete an exercise; retire it. */
+  retired?: boolean;
+  /** What it trains. Leave out to use the default from the section (see `focusOf`). */
+  focus?: Focus[];
   /** Custom exercises only (ids start with `u-`): last edit, and a soft delete like workouts. */
   updatedAt?: number;
   deletedAt?: number;
@@ -215,6 +246,7 @@ export const EXERCISES: Exercise[] = [
     id: "dog-flow",
     name: "Upward / downward dog",
     section: "mobility",
+    focus: ["mobility", "flexibility"],
     regions: ["full"],
     mode: "reps",
     dose: { sets: 1, reps: 8 },
@@ -229,6 +261,7 @@ export const EXERCISES: Exercise[] = [
     id: "glute-bridge",
     name: "Glute bridge / reverse tabletop",
     section: "mobility",
+    focus: ["mobility", "strength", "isometric"],
     regions: ["lower", "core"],
     mode: "reps",
     dose: { sets: 3, reps: 12 },
@@ -244,6 +277,7 @@ export const EXERCISES: Exercise[] = [
     id: "kneeling-backbend",
     name: "Kneeling backbend",
     section: "mobility",
+    focus: ["mobility", "flexibility"],
     regions: ["core", "upper"],
     mode: "hold",
     dose: { sets: 3, seconds: 20 },
@@ -254,6 +288,7 @@ export const EXERCISES: Exercise[] = [
     id: "hip-flexor-stretch",
     name: "Hip flexor stretch",
     section: "mobility",
+    focus: ["mobility", "flexibility"],
     regions: ["lower"],
     mode: "hold",
     perSide: true,
@@ -268,6 +303,7 @@ export const EXERCISES: Exercise[] = [
     id: "deep-squat-hold",
     name: "Deep squat hold",
     section: "mobility",
+    focus: ["mobility", "flexibility"],
     regions: ["lower"],
     mode: "hold",
     dose: { sets: 2, seconds: 60 },
@@ -341,6 +377,7 @@ export const EXERCISES: Exercise[] = [
     id: "wrist-flexor-stretch",
     name: "Wrist flexor stretch",
     section: "physio",
+    focus: ["flexibility"],
     regions: ["upper"],
     mode: "hold",
     perSide: true,
@@ -389,6 +426,7 @@ export const EXERCISES: Exercise[] = [
     id: "crane-stance",
     name: "Crane stance",
     section: "stances",
+    focus: ["isometric"],
     regions: ["lower", "core"],
     mode: "hold",
     perSide: true,
@@ -537,6 +575,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: "wall-push",
+    retired: true, // replaced by the Iso strap press
     name: "Wall push",
     section: "push",
     regions: ["upper"],
@@ -547,6 +586,7 @@ export const EXERCISES: Exercise[] = [
   },
   {
     id: "wall-push-back",
+    retired: true, // replaced by the Iso strap press
     name: "Wall push backwards",
     section: "push",
     regions: ["upper"],
@@ -567,6 +607,7 @@ export const EXERCISES: Exercise[] = [
       { id: "overhead", name: "Overhead (stand on the strap)" },
       { id: "chest", name: "Chest press (strap behind the back)" },
       { id: "lateral", name: "Lateral raise (stand on the strap)" },
+      { id: "press-back", name: "Straight-arm press back (strap under the front foot)" },
     ],
     cue: "Set the strap so the joint angle is where you want it, then build tension over 2 s and push as hard as you can.",
   },
@@ -653,6 +694,7 @@ export const EXERCISES: Exercise[] = [
     id: "cossack",
     name: "Cossack squat",
     section: "legs",
+    focus: ["strength", "mobility"],
     regions: ["lower"],
     mode: "reps",
     perSide: true,
@@ -670,8 +712,9 @@ export const EXERCISES: Exercise[] = [
     variations: [
       { id: "negative", name: "Negatives" },
       { id: "full", name: "Full" },
+      { id: "hold", name: "Hold (at a fixed angle)", mode: "hold", dose: { sets: 3, seconds: 10, repeats: 5, repeatRest: 5 } },
     ],
-    cue: "Ankles hooked under the bed, hips straight; lower as slowly as you can control.",
+    cue: "Ankles hooked under the bed, hips straight; lower as slowly as you can control. Hold: stop at the lowest angle you can keep still.",
   },
   {
     id: "reverse-nordic",
@@ -680,7 +723,11 @@ export const EXERCISES: Exercise[] = [
     regions: ["lower"],
     mode: "reps",
     dose: { sets: 3, reps: 8 },
-    cue: "Kneel tall, lean back in one line from knees to head, quads doing the work.",
+    variations: [
+      { id: "full", name: "Lean back and up" },
+      { id: "hold", name: "Hold (at a fixed angle)", mode: "hold", dose: { sets: 3, seconds: 10, repeats: 5, repeatRest: 5 } },
+    ],
+    cue: "Kneel tall, lean back in one line from knees to head, quads doing the work. Hold: stop at the deepest angle you can keep still.",
   },
   {
     id: "iso-deadlift",
@@ -749,6 +796,23 @@ export const EXERCISES: Exercise[] = [
     ],
     cue: "Arms locked, shoulders protracted and pushed forward past the hands.",
   },
+  {
+    id: "front-lever",
+    name: "Front lever",
+    section: "skills",
+    regions: ["upper", "core"],
+    mode: "hold",
+    equipment: ["pull-up-bar"],
+    dose: { sets: 5, seconds: 10 },
+    variations: [
+      { id: "tuck", name: "Tuck front lever", dose: { sets: 5, seconds: 15 } },
+      { id: "adv-tuck", name: "Advanced tuck (flat back)" },
+      { id: "one-leg", name: "One leg" },
+      { id: "straddle", name: "Straddle" },
+      { id: "full", name: "Full", dose: { sets: 5, seconds: 5 } },
+    ],
+    cue: "Arms locked, push the bar down toward your hips, shoulders down away from the ears; hips in line with the shoulders, glutes tight.",
+  },
 
   // ── Flexibility ────────────────────────────────────────────────
   {
@@ -804,6 +868,7 @@ export const EXERCISES: Exercise[] = [
     id: "jefferson-curl",
     name: "Jefferson curl",
     section: "flexibility",
+    focus: ["flexibility", "mobility"],
     regions: ["core", "lower"],
     mode: "reps",
     equipment: ["chair", "kettlebell"],
@@ -814,3 +879,20 @@ export const EXERCISES: Exercise[] = [
 
 export const exerciseById = (id: string) => EXERCISES.find((e) => e.id === id);
 export const sectionById = (id: SectionId) => SECTIONS.find((s) => s.id === id)!;
+
+const STRENGTH_SECTIONS: SectionId[] = ["stances", "core", "push", "pull", "legs", "skills"];
+
+/** What an exercise trains: its own `focus`, or else from its section. Isometric = it (or a
+    variation) is a static hold, outside cardio (timed work), mobility and flexibility (stretches);
+    physio rep work counts as strength, physio holds as isometric only. */
+export function focusOf(e: Pick<Exercise, "focus" | "section" | "mode" | "variations">): Focus[] {
+  if (e.focus) return e.focus;
+  const hold = e.mode === "hold" || !!e.variations?.some((v) => v.mode === "hold");
+  const out: Focus[] = [];
+  if (STRENGTH_SECTIONS.includes(e.section) || (e.section === "physio" && e.mode === "reps")) out.push("strength");
+  if (hold && (STRENGTH_SECTIONS.includes(e.section) || e.section === "physio")) out.push("isometric");
+  if (e.section === "mobility") out.push("mobility");
+  if (e.section === "flexibility") out.push("flexibility");
+  if (e.section === "cardio") out.push("cardio");
+  return out;
+}

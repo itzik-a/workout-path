@@ -94,6 +94,7 @@ function stepTitle(st: WorkStep, custom: Exercise[]) {
 function stepContext(st: WorkStep) {
   const parts = [st.group ? `Round ${st.set} of ${st.sets}` : `Set ${st.set} of ${st.sets}`];
   if (st.group) parts.push(`${GROUP_LABEL[st.group.kind]} ${st.group.i}/${st.group.n}`);
+  if (st.rep) parts.push(`${st.override ? "Interval" : "Hold"} ${st.rep.i} of ${st.rep.n}`);
   if (st.side) parts.push(st.side === "left" ? "Left side" : "Right side");
   return parts.join(" · ");
 }
@@ -333,13 +334,26 @@ export function groupSets(sets: SetLog[], custom: Exercise[]) {
   return [...groups.values()];
 }
 
-/** "12, 12, 10 reps · 12 kg", "45 s, 30 s", "20 min, skipped". */
+/** "12, 12, 10 reps · 12 kg", "45 s, 30 s", "20 min, skipped"; interval holds per set: "5 × 10 s, (10 s, 10 s, 6 s)". */
 export function setsLine(mode: string, sets: SetLog[]) {
-  const vals = sets.map((x) =>
+  const one = (x: SetLog) =>
     x.skipped ? "skipped"
     : mode === "reps" ? `${x.reps ?? 0}`
     : mode === "hold" ? formatSeconds(x.seconds ?? 0)
-    : `${x.minutes ?? 0} min`);
+    : `${x.minutes ?? 0} min`;
+  // The holds of one interval set (same item, set and side) read as one entry.
+  const runs: SetLog[][] = [];
+  for (const x of sets) {
+    const prev = runs.at(-1)?.[0];
+    if (x.rep && prev?.rep && prev.itemId === x.itemId && prev.set === x.set && prev.side === x.side) runs.at(-1)!.push(x);
+    else runs.push([x]);
+  }
+  const vals = runs.map((r) => {
+    if (r.length === 1) return one(r[0]);
+    const v = r.map(one);
+    if (v.every((y) => y === "skipped")) return "skipped";
+    return v.every((y) => y === v[0]) ? `${r.length} × ${v[0]}` : `(${v.join(", ")})`;
+  });
   if (mode === "reps") {
     const i = vals.map((v) => v !== "skipped").lastIndexOf(true);
     if (i >= 0) vals[i] += " reps";

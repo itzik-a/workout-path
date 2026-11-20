@@ -5,7 +5,7 @@
 import type { Mode } from "../data/catalog";
 import type { Exercise } from "../data/catalog";
 import type { SetLog, Workout } from "../state/store";
-import { itemParts } from "./workout";
+import { itemParts, repeatsOf } from "./workout";
 
 export interface WorkStep {
   kind: "work";
@@ -23,6 +23,8 @@ export interface WorkStep {
   /** set number (single exercise) or round number (group) */
   set: number;
   sets: number;
+  /** interval holds: hold i of n in this set */
+  rep?: { i: number; n: number };
   group?: { kind: "superset" | "circuit"; i: number; n: number };
 }
 export interface RestStep { kind: "rest"; seconds: number; label: string }
@@ -62,12 +64,17 @@ export function buildSteps(w: Workout, custom?: Exercise[]): Step[] {
       const { mode, base } = itemParts(it, custom);
       const override = mode !== base ? mode : undefined;
       const sides = it.perSide ? (["left", "right"] as const) : [undefined];
+      const n = repeatsOf(it, mode);
       sides.forEach((side, si) => {
         if (si && mode !== "reps") rest(SWITCH_SIDES_S, "Switch sides");
-        steps.push({
-          kind: "work", itemId: it.id, exerciseId: it.exerciseId, variationId: it.variationId, mode, override,
-          reps: it.reps, seconds: it.seconds, minutes: it.minutes, kg: it.kg, side, set, sets, group,
-        });
+        for (let k = 1; k <= n; k++) {
+          if (k > 1) rest(it.repeatRest ?? 0, "Short rest");
+          steps.push({
+            kind: "work", itemId: it.id, exerciseId: it.exerciseId, variationId: it.variationId, mode, override,
+            reps: it.reps, seconds: it.seconds, minutes: it.minutes, kg: it.kg, side, set, sets, group,
+            rep: n > 1 ? { i: k, n } : undefined,
+          });
+        }
       });
     };
     if (b.kind === "straight") {
@@ -131,7 +138,7 @@ export function enter(r: Run, i: number, at: number, how: How) {
 function log(r: Run, i: number, patch: Partial<SetLog>) {
   const s = r.steps[i];
   if (s?.kind !== "work") return;
-  const entry: SetLog = { itemId: s.itemId, exerciseId: s.exerciseId, variationId: s.variationId, set: s.set, side: s.side, kg: s.kg, mode: s.override, ...patch };
+  const entry: SetLog = { itemId: s.itemId, exerciseId: s.exerciseId, variationId: s.variationId, set: s.set, side: s.side, kg: s.kg, mode: s.override, rep: s.rep?.i, ...patch };
   for (const k of Object.keys(entry) as (keyof SetLog)[]) if (entry[k] === undefined) delete entry[k];
   r.logs[i] = entry;
 }
