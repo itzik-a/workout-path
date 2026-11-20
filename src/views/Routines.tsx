@@ -7,17 +7,17 @@ import { useDragSort } from "../lib/useDragSort";
 import { liveWorkouts } from "../state/actions";
 import {
   addToRotation, createRoutine, deleteRoutine, duplicateRoutine, moveInRotation, removeFromRotation, renameRoutine,
-  restoreRoutine, setActiveRoutine, setRotationNext, setRoutineDay, setRoutineKind,
+  restoreRoutine, setFollowing, setRotationNext, setRoutineDay, setRoutineKind,
 } from "../state/actions";
 import { getState, useAppState, type AppState, type Routine } from "../state/store";
 
 export const routineName = (r: Routine) => r.name.trim() || "Untitled routine";
 
 function deleteWithUndo(r: Routine) {
-  const wasActive = getState().activeRoutine === r.id;
+  const wasFollowed = getState().following.includes(r.id);
   const snap = structuredClone(r);
   deleteRoutine(r.id);
-  showToast(`Deleted ${routineName(r)}`, { label: "Undo", run: () => restoreRoutine(snap, wasActive) });
+  showToast(`Deleted ${routineName(r)}`, { label: "Undo", run: () => restoreRoutine(snap, wasFollowed) });
 }
 
 export function newRoutine() {
@@ -36,7 +36,7 @@ function RoutineList() {
       <div className="page-head page-head-row">
         <div>
           <h1 className="display">Routines</h1>
-          <p className="muted small">{list.length ? "The one you follow decides what Today shows." : "Put your workouts on a schedule"}</p>
+          <p className="muted small">{list.length ? "Every routine you follow shows on Today." : "Put your workouts on a schedule"}</p>
         </div>
         {list.length > 0 && <button type="button" className="btn primary" onClick={newRoutine}><IconPlus /> New</button>}
       </div>
@@ -50,7 +50,7 @@ function RoutineList() {
       ) : (
         <ul className="workout-list">
           {list.map((r) => {
-            const active = s.activeRoutine === r.id;
+            const active = s.following.includes(r.id);
             return (
               <li key={r.id} className={`card workout-card routine-card${active ? " active" : ""}`}>
                 <a className="workout-link" href={`#routines/${r.id}`}>
@@ -63,8 +63,8 @@ function RoutineList() {
                   label={`More for ${routineName(r)}`}
                   items={[
                     active
-                      ? { label: "Stop following", onSelect: () => setActiveRoutine(undefined) }
-                      : { label: "Follow this routine", onSelect: () => setActiveRoutine(r.id) },
+                      ? { label: "Stop following", onSelect: () => setFollowing(r.id, false) }
+                      : { label: "Follow this routine", onSelect: () => setFollowing(r.id, true) },
                     { label: "Duplicate", onSelect: () => { duplicateRoutine(r.id); showToast(`Duplicated ${routineName(r)}`); } },
                     { label: "Delete", danger: true, onSelect: () => deleteWithUndo(r) },
                   ]}
@@ -89,7 +89,7 @@ function RoutineEditor({ id }: { id: string }) {
       </div>
     );
   }
-  const active = s.activeRoutine === r.id;
+  const active = s.following.includes(r.id);
   const workouts = liveWorkouts(s);
 
   return (
@@ -107,7 +107,7 @@ function RoutineEditor({ id }: { id: string }) {
         <Menu
           label="Routine options"
           items={[
-            { label: "Stop following", hidden: !active, onSelect: () => setActiveRoutine(undefined) },
+            { label: "Stop following", hidden: !active, onSelect: () => setFollowing(r.id, false) },
             { label: "Duplicate routine", onSelect: () => { const nid = duplicateRoutine(r.id); if (nid) { location.hash = `#routines/${nid}`; showToast("Duplicated. You're editing the copy."); } } },
             { label: "Delete routine", danger: true, onSelect: () => { location.hash = "#routines"; deleteWithUndo(r); } },
           ]}
@@ -124,7 +124,7 @@ function RoutineEditor({ id }: { id: string }) {
         {active ? (
           <span className="tag accent following"><IconCheck /> Following · shows on Today</span>
         ) : (
-          <button type="button" className="btn sm primary" onClick={() => setActiveRoutine(r.id)}>Follow this routine</button>
+          <button type="button" className="btn sm primary" onClick={() => setFollowing(r.id, true)}>Follow this routine</button>
         )}
       </div>
       <p className="muted small">

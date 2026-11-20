@@ -3,7 +3,7 @@ import type { Equipment, Exercise } from "../data/catalog";
 import { TIMED_DEFAULT_S, cloneWorkout, defaultName, doseFields, fromTemplate, getExercise, newItem, tidy, uid } from "../lib/workout";
 import type { Template } from "../data/templates";
 import type { Suggestion } from "../lib/progress";
-import { activeRoutine, liveRoutines, rotationNext } from "../lib/routine";
+import { followedRoutines, liveRoutines, rotationNext } from "../lib/routine";
 import { getState, update, type AppState, type Block, type Item, type Routine, type Session, type Workout } from "./store";
 
 export function toggleEquipment(e: Equipment) {
@@ -219,8 +219,10 @@ export const deleteBlock = (workoutId: string, blockId: string) =>
 export function addSession(session: Session) {
   update((s) => {
     s.sessions.push(session);
-    const r = activeRoutine(s);
-    if (r?.kind === "rotation" && session.sets.some((x) => !x.skipped)) {
+    if (!session.sets.some((x) => !x.skipped)) return;
+    // Every followed rotation whose next workout this was moves on.
+    for (const r of followedRoutines(s)) {
+      if (r.kind !== "rotation") continue;
       const nx = rotationNext(s, r);
       if (nx && nx.w.id === session.workoutId) { r.pos = (nx.i + 1) % (r.order?.length || 1); r.updatedAt = Date.now(); }
     }
@@ -246,7 +248,7 @@ export function createRoutine(): string {
   update((s) => {
     const n = liveRoutines(s).length;
     s.routines.push({ id, name: n ? `Routine ${n + 1}` : "My routine", kind: "weekly", days: Array(7).fill(null), order: [], pos: 0, updatedAt: Date.now() });
-    if (!activeRoutine(s)) s.activeRoutine = id;
+    if (!followedRoutines(s).length) s.following = [...s.following, id];
   });
   return id;
 }
@@ -286,7 +288,11 @@ export function moveInRotation(id: string, from: number, to: number) {
 export const setRotationNext = (id: string, i: number) =>
   editRoutine(id, (r) => { const n = r.order?.length ?? 0; r.pos = n ? ((i % n) + n) % n : 0; });
 
-export const setActiveRoutine = (id: string | undefined) => update((s) => { s.activeRoutine = id; });
+/** Follow a routine (shows on Today), or stop following it. */
+export const setFollowing = (id: string, on: boolean) => update((s) => {
+  s.following = s.following.filter((x) => x !== id);
+  if (on) s.following.push(id);
+});
 
 export function duplicateRoutine(id: string): string | undefined {
   const src = getState().routines.find((r) => r.id === id);
@@ -303,17 +309,17 @@ export function deleteRoutine(id: string) {
     if (!r) return;
     r.deletedAt = Date.now();
     r.updatedAt = Date.now();
-    if (s.activeRoutine === id) s.activeRoutine = undefined;
+    s.following = s.following.filter((x) => x !== id);
   });
 }
 
-export function restoreRoutine(snapshot: Routine, wasActive: boolean) {
+export function restoreRoutine(snapshot: Routine, wasFollowed: boolean) {
   update((s) => {
     const r: Routine = { ...structuredClone(snapshot), updatedAt: Date.now() };
     delete r.deletedAt;
     const i = s.routines.findIndex((x) => x.id === r.id);
     if (i >= 0) s.routines[i] = r; else s.routines.push(r);
-    if (wasActive) s.activeRoutine = r.id;
+    if (wasFollowed && !s.following.includes(r.id)) s.following = [...s.following, r.id];
   });
 }
 

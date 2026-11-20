@@ -115,6 +115,9 @@ export interface AppState {
   exerciseNotes: Record<string, ExerciseNote>;
   workouts: Workout[];
   routines: Routine[];
+  /** routines that show on Today, in the order they were followed */
+  following: string[];
+  /** before several routines could be followed: the one followed (read by normalize() only) */
   activeRoutine?: string;
   sessions: Session[];
   /** deleted sessions, so a delete sticks after sync */
@@ -134,6 +137,7 @@ export function defaults(): AppState {
     exerciseNotes: {},
     workouts: [],
     routines: [],
+    following: [],
     sessions: [],
     sessionsDeleted: [],
     settings: { restDefault: 60, beeps: true, theme: "system", equipment: [...HOME_EQUIPMENT] },
@@ -153,7 +157,7 @@ export function normalize(s: unknown): AppState {
     exerciseNotes: x.exerciseNotes && typeof x.exerciseNotes === "object" ? x.exerciseNotes : {},
     workouts: arr(x.workouts),
     routines: arr(x.routines),
-    activeRoutine: x.activeRoutine,
+    following: Array.isArray(x.following) ? x.following.filter((id): id is string => typeof id === "string") : x.activeRoutine ? [x.activeRoutine] : [],
     sessions: arr(x.sessions),
     sessionsDeleted: arr<Tombstone | string>(x.sessionsDeleted).map((t) => (typeof t === "string" ? { id: t, at: 0 } : t)),
     settings: { ...d.settings, ...(x.settings || {}) },

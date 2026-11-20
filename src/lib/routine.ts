@@ -29,7 +29,11 @@ export const liveWorkout = (s: AppState, id?: string | null): Workout | undefine
 
 export const liveRoutines = (s: AppState) => s.routines.filter((r) => !r.deletedAt);
 
-export const activeRoutine = (s: AppState) => liveRoutines(s).find((r) => r.id === s.activeRoutine);
+/** Followed routines (not deleted), in the order they were followed. */
+export const followedRoutines = (s: AppState) =>
+  s.following.map((id) => s.routines.find((r) => r.id === id && !r.deletedAt)).filter((r): r is Routine => !!r);
+
+export const isFollowed = (s: AppState, id: string) => s.following.includes(id);
 
 /** The rotation's next workout: `pos`, moved forward past workouts that were deleted. */
 export function rotationNext(s: AppState, r: Routine): { i: number; w: Workout } | undefined {
@@ -58,9 +62,10 @@ export interface TodayPlan {
   rotation?: { i: number; n: number };
 }
 
-export function todayPlan(s: AppState, now = new Date()): TodayPlan | null {
-  const r = activeRoutine(s);
-  if (!r) return null;
+/** What each followed routine says to do today. */
+export const todayPlans = (s: AppState, now = new Date()): TodayPlan[] => followedRoutines(s).map((r) => todayPlan(s, r, now));
+
+export function todayPlan(s: AppState, r: Routine, now = new Date()): TodayPlan {
   const today = s.sessions.filter((x) => x.date === dateStr(now)).sort((a, b) => b.startedAt - a.startedAt);
   if (r.kind === "weekly") {
     const d = weekday(now);

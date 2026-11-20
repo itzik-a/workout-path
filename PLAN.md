@@ -44,7 +44,7 @@ Progression ladders (`src/data/progressions.ts`) cover 12 exercises: planche, L 
 
 Tabs: **Today · Workouts · Routines · Catalog · History**
 
-- **Today**: the followed routine's workout for today (weekly) or next (rotation) with Start; rest days show what's next; done today shows a check. Week or rotation strip, quick start for every workout, last workout.
+- **Today**: for each followed routine (several can be followed, e.g. isometrics + cardio), its workout for today (weekly) or next (rotation) with Start; rest days show what's next; done today shows a check. Week or rotation strip, quick start for every workout, last workout.
 - **Catalog**: sections as groups, search, filters (region, mode, equipment, section), New custom exercise. Exercise page: cue, variations, default dose, progression ladder, my notes & links, my history and best.
 - **Workouts**: list + builder, or start from a template. Add exercises from the catalog (picker with the same filters), pick variation, edit dose, reorder (drag on Mac, handle on iPhone), group into superset / circuit blocks, duplicate a workout. Suggestions ("Ready for 50 s", "Ready for Advanced tuck") under items.
 - **Routines**: weekly or rotation schedule built from workouts; one routine is followed.
@@ -76,7 +76,7 @@ Tabs: **Today · Workouts · Routines · Catalog · History**
   exerciseNotes: Record<exerciseId, { note?, links?: { url, label? }[], updatedAt }>,
   workouts: { id, name, blocks: Block[], updatedAt, deletedAt? }[],
   routines: { id, name, kind: "weekly" | "rotation", days?, order?, pos?, updatedAt, deletedAt? }[],
-  activeRoutine?: string,
+  following: string[],   // followed routine ids (was activeRoutine?: string)
   sessions: { id, workoutId, workoutName?, date, startedAt, endedAt, sets: SetLog[], note?, rpe?, updatedAt? }[],
   sessionsDeleted: { id, at }[],
   settings: { restDefault, beeps, theme, equipment: Equipment[] },

@@ -1,8 +1,8 @@
-/* Today: what the followed routine says to do, quick start for any workout, last workout. */
+/* Today: what each followed routine says to do, quick start for any workout, last workout. */
 import { useEffect, useState } from "react";
 import { IconCheck, IconPlay } from "../components/Icons";
 import { formatDuration } from "../lib/format";
-import { relativeDay, rotationNext, todayPlan, weekStrip, liveWorkout, type TodayPlan } from "../lib/routine";
+import { relativeDay, rotationNext, todayPlans, weekStrip, liveWorkout, type TodayPlan } from "../lib/routine";
 import { getExercise, workoutSummary } from "../lib/workout";
 import { liveWorkouts, setRotationNext } from "../state/actions";
 import { useAppState, type AppState, type Session, type Workout } from "../state/store";
@@ -21,7 +21,7 @@ export function Today() {
   }, []);
 
   const now = new Date();
-  const plan = todayPlan(s, now);
+  const plans = todayPlans(s, now);
   const workouts = liveWorkouts(s);
   const last = [...s.sessions].sort((a, b) => b.startedAt - a.startedAt)[0];
 
@@ -32,7 +32,7 @@ export function Today() {
         <h1 className="display">Today</h1>
       </div>
 
-      {plan ? <PlanCard s={s} plan={plan} /> : <NoRoutine hasWorkouts={workouts.length > 0} />}
+      {plans.length ? plans.map((p) => <PlanCard key={p.routine.id} s={s} plan={p} />) : <NoRoutine hasWorkouts={workouts.length > 0} />}
 
       {workouts.length > 0 && (
         <section className="group" aria-labelledby="qs-title">

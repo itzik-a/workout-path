@@ -4,7 +4,7 @@
    - sessions: union by id, minus deleted ones; a delete only wins over a session
      not touched after it (so Undo after a sync still restores)
    - notes and links per exercise: the copy edited last wins
-   - settings and the followed routine: from whichever whole copy changed last
+   - settings and the followed routines (`following`): from whichever whole copy changed last
    Only type imports here, so the merge can be tested on its own. */
 import type { AppState, Session, Tombstone } from "../state/store";
 
