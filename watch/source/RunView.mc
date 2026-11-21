@@ -22,7 +22,7 @@ class RunView extends WatchUi.View {
         dc.clear();
         if (_r.phase == :ready) {
             drawReady(dc);
-        } else if (_r.phase == :run) {
+        } else if (_r.phase == :run || _r.phase == :paused) {
             drawStep(dc);
         } else {
             drawDone(dc);
@@ -57,7 +57,7 @@ class RunView extends WatchUi.View {
         }
 
         var hr = Activity.getActivityInfo().currentHeartRate;
-        var top = (_r.index + 1) + " / " + _r.steps.size() + (hr != null ? "   HR " + hr : "");
+        var top = _r.phase == :paused ? "Paused" : (_r.index + 1) + " / " + _r.steps.size() + (hr != null ? "   HR " + hr : "");
         text(dc, x, h * 0.16, Graphics.FONT_XTINY, DIM, top);
 
         var name = st[:name] as String;
@@ -90,7 +90,7 @@ class RunView extends WatchUi.View {
         text(dc, x, h * 0.28, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE, "Done");
         text(dc, x, h * 0.42, Graphics.FONT_SMALL, DIM, clock((_r.finishedAt - _r.startedAt) / 1000));
         text(dc, x, h * 0.60, Graphics.FONT_SMALL, ACCENT, "START  save");
-        text(dc, x, h * 0.72, Graphics.FONT_SMALL, DIM, "BACK  discard");
+        text(dc, x, h * 0.72, Graphics.FONT_SMALL, DIM, "BACK  more");
     }
 
     private function text(dc as Graphics.Dc, x as Numeric, y as Numeric, font as Graphics.FontType, colour as Number, s as String) as Void {

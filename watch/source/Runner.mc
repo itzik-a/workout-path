@@ -20,6 +20,9 @@ class Runner {
     var startedAt as Number = 0;
     var finishedAt as Number = 0;
     var downloadText as String = "Download: waiting";
+    // while paused: when it started, and what was left of a timed step
+    private var _pausedAt as Number = 0;
+    private var _leftMs as Number? = null;
 
     private var _session as ActivityRecording.Session?;
     private var _fStep as FitContributor.Field?;
@@ -42,7 +45,7 @@ class Runner {
     // Seconds left in a timed step (rounded up, so 0 only at the end).
     function left() as Number {
         if (endsAt == null) { return 0; }
-        var ms = (endsAt as Number) - System.getTimer();
+        var ms = phase == :paused && _leftMs != null ? _leftMs as Number : (endsAt as Number) - System.getTimer();
         return ms <= 0 ? 0 : (ms + 999) / 1000;
     }
 
@@ -59,14 +62,15 @@ class Runner {
         }
     }
 
-    // BACK: leave the start screen; end the workout early; on the end screen, discard.
+    // BACK: leave the start screen; during the workout, pause and open the menu (Resume / Save /
+    // Discard), so a press by mistake costs nothing; on the end screen, the menu without Resume.
     function onBack() as Boolean {
         if (phase == :ready) { return false; }
         if (phase == :run) {
-            finish();
+            pause();
+            openMenu(self, true);
         } else if (phase == :done) {
-            discard();
-            System.exit();
+            openMenu(self, false);
         }
         return true;
     }
@@ -129,6 +133,40 @@ class Runner {
         s.addLap();
     }
 
+    // Freeze the step and pause the recording (its timer stops, as with Garmin's own pause).
+    function pause() as Void {
+        if (phase != :run) { return; }
+        _timer.stop();
+        _pausedAt = System.getTimer();
+        _leftMs = endsAt != null ? (endsAt as Number) - _pausedAt : null;
+        var s = _session;
+        if (s != null && s.isRecording()) { s.stop(); }
+        phase = :paused;
+        WatchUi.requestUpdate();
+    }
+
+    // Go on with the same step: the time away doesn't count, a timed step keeps what it had left.
+    function resume() as Void {
+        if (phase != :paused) { return; }
+        var now = System.getTimer(), away = now - _pausedAt;
+        stepStart += away;
+        startedAt += away;
+        endsAt = _leftMs != null ? now + (_leftMs as Number) : null;
+        var s = _session;
+        if (s != null && !s.isRecording()) { s.start(); }
+        phase = :run;
+        _timer.start(method(:tick), 250, true);
+        WatchUi.requestUpdate();
+    }
+
+    // End early from the pause menu (Save / Discard).
+    function end() as Void {
+        if (phase == :paused) {
+            finishedAt = _pausedAt;
+            phase = :done;
+        }
+    }
+
     private function finish() as Void {
         if (phase != :run) { return; }
         _timer.stop();
@@ -148,7 +186,7 @@ class Runner {
         _session = null;
     }
 
-    private function discard() as Void {
+    function discard() as Void {
         var s = _session;
         if (s == null) { return; }
         if (s.isRecording()) { s.stop(); }

@@ -24,3 +24,22 @@ function clockFormats(logger as Test.Logger) as Boolean {
     Test.assertEqual(clock(600), "10:00");
     return true;
 }
+
+(:test)
+function pauseKeepsTheStepAndTimeLeft(logger as Test.Logger) as Boolean {
+    var r = new Runner(sampleWorkout());
+    r.onStart(); // begin: step 1 is a 20 s hold
+    var before = r.left();
+    r.pause();
+    Test.assertEqual(r.phase, :paused);
+    Test.assertEqual(r.left(), before);
+    r.resume();
+    Test.assertEqual(r.phase, :run);
+    Test.assertEqual(r.index, 0);
+    Test.assert(r.left() >= before - 1);
+    r.pause();
+    r.end();
+    Test.assertEqual(r.phase, :done);
+    r.discard();
+    return true;
+}

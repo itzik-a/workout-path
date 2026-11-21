@@ -1,0 +1,20 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:454px;height:454px;background:#000;overflow:hidden}
+body{font-family:-apple-system,"Helvetica Neue",sans-serif;color:#fff}
+.face{position:relative;width:454px;height:454px;border-radius:50%;background:#000;overflow:hidden}
+.t{position:absolute;left:0;right:0;text-align:center;transform:translateY(-50%)}
+.dim{color:#9a9a9a}.acc{color:#E8661C}.rest{color:#4FA3E0}
+.xt{font-size:21px}.sm{font-size:30px;font-weight:600}.md{font-size:38px;font-weight:700}.big{font-size:118px;font-weight:700;font-variant-numeric:tabular-nums}
+.cue{left:64px;right:64px;line-height:1.2}
+svg{position:absolute;inset:0}
+</style></head><body><div class="face" id="f"></div>
+<script>
+const s=location.hash.slice(1);
+const T=(y,c,txt)=>`<div class="t ${c}" style="top:${y*454}px">${txt}</div>`;
+const ring=(frac,col)=>`<svg viewBox="0 0 454 454"><circle cx="227" cy="227" r="219" fill="none" stroke="#262626" stroke-width="10"/><circle cx="227" cy="227" r="219" fill="none" stroke="${col}" stroke-width="10" stroke-dasharray="${2*Math.PI*219*frac} 9999" transform="rotate(-90 227 227)"/></svg>`;
+const f=document.getElementById('f');
+if(s==='ready') f.innerHTML=T(.26,'md','Workout Path')+T(.40,'sm dim','Test · 5 steps')+T(.54,'xt dim','Download OK: 2022 chars')+T(.72,'sm acc','START to begin');
+if(s==='hold') f.innerHTML=ring(14/20,'#E8661C')+T(.16,'xt dim','1 / 5 &nbsp; HR 112')+T(.30,'md','Active hang')+T(.48,'big','14')+T(.74,'xt cue','Pull the shoulders down, away from the ears')+T(.88,'xt dim','Next: Rest 15');
+if(s==='reps') f.innerHTML=T(.16,'xt dim','3 / 5 &nbsp; HR 124')+T(.30,'md','Push up · Standard')+T(.48,'big','8')+T(.62,'xt dim','reps · START when done')+T(.74,'xt cue','Body in one line, chest to the floor')+T(.88,'xt dim','Next: Rest 10');
+if(s==='done') f.innerHTML=T(.28,'md','Done')+T(.42,'sm dim','1:24')+T(.60,'sm acc','START &nbsp;save')+T(.72,'sm dim','BACK &nbsp;discard');
+</script></body></html>
