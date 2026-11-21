@@ -20,22 +20,34 @@ function fitBytes(s as String, max as Number) as String {
     return s.substring(0, n) as String;
 }
 
+// Get-ready time before a timed set (as in the web player): 3 s when it starts the workout, 5 s when it follows
+// another set with no rest between; none after a rest (the rest's 3-2-1 is the get-ready).
+const LEAD_FIRST_MS = 3000;
+const LEAD_AFTER_SET_MS = 5000;
+
 class Runner {
-    // :ready (start screen) → :run → :done (save or discard)
+    // :ready (start screen) → :run ⇄ :paused → :done (save or discard)
     var phase as Symbol = :ready;
     var steps as Array<Step>;
     var index as Number = 0;
-    // System.getTimer() ms: when the current step started, and when a timed one ends
+    var title as String;
+    // System.getTimer() ms. A timed step (hold, time, rest) ends at endsAt: `lead` ms of get-ready, then `dur` ms.
     var stepStart as Number = 0;
     var endsAt as Number? = null;
+    var dur as Number = 0;
+    var lead as Number = 0;
+    // a reps step: the count shown (the target; UP / DOWN change it), recorded on the lap
+    var reps as Number? = null;
     var startedAt as Number = 0;
     var finishedAt as Number = 0;
-    var title as String;
-    // while paused: when it started, and what was left of a timed step
-    private var _pausedAt as Number = 0;
     // Paused by hold() (something covered the screen), not by me: the recording goes on, and it resumes by itself.
     var held as Boolean = false;
+    // while paused: when it started, and what was left of a timed step
+    private var _pausedAt as Number = 0;
     private var _leftMs as Number? = null;
+    // the last 3-2-1 second beeped, and whether the get-ready was still on at the last tick
+    private var _beeped as Number = -1;
+    private var _wasLead as Boolean = false;
 
     private var _session as ActivityRecording.Session?;
     private var _fStep as FitContributor.Field?;
@@ -56,20 +68,49 @@ class Runner {
         return index + 1 < steps.size() ? steps[index + 1] : null;
     }
 
-    // Seconds left in a timed step (rounded up, so 0 only at the end).
-    function left() as Number {
+    // ms left until endsAt (frozen while paused)
+    private function leftMs() as Number {
         if (endsAt == null) { return 0; }
         var ms = phase == :paused && _leftMs != null ? _leftMs as Number : (endsAt as Number) - System.getTimer();
-        return ms <= 0 ? 0 : (ms + 999) / 1000;
+        return ms < 0 ? 0 : ms;
+    }
+
+    // In the get-ready before a timed set.
+    function inLead() as Boolean {
+        return endsAt != null && lead > 0 && leftMs() > dur;
+    }
+
+    // Seconds on the big countdown: the get-ready's, else the step's (rounded up, so 0 only at the end).
+    function left() as Number {
+        var ms = leftMs();
+        if (inLead()) { ms -= dur; }
+        return (ms + 999) / 1000;
+    }
+
+    // How much of the countdown is left, 1 → 0, for the ring.
+    function fraction() as Float {
+        if (endsAt == null) { return 0.0; }
+        var ms = leftMs();
+        if (inLead()) { return (ms - dur).toFloat() / lead; }
+        return dur > 0 ? ms.toFloat() / dur : 0.0;
     }
 
     // ── Buttons ─────────────────────────────────────────────
-    // START: begin; end a reps step; skip a timed step or rest; on the end screen, save.
+    // START: begin; end a reps set; during a get-ready, go now; skip a timed set or rest; on the end screen, save.
     function onStart() as Void {
         if (phase == :ready) {
             begin();
         } else if (phase == :run) {
-            endStep();
+            if (inLead()) {
+                var now = System.getTimer();
+                lead = now - stepStart; // the get-ready as it was, so the lap's hold time stays right
+                endsAt = now + dur;
+                _wasLead = false;
+                go();
+                WatchUi.requestUpdate();
+            } else {
+                endStep();
+            }
         } else if (phase == :paused) {
             resume();
         } else if (phase == :done) {
@@ -90,8 +131,8 @@ class Runner {
         return true;
     }
 
-    // BACK: leave the start screen; during the workout (or paused by a tap), pause and open the menu (Resume / Save /
-    // Discard), so a press by mistake costs nothing; on the end screen, the menu without Resume.
+    // BACK: leave the start screen; during the workout (or paused by a tap), pause and open the menu (Resume / Skip /
+    // Previous / Save / Discard), so a press by mistake costs nothing; on the end screen, the menu without those.
     function onBack() as Boolean {
         if (phase == :ready) { return false; }
         if (phase == :run || phase == :paused) {
@@ -100,6 +141,15 @@ class Runner {
         } else if (phase == :done) {
             openMenu(self, false);
         }
+        return true;
+    }
+
+    // UP / DOWN on a reps set: I did more or fewer. False = not a reps set (the key does its usual thing).
+    function adjust(by as Number) as Boolean {
+        if ((phase != :run && phase != :paused) || reps == null) { return false; }
+        var n = (reps as Number) + by;
+        reps = n < 0 ? 0 : n;
+        WatchUi.requestUpdate();
         return true;
     }
 
@@ -123,19 +173,44 @@ class Runner {
     }
 
     private function startStep() as Void {
-        stepStart = System.getTimer();
-        var secs = step()[:secs];
-        endsAt = secs != null ? stepStart + (secs as Number) * 1000 : null;
-        buzz();
+        var st = step();
+        var now = System.getTimer();
+        stepStart = now;
+        var secs = st[:secs];
+        var work = st[:kind] == :work;
+        lead = 0;
+        if (work && secs != null) {
+            var prev = index > 0 ? steps[index - 1] : null;
+            lead = prev == null ? LEAD_FIRST_MS : prev[:kind] == :work ? LEAD_AFTER_SET_MS : 0;
+        }
+        dur = secs != null ? (secs as Number) * 1000 : 0;
+        endsAt = secs != null ? now + lead + dur : null;
+        reps = st[:reps];
+        _beeped = -1;
+        _wasLead = lead > 0;
+        if (work && lead == 0) { go(); } else if (lead > 0) { nudge(); }
         WatchUi.requestUpdate();
     }
 
     function tick() as Void {
-        if (phase == :run && endsAt != null && System.getTimer() >= (endsAt as Number)) {
-            endStep();
-        } else {
-            WatchUi.requestUpdate();
+        if (phase != :run) { return; }
+        if (endsAt != null) {
+            var ms = (endsAt as Number) - System.getTimer();
+            if (ms <= 0) {
+                if (step()[:kind] == :work) { setDone(); }
+                endStep();
+                return;
+            }
+            var lead_ = inLead();
+            if (_wasLead && !lead_) { go(); }
+            _wasLead = lead_;
+            // 3-2-1 before a get-ready or a rest ends
+            if (lead_ || step()[:kind] == :rest) {
+                var s = ((lead_ ? ms - dur : ms) + 999) / 1000;
+                if (s <= 3 && s != _beeped) { _beeped = s; countBeep(); }
+            }
         }
+        WatchUi.requestUpdate();
     }
 
     // Close the step's lap with my numbers, then go on (or finish after the last).
@@ -149,15 +224,23 @@ class Runner {
         }
     }
 
+    // Back one step (from the pause menu): this one's lap closes as it is, and the one before starts again.
+    function back() as Void {
+        resume();
+        if (phase != :run) { return; }
+        lap();
+        if (index > 0) { index -= 1; }
+        startStep();
+    }
+
     private function lap() as Void {
         var s = _session;
         if (s == null) { return; }
         var st = step();
-        var secs = (System.getTimer() - stepStart) / 1000;
-        var reps = st[:reps];
+        var worked = (System.getTimer() - stepStart - lead) / 1000;
         (_fStep as FitContributor.Field).setData(fitBytes(st[:name] as String, STEP_BYTES - 1));
         (_fReps as FitContributor.Field).setData(reps != null ? reps as Number : 0);
-        (_fHold as FitContributor.Field).setData(st[:kind] == :work && reps == null ? secs : 0);
+        (_fHold as FitContributor.Field).setData(st[:kind] == :work && reps == null && worked > 0 ? worked : 0);
         s.addLap();
     }
 
@@ -234,7 +317,7 @@ class Runner {
         if (s != null && s.isRecording()) { s.stop(); }
         finishedAt = System.getTimer();
         phase = :done;
-        buzz();
+        signal(Attention.TONE_SUCCESS, 100, 600);
         WatchUi.requestUpdate();
     }
 
@@ -254,13 +337,18 @@ class Runner {
         _session = null;
     }
 
-    private function buzz() as Void {
+    // ── Sound and vibration (the watch's own sound settings apply) ──
+    private function go() as Void { signal(Attention.TONE_START, 100, 400); }        // work starts
+    private function setDone() as Void { signal(Attention.TONE_STOP, 100, 600); }    // a timed set ended
+    private function countBeep() as Void { signal(Attention.TONE_KEY, 50, 100); }    // 3-2-1
+    private function nudge() as Void { signal(null, 50, 150); }                      // a get-ready begins
+
+    private function signal(tone as Attention.Tone?, strength as Number, ms as Number) as Void {
         if (Attention has :vibrate) {
-            Attention.vibrate([new Attention.VibeProfile(60, 300)]);
+            Attention.vibrate([new Attention.VibeProfile(strength, ms)]);
         }
-        if (Attention has :playTone) {
-            Attention.playTone(Attention.TONE_LAP);
+        if (tone != null && Attention has :playTone) {
+            Attention.playTone(tone);
         }
     }
-
 }

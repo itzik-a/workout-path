@@ -5,6 +5,12 @@ import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Test;
 
+// START until the step ends: the first press during a get-ready only starts the set.
+function next(r as Runner) as Void {
+    if (r.inLead()) { r.onStart(); }
+    r.onStart();
+}
+
 (:test)
 function runsEveryStepAndSaves(logger as Test.Logger) as Boolean {
     var r = new Runner(sampleWorkout(), "Test");
@@ -12,7 +18,7 @@ function runsEveryStepAndSaves(logger as Test.Logger) as Boolean {
     Test.assertEqual(r.phase, :run);
     for (var i = 0; i < r.steps.size(); i++) {
         Test.assertEqual(r.index, i);
-        r.onStart(); // end / skip the step
+        next(r);
     }
     Test.assertEqual(r.phase, :done);
     r.save();
@@ -170,8 +176,8 @@ function longNamesFitTheLapField(logger as Test.Logger) as Boolean {
         { :kind => :work, :name => "Iso pull up · Top (chin over bar)", :secs => 20 }
     ] as Array<Step>, "Test");
     r.onStart();
-    r.onStart();
-    r.onStart();
+    next(r);
+    next(r);
     Test.assertEqual(r.phase, :done);
     r.discard();
     return true;
@@ -202,6 +208,93 @@ function drawsEveryStep(logger as Test.Logger) as Boolean {
     var r = new Runner(sampleWorkout(), "A workout name long enough to need two lines or more");
     drawAll(r);
     Test.assertEqual(r.phase, :done);
+    r.discard();
+    return true;
+}
+
+// Get-ready as in the web player: 3 s when a timed set starts the workout, 5 s straight after another set, none
+// after a rest; START during it starts the set (same step).
+(:test)
+function getReadyBeforeTimedSets(logger as Test.Logger) as Boolean {
+    var r = new Runner([
+        { :kind => :work, :name => "Hold A", :secs => 20 },
+        { :kind => :work, :name => "Hold B", :secs => 30 },
+        { :kind => :rest, :name => "Rest", :secs => 10 },
+        { :kind => :work, :name => "Hold C", :secs => 15 },
+        { :kind => :work, :name => "Reps", :reps => 8 }
+    ] as Array<Step>, "Test");
+    r.onStart();
+    Test.assert(r.inLead());
+    Test.assertEqual(r.lead, LEAD_FIRST_MS);
+    Test.assertEqual(r.left(), 3);
+    r.onStart(); // go now
+    Test.assert(!r.inLead());
+    Test.assertEqual(r.index, 0);
+    Test.assertEqual(r.left(), 20);
+    r.onStart();
+    Test.assertEqual(r.index, 1);
+    Test.assertEqual(r.lead, LEAD_AFTER_SET_MS);
+    Test.assertEqual(r.left(), 5);
+    // pausing in the get-ready keeps it
+    r.pause();
+    Test.assert(r.inLead());
+    Test.assertEqual(r.left(), 5);
+    r.resume();
+    next(r);
+    Test.assertEqual(r.index, 2); // the rest: no get-ready
+    Test.assertEqual(r.lead, 0);
+    r.onStart();
+    Test.assertEqual(r.index, 3); // after a rest: no get-ready
+    Test.assertEqual(r.lead, 0);
+    Test.assertEqual(r.left(), 15);
+    r.onStart();
+    Test.assertEqual(r.index, 4); // reps: no timer
+    Test.assert(!r.inLead());
+    r.pause();
+    r.end();
+    r.discard();
+    return true;
+}
+
+// UP / DOWN change a reps set's count (not below 0); other steps ignore them.
+(:test)
+function upDownChangeTheReps(logger as Test.Logger) as Boolean {
+    var r = new Runner(sampleWorkout(), "Test");
+    r.onStart();
+    Test.assert(!r.adjust(1)); // a hold
+    next(r);
+    next(r); // the rest, then Push up 8 reps
+    Test.assertEqual(r.index, 2);
+    Test.assertEqual(r.reps, 8);
+    Test.assert(r.adjust(1));
+    Test.assertEqual(r.reps, 9);
+    for (var i = 0; i < 12; i++) { r.adjust(-1); }
+    Test.assertEqual(r.reps, 0);
+    next(r);
+    Test.assert(r.reps == null); // the rest after it
+    r.pause();
+    r.end();
+    r.discard();
+    return true;
+}
+
+// Previous step (pause menu): the step before starts again, running.
+(:test)
+function previousStepGoesBack(logger as Test.Logger) as Boolean {
+    var r = new Runner(sampleWorkout(), "Test");
+    r.onStart();
+    next(r);
+    Test.assertEqual(r.index, 1);
+    r.pause();
+    r.back();
+    Test.assertEqual(r.phase, :run);
+    Test.assertEqual(r.index, 0);
+    Test.assertEqual(r.left(), 3); // its get-ready again (it starts the workout)
+    r.pause();
+    r.back(); // at the first step: starts it again
+    Test.assertEqual(r.index, 0);
+    r.pause();
+    r.end();
     r.discard();
     return true;
 }
