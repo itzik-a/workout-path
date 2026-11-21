@@ -114,8 +114,24 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
         _r = runner;
     }
 
+    // The START button, read as a key so it never gets mixed up with a tap.
+    function onKey(evt as WatchUi.KeyEvent) as Boolean {
+        if (evt.getKey() == WatchUi.KEY_ENTER) {
+            _r.onStart();
+            return true;
+        }
+        return false; // BACK etc. go on to the behaviours below
+    }
+
+    function onTap(evt as WatchUi.ClickEvent) as Boolean {
+        tapped();
+        return true;
+    }
+
+    // A select that isn't the START key (handled above) came from the screen: on the 970 a tap can arrive here
+    // instead of in onTap, so it pauses too.
     function onSelect() as Boolean {
-        _r.onStart();
+        tapped();
         return true;
     }
 
@@ -123,7 +139,7 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
         return _r.onBack();
     }
 
-    function onTap(evt as WatchUi.ClickEvent) as Boolean {
-        return _r.onTap();
+    private function tapped() as Void {
+        if (!_r.onTap()) { _r.onStart(); } // on the start screen a tap starts
     }
 }
