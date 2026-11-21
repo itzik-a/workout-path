@@ -11,7 +11,7 @@
      W    <workout id>  <name>  <minutes>  <hash of its file>
    wpw-<workout id>.txt
      WP1  <workout id>
-     C    <key>  <cue>                                             an exercise's cue, for the X lines below
+     C    <key>  <cue>                                             an exercise's cue (not written: the watch doesn't show cues)
      X    <name>  <variation>  <mode r|h|t>  <amount>  <side L|R|->  <set>  <sets>  <kg>  <hold i>  <holds>
           <group s|c|->  <in group i>  <of n>  <cue key>           amount = reps (r) or seconds (h, t)
      R    <seconds>  <label>                                       a rest */
@@ -36,24 +36,21 @@ export function hash(s: string): string {
 
 export function watchWorkout(w: Workout, s: AppState): string {
   const custom = s.customExercises;
-  const cues = new Map<string, string>();
   const body: string[] = [];
   for (const st of buildSteps(w, custom)) {
     if (st.kind === "rest") { body.push(["R", st.seconds, clean(st.label)].join("\t")); continue; }
     const ex = getExercise(st.exerciseId, custom);
     const v = ex?.variations?.find((x) => x.id === st.variationId);
     const t = itemTitle(ex, v);
-    const cue = clean(ex?.cue);
-    if (cue) cues.set(st.exerciseId, cue);
     const mode = st.mode === "reps" ? "r" : st.mode === "hold" ? "h" : "t";
     const amount = st.mode === "reps" ? st.reps : st.mode === "hold" ? st.seconds : (st.minutes ?? 0) * 60;
     body.push([
       "X", clean(t.main), clean(t.sub), mode, n(amount), st.side === "left" ? "L" : st.side === "right" ? "R" : "-",
       st.set, st.sets, n(st.kg), n(st.rep?.i), n(st.rep?.n),
-      st.group ? st.group.kind[0] : "-", n(st.group?.i), n(st.group?.n), cue ? st.exerciseId : "",
+      st.group ? st.group.kind[0] : "-", n(st.group?.i), n(st.group?.n), "",
     ].join("\t"));
   }
-  return [`WP1\t${w.id}`, ...[...cues].map(([k, c]) => `C\t${k}\t${c}`), ...body].join("\n") + "\n";
+  return [`WP1\t${w.id}`, ...body].join("\n") + "\n";
 }
 
 /** Every watch file by name: the index and one per live workout. */

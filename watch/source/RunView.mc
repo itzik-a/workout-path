@@ -9,7 +9,7 @@ const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
 // Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
-const VERSION = "0.1.10";
+const VERSION = "0.1.11";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -83,12 +83,6 @@ class RunView extends WatchUi.View {
             text(dc, x, h * 0.62, Graphics.FONT_XTINY, DIM, "reps · START when done");
         } else {
             text(dc, x, h * 0.48, Graphics.FONT_NUMBER_HOT, Graphics.COLOR_WHITE, clock(_r.left()));
-        }
-
-        var cue = st[:cue];
-        if (cue != null) {
-            var fitted = Graphics.fitTextToArea(cue as String, Graphics.FONT_XTINY, w * 0.72, h * 0.14, true);
-            if (fitted != null) { text(dc, x, h * 0.74, Graphics.FONT_XTINY, Graphics.COLOR_WHITE, fitted); }
         }
 
         var next = _r.nextStep();

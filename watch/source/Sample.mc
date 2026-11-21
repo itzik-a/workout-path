@@ -1,7 +1,7 @@
 // A small workout for the unit tests (Tests.mc): one of each kind of step.
 import Toybox.Lang;
 
-// A step (built in Data.mc from the workout's file): :kind (:work / :rest), :name (shown), :cue, and :secs (counts
+// A step (built in Data.mc from the workout's file): :kind (:work / :rest), :name (shown), :cue (kept from the file, not shown), and :secs (counts
 // down) or :reps (one press ends it). Work steps also carry the parts for the player: :main / :sub (exercise /
 // variation), :side ("left" / "right"), :set of :sets, :kg, :holdI of :holdN (interval holds), :group (:superset /
 // :circuit) with :groupI of :groupN.
