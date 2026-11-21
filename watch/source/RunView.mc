@@ -10,7 +10,7 @@ const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
 // Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
-const VERSION = "0.2.1";
+const VERSION = "0.2.2";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -85,14 +85,13 @@ class RunView extends WatchUi.View {
             if (next != null) {
                 text(dc, x, h * 0.655, Graphics.FONT_XTINY, DIM, "Next");
                 drawName(dc, next, x, h * 0.75, w * 0.78, Graphics.FONT_SMALL);
-                line(dc, x, h * 0.85, w * 0.7, ACCENT, join([next[:sub] as String?, tags(next), dose(next)]));
+                line(dc, x, h * 0.85, w * 0.7, ACCENT, join([tags(next), dose(next)]));
             }
             return;
         }
 
-        drawName(dc, st, x, h * 0.253, w * 0.8, Graphics.FONT_MEDIUM);
-        var sub = st[:sub];
-        if (sub != null && (sub as String).length() > 0) { line(dc, x, h * 0.36, w * 0.78, DIM, sub as String); }
+        // Just the exercise, no variation (it didn't fit beside it on the watch); the lap keeps the full name.
+        drawName(dc, st, x, h * 0.29, w * 0.8, Graphics.FONT_MEDIUM);
 
         // The big number, and under it what it is: reps (and the target if I changed it), get ready, or the tags.
         var tag = tags(st);
