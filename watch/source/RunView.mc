@@ -9,7 +9,7 @@ const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
 // Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
-const VERSION = "0.1.6";
+const VERSION = "0.1.7";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -118,9 +118,9 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
         _r = runner;
     }
 
-    // On the watch START didn't come in as KEY_ENTER (it paused like a tap), so: either START code, seen on press,
-    // release or onKey; a tap seen in onTap; and a select is ignored right after either (it's the same press), else
-    // it counts as START. inputLog shows what came in, to check this on the watch.
+    // On the 970 (tested 2026-11-21): START comes as a key (press / release / onKey, ENTER or START code) followed by
+    // a select; a tap comes as a select alone, without onTap. So: START = the key; a select right after the key or
+    // an onTap is the same press and ignored; any other select is a tap. inputLog shows what came in.
     private var _keyAt as Number = -10000;
     private var _tapAt as Number = -10000;
 
@@ -130,7 +130,7 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
     }
 
     private function recent(t as Number) as Boolean {
-        return System.getTimer() - t < 600;
+        return System.getTimer() - t < 1000;
     }
 
     function onKeyPressed(evt as WatchUi.KeyEvent) as Boolean {
@@ -167,7 +167,7 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
             _r.note("s");
         } else {
             _r.note("S");
-            _r.onStart();
+            if (!_r.onTap()) { _r.onStart(); } // a tap: pause / resume (on the start screen it starts)
         }
         return true;
     }
