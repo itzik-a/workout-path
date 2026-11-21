@@ -37,6 +37,8 @@ export const GARMIN_CODES: Record<string, string> = {
   "box-squat": "SQUAT/SQUAT", bulgarian: "LUNGE/DUMBBELL_BULGARIAN_SPLIT_SQUAT", cossack: "LUNGE/SIDE_LUNGE",
   nordic: "LEG_CURL/LEG_CURL", "reverse-nordic": "SQUAT/SQUAT", "iso-deadlift": "DEADLIFT/DEADLIFT",
   "calf-raise": "CALF_RAISE/CALF_RAISE",
+  "spanish-squat": "SQUAT/SQUAT", "split-squat-hold": "LUNGE/LUNGE", "copenhagen-plank": "PLANK/SIDE_PLANK",
+  // the new leg stretches use the Flexibility section's "Warm-up" (BY_SECTION): no close Garmin stretch codes known
   "tibialis-raise": "WARM_UP/WARM_UP", // Garmin has no tibialis / toe raise ("Calf Raise" is the opposite movement)
   handstand: "TOTAL_BODY/TOTAL_BODY", crow: "TOTAL_BODY/TOTAL_BODY", "walk-press": "TOTAL_BODY/TOTAL_BODY",
   planche: "TOTAL_BODY/TOTAL_BODY", "front-lever": "CORE/MODIFIED_FRONT_LEVER",
