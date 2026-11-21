@@ -20,6 +20,9 @@ class Runner {
     var startedAt as Number = 0;
     var finishedAt as Number = 0;
     var downloadText as String = "Download: waiting";
+    // The last few inputs (P = key pressed, K = key, T = tap, S = select acted on, s = select ignored), shown small
+    // on the screen while we find out how the 970 sends START and taps. Remove once settled.
+    var inputLog as String = "";
     // while paused: when it started, and what was left of a timed step
     private var _pausedAt as Number = 0;
     private var _leftMs as Number? = null;
@@ -87,6 +90,12 @@ class Runner {
             openMenu(self, false);
         }
         return true;
+    }
+
+    function note(s as String) as Void {
+        inputLog = inputLog + " " + s;
+        if (inputLog.length() > 18) { inputLog = inputLog.substring(inputLog.length() - 18, inputLog.length()) as String; }
+        WatchUi.requestUpdate();
     }
 
     // ── Workout ─────────────────────────────────────────────

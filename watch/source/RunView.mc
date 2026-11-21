@@ -9,7 +9,7 @@ const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
 // Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
-const VERSION = "0.1.4";
+const VERSION = "0.1.6";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -37,7 +37,7 @@ class RunView extends WatchUi.View {
         text(dc, x, h * 0.40, Graphics.FONT_SMALL, DIM, "Test · " + _r.steps.size() + " steps");
         text(dc, x, h * 0.54, Graphics.FONT_XTINY, DIM, _r.downloadText);
         text(dc, x, h * 0.72, Graphics.FONT_SMALL, ACCENT, "START to begin");
-        text(dc, x, h * 0.86, Graphics.FONT_XTINY, DIM, "v" + VERSION);
+        text(dc, x, h * 0.86, Graphics.FONT_XTINY, DIM, "v" + VERSION + "  " + _r.inputLog);
     }
 
     private function drawStep(dc as Graphics.Dc) as Void {
@@ -88,6 +88,7 @@ class RunView extends WatchUi.View {
             var n = next[:secs];
             text(dc, x, h * 0.88, Graphics.FONT_XTINY, DIM, "Next: " + next[:name] + (n != null ? " " + clock(n as Number) : ""));
         }
+        text(dc, x, h * 0.94, Graphics.FONT_XTINY, 0x5A5A5A, _r.inputLog);
     }
 
     private function drawDone(dc as Graphics.Dc) as Void {
@@ -117,32 +118,61 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
         _r = runner;
     }
 
-    // The START button, read as a key so it never gets mixed up with a tap.
-    function onKey(evt as WatchUi.KeyEvent) as Boolean {
-        if (evt.getKey() == WatchUi.KEY_ENTER) {
-            _r.onStart();
-            return true;
-        }
-        return false; // BACK etc. go on to the behaviours below
+    // On the watch START didn't come in as KEY_ENTER (it paused like a tap), so: either START code, seen on press,
+    // release or onKey; a tap seen in onTap; and a select is ignored right after either (it's the same press), else
+    // it counts as START. inputLog shows what came in, to check this on the watch.
+    private var _keyAt as Number = -10000;
+    private var _tapAt as Number = -10000;
+
+    private function isStart(evt as WatchUi.KeyEvent) as Boolean {
+        var k = evt.getKey();
+        return k == WatchUi.KEY_ENTER || k == WatchUi.KEY_START;
     }
 
-    function onTap(evt as WatchUi.ClickEvent) as Boolean {
-        tapped();
+    private function recent(t as Number) as Boolean {
+        return System.getTimer() - t < 600;
+    }
+
+    function onKeyPressed(evt as WatchUi.KeyEvent) as Boolean {
+        _r.note("P" + evt.getKey());
+        if (!isStart(evt)) { return false; }
+        if (!recent(_keyAt)) { _r.onStart(); }
+        _keyAt = System.getTimer();
         return true;
     }
 
-    // A select that isn't the START key (handled above) came from the screen: on the 970 a tap can arrive here
-    // instead of in onTap, so it pauses too.
+    function onKeyReleased(evt as WatchUi.KeyEvent) as Boolean {
+        if (!isStart(evt)) { return false; }
+        _keyAt = System.getTimer();
+        return true;
+    }
+
+    function onKey(evt as WatchUi.KeyEvent) as Boolean {
+        _r.note("K" + evt.getKey());
+        if (!isStart(evt)) { return false; } // BACK etc. go on to the behaviours below
+        if (!recent(_keyAt)) { _r.onStart(); }
+        _keyAt = System.getTimer();
+        return true;
+    }
+
+    function onTap(evt as WatchUi.ClickEvent) as Boolean {
+        _r.note("T");
+        _tapAt = System.getTimer();
+        if (!_r.onTap()) { _r.onStart(); } // on the start screen a tap starts
+        return true;
+    }
+
     function onSelect() as Boolean {
-        tapped();
+        if (recent(_keyAt) || recent(_tapAt)) {
+            _r.note("s");
+        } else {
+            _r.note("S");
+            _r.onStart();
+        }
         return true;
     }
 
     function onBack() as Boolean {
         return _r.onBack();
-    }
-
-    private function tapped() as Void {
-        if (!_r.onTap()) { _r.onStart(); } // on the start screen a tap starts
     }
 }
