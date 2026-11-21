@@ -8,6 +8,8 @@ import Toybox.WatchUi;
 const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
+// Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
+const VERSION = "0.1.3";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -35,6 +37,7 @@ class RunView extends WatchUi.View {
         text(dc, x, h * 0.40, Graphics.FONT_SMALL, DIM, "Test · " + _r.steps.size() + " steps");
         text(dc, x, h * 0.54, Graphics.FONT_XTINY, DIM, _r.downloadText);
         text(dc, x, h * 0.72, Graphics.FONT_SMALL, ACCENT, "START to begin");
+        text(dc, x, h * 0.86, Graphics.FONT_XTINY, DIM, "v" + VERSION);
     }
 
     private function drawStep(dc as Graphics.Dc) as Void {
