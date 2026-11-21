@@ -2,3 +2,7 @@ node_modules
 dist
 .DS_Store
 *.local
+
+# Watch app: build output and the gist URL
+watch/bin
+watch/source/Secrets.mc

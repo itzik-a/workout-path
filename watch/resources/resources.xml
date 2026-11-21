@@ -1,0 +1,21 @@
+<resources>
+    <string id="AppName">Workout Path</string>
+    <string id="FieldStep">Step</string>
+    <string id="FieldReps">Reps</string>
+    <string id="FieldHold">Hold</string>
+    <string id="UnitReps">reps</string>
+    <string id="UnitSec">s</string>
+    <string id="UnitNone"> </string>
+
+    <bitmap id="LauncherIcon" filename="images/launcher.png" />
+
+    <!-- My numbers per lap, shown in Garmin Connect (if it shows them for a sideloaded app: W1 checks). -->
+    <fitContributions>
+        <fitField id="0" displayInChart="false" displayInActivityLaps="true" sortOrder="0"
+                  dataLabel="@Strings.FieldStep" unitLabel="@Strings.UnitNone" />
+        <fitField id="1" displayInChart="false" displayInActivityLaps="true" sortOrder="1"
+                  dataLabel="@Strings.FieldReps" unitLabel="@Strings.UnitReps" />
+        <fitField id="2" displayInChart="false" displayInActivityLaps="true" sortOrder="2"
+                  dataLabel="@Strings.FieldHold" unitLabel="@Strings.UnitSec" />
+    </fitContributions>
+</resources>

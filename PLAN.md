@@ -142,7 +142,7 @@ Milestones 1–8 are done and live. Next, in order of value:
 
 ## 9. Workouts on the Garmin watch (from 2026-11-20)
 
-I train almost only with the Forerunner 970. The web app stays the place to keep the catalog and build workouts and routines; the watch runs them with **Garmin's own workout player**, and Garmin Connect keeps the record (no history needed here). No watch app of our own (a Connect IQ app was planned first and dropped: much more work, and as far as I know it couldn't fill Connect's sets table).
+I train almost only with the Forerunner 970. The web app stays the place to keep the catalog and build workouts and routines; the watch runs them with **Garmin's own workout player**, and Garmin Connect keeps the record (no history needed here). No watch app of our own (a Connect IQ app was planned first and dropped: much more work, and as far as I know it couldn't fill Connect's sets table). Reconsidered on 2026-11-21 after training with it: see §10.
 
 ### How workouts get to Garmin
 
@@ -165,3 +165,33 @@ G5. **Tidy the web app for watch training.** Hide History and the phone player b
 1. **Rotations on the calendar** (decided: training days per rotation; a missed day isn't caught up, the calendar just moves on).
 2. **Edits in Connect.** A send overwrites workouts made here, so edits made in Connect are lost. Fine to always edit in the web app?
 3. **Exercise names.** The watch shows Garmin's name for each exercise (`src/data/garminCodes.ts` picks the closest; some are generic, like "Total Body" for the planche). Is that readable enough with my name in the step's note?
+
+## 10. Our own watch app (from 2026-11-21)
+
+Garmin's workout player doesn't fit how I train: every exercise shows Garmin's name (often wrong: "Active hang" became "Pull-up"; Garmin has no custom exercise names and no hang at all), and after each reps set it asks me to confirm the count. So a **Connect IQ watch app** for the Forerunner 970 runs my workouts with my names, cues and flow. The web app stays the place to build workouts and routines; the watch app only runs them. "Send to Garmin" (§9) stays as the fallback.
+
+### What it does
+
+- **Workouts on the watch.** The web app writes a small `watch.json` next to `workout-path.json` in the sync gist: the workouts already turned into steps (from `garminTree()`) and today's workout from my followed routines. The watch downloads it through the phone (Bluetooth) and keeps a copy, so it works offline.
+- **Player.** My exercise and variation names and the cue; holds count down by themselves; reps show the target and one press ends the set (no count to confirm); rests count down; switch sides, interval holds, weight; "next up"; pause, skip, back; vibration and beeps at each change.
+- **Recording.** Saved to Garmin Connect as strength training (heart rate, time, calories, training effect), one lap per set.
+
+### What I give up
+
+- Connect's sets table and muscle map: a watch app can't write Garmin's set / exercise records (the SDK's recording session only has laps; checked in SDK 9.3.0). Connect shows the session and its laps.
+- The calendar's "today's workout" on the watch (the app shows today's workout itself) and Garmin's exercise animations.
+
+### Facts (SDK 9.3.0, installed)
+
+- Forerunner 970: Connect IQ 6.0.3, 454 × 454 AMOLED, 768 KB for a watch app.
+- Recording: `ActivityRecording.createSession` (sport training / strength training), `addLap()`; my own numbers per lap or session through `FitContributor` fields.
+- Downloads: `Communications.makeWebRequest` through the phone, https only, and the response's content type must match what the app asks for. The raw gist file is `text/plain`, so the watch reads text and parses it itself. Size limit (simulator): 13.9 KB works, 17 KB fails (-402, too large), and `workout-path.json` is already 19 KB, so the watch gets its own small file(s).
+- Personal use: built with my own developer key (kept outside the repo) and copied to the watch over USB (`GARMIN/APPS`); no store.
+- The gist id is never committed (the repo is public and the gist holds all my data): it goes into the build from an ignored local file.
+
+### Milestones
+
+W1. **Test on the watch.** A minimal app in `watch/` (Monkey C) on the 970: a built-in sample workout (a reps step, a hold, a rest), recorded as strength training with a lap per step, plus a test download of the gist file. Check: it installs and runs; what Connect saves (sport, heart rate, laps, my lap fields); whether the download works from a sideloaded app. This decides whether to go on. (Built 2026-11-21: runs in the simulator, unit tests pass; waiting for the test on the watch.)
+W2. **Data path.** The web app writes `watch.json` to the gist on sync; the watch downloads, parses and stores it; a list of workouts with today's first.
+W3. **Player.** The full step-by-step flow above.
+W4. **Recording.** The session saved to Connect, with a lap per set and my lap fields.
