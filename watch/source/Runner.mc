@@ -8,6 +8,18 @@ import Toybox.System;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
+// The lap's Step field: bytes, with the null at the end. Longer text crashes setData ("string too long for allocated
+// space": it did on the watch at a 34-byte name), so names are cut to fit (fitBytes). Apps get 256 bytes per message.
+const STEP_BYTES = 64;
+
+// `s` cut at a character boundary to at most `max` UTF-8 bytes ("·" is 2).
+function fitBytes(s as String, max as Number) as String {
+    if (s.toUtf8Array().size() <= max) { return s; }
+    var n = s.length() < max ? s.length() : max;
+    while (n > 0 && (s.substring(0, n) as String).toUtf8Array().size() > max) { n -= 1; }
+    return s.substring(0, n) as String;
+}
+
 class Runner {
     // :ready (start screen) → :run → :done (save or discard)
     var phase as Symbol = :ready;
@@ -98,7 +110,7 @@ class Runner {
             :sport => Activity.SPORT_TRAINING,
             :subSport => Activity.SUB_SPORT_STRENGTH_TRAINING
         });
-        _fStep = s.createField("step", 0, FitContributor.DATA_TYPE_STRING, { :mesgType => FitContributor.MESG_TYPE_LAP, :count => 32 });
+        _fStep = s.createField("step", 0, FitContributor.DATA_TYPE_STRING, { :mesgType => FitContributor.MESG_TYPE_LAP, :count => STEP_BYTES });
         _fReps = s.createField("reps", 1, FitContributor.DATA_TYPE_UINT16, { :mesgType => FitContributor.MESG_TYPE_LAP, :units => "reps" });
         _fHold = s.createField("hold", 2, FitContributor.DATA_TYPE_UINT16, { :mesgType => FitContributor.MESG_TYPE_LAP, :units => "s" });
         s.start();
@@ -143,7 +155,7 @@ class Runner {
         var st = step();
         var secs = (System.getTimer() - stepStart) / 1000;
         var reps = st[:reps];
-        (_fStep as FitContributor.Field).setData(st[:name] as String);
+        (_fStep as FitContributor.Field).setData(fitBytes(st[:name] as String, STEP_BYTES - 1));
         (_fReps as FitContributor.Field).setData(reps != null ? reps as Number : 0);
         (_fHold as FitContributor.Field).setData(st[:kind] == :work && reps == null ? secs : 0);
         s.addLap();

@@ -9,7 +9,7 @@ const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
 // Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
-const VERSION = "0.1.9";
+const VERSION = "0.1.10";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -43,7 +43,7 @@ class RunView extends WatchUi.View {
     private function drawReady(dc as Graphics.Dc) as Void {
         var w = dc.getWidth(), h = dc.getHeight(), x = w / 2;
         var title = Graphics.fitTextToArea(_r.title, Graphics.FONT_MEDIUM, w * 0.8, h * 0.24, true);
-        text(dc, x, h * 0.32, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE, title);
+        text(dc, x, h * 0.32, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE, title != null ? title : _r.title);
         text(dc, x, h * 0.52, Graphics.FONT_SMALL, DIM, _r.steps.size() + " steps");
         text(dc, x, h * 0.72, Graphics.FONT_SMALL, ACCENT, "START to begin");
         text(dc, x, h * 0.86, Graphics.FONT_XTINY, DIM, "v" + VERSION);
@@ -68,7 +68,8 @@ class RunView extends WatchUi.View {
             }
         }
 
-        var hr = Activity.getActivityInfo().currentHeartRate;
+        var info = Activity.getActivityInfo();
+        var hr = info != null ? info.currentHeartRate : null;
         var top = _r.phase == :paused ? "Paused" : (_r.index + 1) + " / " + _r.steps.size() + (hr != null ? "   HR " + hr : "");
         text(dc, x, h * 0.16, Graphics.FONT_XTINY, DIM, top);
 
@@ -87,7 +88,7 @@ class RunView extends WatchUi.View {
         var cue = st[:cue];
         if (cue != null) {
             var fitted = Graphics.fitTextToArea(cue as String, Graphics.FONT_XTINY, w * 0.72, h * 0.14, true);
-            text(dc, x, h * 0.74, Graphics.FONT_XTINY, Graphics.COLOR_WHITE, fitted);
+            if (fitted != null) { text(dc, x, h * 0.74, Graphics.FONT_XTINY, Graphics.COLOR_WHITE, fitted); }
         }
 
         var next = _r.nextStep();

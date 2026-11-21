@@ -1,6 +1,7 @@
 // Unit tests (built only with ./build.sh test): drive the runner through the sample and save,
 // so the simulator writes a FIT activity to check.
 import Toybox.Application;
+import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Test;
 
@@ -157,6 +158,50 @@ function coveredScreenHoldsTheStep(logger as Test.Logger) as Boolean {
     r.unhold();
     Test.assertEqual(r.phase, :paused);
     r.end();
+    r.discard();
+    return true;
+}
+
+// Real names are longer than the lap's Step field (it crashed on the watch at "Iso pull up · Top (chin over bar)").
+(:test)
+function longNamesFitTheLapField(logger as Test.Logger) as Boolean {
+    var r = new Runner([
+        { :kind => :work, :name => "Wrist deviation · Ulnar (toward the little finger) · right", :reps => 8 },
+        { :kind => :work, :name => "Iso pull up · Top (chin over bar)", :secs => 20 }
+    ] as Array<Step>, "Test");
+    r.onStart();
+    r.onStart();
+    r.onStart();
+    Test.assertEqual(r.phase, :done);
+    r.discard();
+    return true;
+}
+
+// Draw every step (running and paused) and the end on a 454 × 454 off-screen image, as on the 970: a drawing error
+// would crash the app mid-workout.
+function drawAll(r as Runner) as Void {
+    var bmp = Graphics.createBufferedBitmap({ :width => 454, :height => 454 }).get() as Graphics.BufferedBitmap;
+    var dc = bmp.getDc();
+    var v = new RunView(r);
+    v.onUpdate(dc);
+    r.onStart();
+    var guard = 0;
+    while (r.phase != :done && guard < 1000) {
+        v.onUpdate(dc);
+        r.pause();
+        v.onUpdate(dc);
+        r.resume();
+        r.onStart();
+        guard++;
+    }
+    v.onUpdate(dc);
+}
+
+(:test)
+function drawsEveryStep(logger as Test.Logger) as Boolean {
+    var r = new Runner(sampleWorkout(), "A workout name long enough to need two lines or more");
+    drawAll(r);
+    Test.assertEqual(r.phase, :done);
     r.discard();
     return true;
 }
