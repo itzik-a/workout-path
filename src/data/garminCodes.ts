@@ -36,6 +36,7 @@ export const GARMIN_CODES: Record<string, string> = {
   "iso-pull-up": "PULL_UP/PULL_UP",
   "box-squat": "SQUAT/SQUAT", bulgarian: "LUNGE/DUMBBELL_BULGARIAN_SPLIT_SQUAT", cossack: "LUNGE/SIDE_LUNGE",
   nordic: "LEG_CURL/LEG_CURL", "reverse-nordic": "SQUAT/SQUAT", "iso-deadlift": "DEADLIFT/DEADLIFT",
+  "calf-raise": "CALF_RAISE/CALF_RAISE",
   "tibialis-raise": "WARM_UP/WARM_UP", // Garmin has no tibialis / toe raise ("Calf Raise" is the opposite movement)
   handstand: "TOTAL_BODY/TOTAL_BODY", crow: "TOTAL_BODY/TOTAL_BODY", "walk-press": "TOTAL_BODY/TOTAL_BODY",
   planche: "TOTAL_BODY/TOTAL_BODY", "front-lever": "CORE/MODIFIED_FRONT_LEVER",
@@ -59,6 +60,7 @@ export function garminCode(ex: Exercise | undefined, variationId?: string): stri
     (FIT SDK profile 21.x; no name number = the FIT file sets only the category). */
 export const GARMIN_EXERCISES: Record<string, [name: string, fitCategory: number, fitName?: number]> = {
   "BENCH_PRESS/ISOMETRIC_BARBELL_BENCH_PRESS": ["Isometric Barbell Bench Press", 0, 11],
+  "CALF_RAISE/CALF_RAISE": ["Calf Raise", 1],
   "CARDIO/CARDIO": ["Cardio", 2],
   "CARDIO/JUMP_ROPE": ["Jump Rope", 2, 6],
   "CORE/CORE": ["Core", 5],

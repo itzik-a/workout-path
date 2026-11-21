@@ -807,6 +807,21 @@ export const EXERCISES: Exercise[] = [
     aliases: ["Tib raise", "Wall tibialis raise", "Toe raise", "Shin raise"],
   },
   {
+    id: "calf-raise",
+    name: "Calf raise",
+    section: "legs",
+    regions: ["lower"],
+    mode: "reps",
+    dose: { sets: 3, reps: 15 },
+    variations: [
+      { id: "two-leg", name: "Two legs" },
+      { id: "single-leg", name: "Single leg", dose: { sets: 3, reps: 10 } },
+      { id: "hold", name: "Hold (on the toes)", mode: "hold", dose: { sets: 3, seconds: 30 } },
+    ],
+    cue: "On the balls of the feet (a step edge lets the heels drop lower), knees straight; rise as high as you can, pause, lower slowly. A hand on the wall for balance.",
+    aliases: ["Heel raise", "Standing calf raise"],
+  },
+  {
     id: "iso-deadlift",
     name: "Iso deadlift",
     section: "legs",
