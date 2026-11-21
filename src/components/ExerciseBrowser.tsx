@@ -6,7 +6,8 @@ import {
 } from "../data/catalog";
 import { ChipGroup, useSessionState } from "./ui";
 import { IconClose, IconFilter, IconSearch } from "./Icons";
-import { NO_FILTERS, activeCount, matches, type Filters } from "../lib/filter";
+import { NO_FILTERS, activeCount, matches, type Filters, type Usage } from "../lib/filter";
+import { useAppState } from "../state/store";
 import { formatDose, plural } from "../lib/format";
 
 const REGIONS = (Object.keys(REGION_LABEL) as Region[]).map((value) => ({ value, label: REGION_LABEL[value] }));
@@ -21,10 +22,17 @@ const EQUIPMENT_OPTS: { value: Equipment | "none"; label: string }[] = [
     .map((value) => ({ value, label: EQUIPMENT_LABEL[value] })),
 ];
 
+const USAGE_OPTS: { value: Usage; label: string }[] = [
+  { value: "unused", label: "Not in a workout" },
+  { value: "used", label: "In a workout" },
+];
+
 /** Filters kept per browser session under `key`, and the exercises they let through. */
 export function useFilteredExercises(key: string, exercises: Exercise[]) {
   const [f, setF] = useSessionState<Filters>(key, NO_FILTERS);
-  const list = exercises.filter((e) => matches(e, f));
+  const { workouts } = useAppState();
+  const used = new Set(workouts.filter((w) => !w.deletedAt).flatMap((w) => w.blocks.flatMap((b) => b.items.map((it) => it.exerciseId))));
+  const list = exercises.filter((e) => matches(e, f, used));
   return { f, setF, list };
 }
 
@@ -94,6 +102,7 @@ export function FilterBar({ f, setF, searchRef }: {
           <ChipGroup label="Type" options={MODES} value={f.modes} onChange={(modes) => set({ modes })} />
           <ChipGroup label="Equipment" options={EQUIPMENT_OPTS} value={f.equipment} onChange={(equipment) => set({ equipment })} />
           <ChipGroup label="Section" options={SECTION_OPTS} value={f.sections} onChange={(sections) => set({ sections })} />
+          <ChipGroup label="Workouts" options={USAGE_OPTS} value={f.usage ?? []} onChange={(usage) => set({ usage })} />
           {n > 0 && (
             <button type="button" className="btn ghost sm" onClick={() => setF((prev) => ({ ...NO_FILTERS, q: prev.q, focus: prev.focus }))}>Clear filters</button>
           )}

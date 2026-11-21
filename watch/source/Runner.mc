@@ -1,6 +1,7 @@
 // The workout in progress: which step, its timer, and the recording (a lap per step).
 import Toybox.Activity;
 import Toybox.ActivityRecording;
+import Toybox.Application;
 import Toybox.Attention;
 import Toybox.FitContributor;
 import Toybox.Lang;
@@ -31,6 +32,10 @@ class Runner {
     var steps as Array<Step>;
     var index as Number = 0;
     var title as String;
+    // what it's recorded as (from the web app, Data.mc): "strength" | "run" | "bike" | "cardio"
+    var sport as String = "strength";
+    // work steps finished (for the end screen)
+    var setsDone as Number = 0;
     // System.getTimer() ms. A timed step (hold, time, rest) ends at endsAt: `lead` ms of get-ready, then `dur` ms.
     var stepStart as Number = 0;
     var endsAt as Number? = null;
@@ -115,7 +120,7 @@ class Runner {
             resume();
         } else if (phase == :done) {
             save();
-            System.exit();
+            leaveWorkout(true, 1);
         }
     }
 
@@ -155,10 +160,19 @@ class Runner {
 
     // ── Workout ─────────────────────────────────────────────
     private function begin() as Void {
+        // Running / spinning / other cardio workouts get their own activity type in Connect; the rest strength.
+        var sp = Activity.SPORT_TRAINING, sub = Activity.SUB_SPORT_STRENGTH_TRAINING;
+        if (sport.equals("run")) {
+            sp = Activity.SPORT_RUNNING; sub = Activity.SUB_SPORT_GENERIC;
+        } else if (sport.equals("bike")) {
+            sp = Activity.SPORT_CYCLING; sub = Activity.SUB_SPORT_INDOOR_CYCLING;
+        } else if (sport.equals("cardio")) {
+            sub = Activity.SUB_SPORT_CARDIO_TRAINING;
+        }
         var s = ActivityRecording.createSession({
             :name => title.length() > 32 ? title.substring(0, 32) as String : title,
-            :sport => Activity.SPORT_TRAINING,
-            :subSport => Activity.SUB_SPORT_STRENGTH_TRAINING
+            :sport => sp,
+            :subSport => sub
         });
         _fStep = s.createField("step", 0, FitContributor.DATA_TYPE_STRING, { :mesgType => FitContributor.MESG_TYPE_LAP, :count => STEP_BYTES });
         _fReps = s.createField("reps", 1, FitContributor.DATA_TYPE_UINT16, { :mesgType => FitContributor.MESG_TYPE_LAP, :units => "reps" });
@@ -216,6 +230,7 @@ class Runner {
     // Close the step's lap with my numbers, then go on (or finish after the last).
     private function endStep() as Void {
         lap();
+        if (step()[:kind] == :work) { setsDone += 1; }
         if (index + 1 < steps.size()) {
             index += 1;
             startStep();
@@ -351,4 +366,12 @@ class Runner {
             Attention.playTone(tone);
         }
     }
+}
+
+// Back to the list after Save / Discard: pop `views` (the workout screen, and the menu if it's open), with a toast.
+function leaveWorkout(saved as Boolean, views as Number) as Void {
+    var app = Application.getApp() as WorkoutPathApp;
+    app.runner = null;
+    for (var i = 0; i < views; i++) { WatchUi.popView(WatchUi.SLIDE_RIGHT); }
+    if (WatchUi has :showToast) { WatchUi.showToast(saved ? "Saved" : "Discarded", null); }
 }

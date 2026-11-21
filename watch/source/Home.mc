@@ -7,6 +7,8 @@ import Toybox.WatchUi;
 class Home extends WatchUi.Menu2 {
     var app as WorkoutPathApp;
     private var _count as Number = 0;
+    // workout id → its sport, for the runner
+    var sports as Dictionary<String, String> = {} as Dictionary<String, String>;
 
     function initialize(a as WorkoutPathApp) {
         Menu2.initialize({ :title => "Workout Path" });
@@ -24,6 +26,7 @@ class Home extends WatchUi.Menu2 {
             var sub = e[:why] != null ? e[:why] as String : e[:mins] + " min";
             if (!hasWorkout(e[:id])) { sub = "not downloaded yet"; }
             addItem(new WatchUi.MenuItem(e[:name], sub, e[:id], null));
+            sports[e[:id]] = e[:sport];
         }
         addItem(new WatchUi.MenuItem(list.size() == 0 ? "Download" : "Update", app.sync.status + "  v" + VERSION, :sync, null));
         _count = list.size() + 1;
@@ -47,7 +50,9 @@ class HomeDelegate extends WatchUi.Menu2InputDelegate {
         }
         var steps = workoutSteps(id as String);
         if (steps == null || steps.size() == 0) { return; }
+        var sport = _home.sports[id as String];
         var runner = new Runner(steps, item.getLabel());
+        if (sport != null) { runner.sport = sport; }
         _home.app.runner = runner;
         WatchUi.pushView(new RunView(runner), new RunDelegate(runner), WatchUi.SLIDE_LEFT);
     }

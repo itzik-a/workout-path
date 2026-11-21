@@ -51,8 +51,9 @@ function textHash(text as String) as String {
     return s;
 }
 
-// A workout in the list: :id, :name, :mins, :hash; :why = "Today · <routine>" / "Next · <routine>" for the top ones.
-typedef Entry as { :id as String, :name as String, :mins as Number, :hash as String, :why as String? };
+// A workout in the list: :id, :name, :mins, :hash, :sport; :why = "Today · <routine>" / "Next · <routine>" for the top ones.
+// :sport = what it's recorded as: "strength" | "run" | "bike" | "cardio" (from the web app; strength if missing).
+typedef Entry as { :id as String, :name as String, :mins as Number, :hash as String, :sport as String, :why as String? };
 
 // The index as kept: my workouts with today's first (weekly routines by weekday, rotations' next).
 function entries() as Array<Entry> {
@@ -70,7 +71,8 @@ function entries() as Array<Entry> {
         } else if (r[0].equals("N") && r.size() >= 3) {
             if (why[r[2]] == null) { why[r[2]] = "Next · " + r[1]; }
         } else if (r[0].equals("W") && r.size() >= 5) {
-            all.add({ :id => r[1], :name => r[2], :mins => num(r[3]) == null ? 0 : num(r[3]) as Number, :hash => r[4] } as Entry);
+            all.add({ :id => r[1], :name => r[2], :mins => num(r[3]) == null ? 0 : num(r[3]) as Number, :hash => r[4],
+                :sport => r.size() >= 6 && r[5].length() > 0 ? r[5] : "strength" } as Entry);
         }
     }
     var top = [] as Array<Entry>;

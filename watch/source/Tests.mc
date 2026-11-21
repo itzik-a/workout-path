@@ -21,6 +21,7 @@ function runsEveryStepAndSaves(logger as Test.Logger) as Boolean {
         next(r);
     }
     Test.assertEqual(r.phase, :done);
+    Test.assertEqual(r.setsDone, 3); // the sample's 3 work steps
     r.save();
     return true;
 }
@@ -127,13 +128,15 @@ function parsesAWorkoutFile(logger as Test.Logger) as Boolean {
 (:test)
 function listPutsTheNextWorkoutFirst(logger as Test.Logger) as Boolean {
     var saved = Application.Storage.getValue("index");
-    Application.Storage.setValue("index", "WP1\t1\nN\tCardio\tb\nW\ta\tFirst\t20\th1\nW\tb\tSecond\t15\th2\n");
+    Application.Storage.setValue("index", "WP1\t1\nN\tCardio\tb\nW\ta\tFirst\t20\th1\nW\tb\tSecond\t15\th2\tbike\n");
     var e = entries();
     Test.assertEqual(e.size(), 2);
     Test.assertEqual(e[0][:id], "b");
     Test.assertEqual(e[0][:why], "Next · Cardio");
     Test.assertEqual(e[1][:name], "First");
     Test.assertEqual(e[1][:mins], 20);
+    Test.assertEqual(e[0][:sport], "bike");
+    Test.assertEqual(e[1][:sport], "strength"); // no sport field (an older index): strength
     if (saved != null) { Application.Storage.setValue("index", saved); } else { Application.Storage.deleteValue("index"); }
     return true;
 }
@@ -296,5 +299,22 @@ function previousStepGoesBack(logger as Test.Logger) as Boolean {
     r.pause();
     r.end();
     r.discard();
+    return true;
+}
+
+// Each activity type starts a recording (running, indoor cycling, cardio, strength).
+(:test)
+function everySportRecords(logger as Test.Logger) as Boolean {
+    var sports = ["run", "bike", "cardio", "strength"];
+    for (var i = 0; i < sports.size(); i++) {
+        var r = new Runner(sampleWorkout(), "Test");
+        r.sport = sports[i];
+        r.onStart();
+        Test.assertEqual(r.phase, :run);
+        next(r);
+        r.pause();
+        r.end();
+        r.discard();
+    }
     return true;
 }

@@ -12,11 +12,16 @@ export interface Filters {
   sections: SectionId[];
   /** The focus chips above the list (Strength, Isometric, …). Not counted in `activeCount`. */
   focus: Focus[];
+  /** In my workouts or not ("unused" = in no workout yet). Filters kept from before this existed lack it. */
+  usage?: Usage[];
 }
 
-export const NO_FILTERS: Filters = { q: "", regions: [], modes: [], equipment: [], sections: [], focus: [] };
+export type Usage = "unused" | "used";
 
-export const activeCount = (f: Filters) => f.regions.length + f.modes.length + f.equipment.length + f.sections.length;
+export const NO_FILTERS: Filters = { q: "", regions: [], modes: [], equipment: [], sections: [], focus: [], usage: [] };
+
+export const activeCount = (f: Filters) =>
+  f.regions.length + f.modes.length + f.equipment.length + f.sections.length + (f.usage?.length ?? 0);
 
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
@@ -34,8 +39,10 @@ function haystack(e: Exercise): string {
 
 /** Within one filter group any chip matches (OR); across groups all must match (AND).
     Every word typed must appear somewhere in the name, aliases, variations, section, equipment or
-    focus words; a trailing "s" is optional ("isometrics", "planks"). */
-export function matches(e: Exercise, f: Filters): boolean {
+    focus words; a trailing "s" is optional ("isometrics", "planks").
+    `used` = ids of exercises in at least one of my (not deleted) workouts, for the usage filter. */
+export function matches(e: Exercise, f: Filters, used?: Set<string>): boolean {
+  if (f.usage?.length && used && !f.usage.some((u) => (u === "used") === used.has(e.id))) return false;
   if (f.regions.length && !e.regions.some((r) => f.regions.includes(r))) return false;
   if (f.modes.length) {
     const modes = [e.mode, ...(e.variations ?? []).map((v) => v.mode ?? e.mode)];

@@ -10,7 +10,7 @@ const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
 // Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -112,12 +112,21 @@ class RunView extends WatchUi.View {
         }
     }
 
+    // The end: time (pauses not counted), sets, heart rate and calories; START saves and goes back to the list.
     private function drawDone(dc as Graphics.Dc) as Void {
         var w = dc.getWidth(), h = dc.getHeight(), x = w / 2;
-        text(dc, x, h * 0.28, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE, "Done");
-        text(dc, x, h * 0.42, Graphics.FONT_SMALL, DIM, clock((_r.finishedAt - _r.startedAt) / 1000));
-        text(dc, x, h * 0.60, Graphics.FONT_SMALL, ACCENT, "START  save");
-        text(dc, x, h * 0.72, Graphics.FONT_SMALL, DIM, "BACK  more");
+        var info = Activity.getActivityInfo();
+        var hr = info != null ? info.averageHeartRate : null;
+        var kcal = info != null ? info.calories : null;
+        text(dc, x, h * 0.17, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE, "Done");
+        text(dc, x, h * 0.37, Graphics.FONT_NUMBER_MEDIUM, Graphics.COLOR_WHITE, clock((_r.finishedAt - _r.startedAt) / 1000));
+        line(dc, x, h * 0.53, w * 0.8, DIM, join([
+            _r.setsDone == 1 ? "1 set" : _r.setsDone + " sets",
+            hr != null ? "HR " + hr : null,
+            kcal != null && kcal > 0 ? kcal + " kcal" : null
+        ]));
+        text(dc, x, h * 0.67, Graphics.FONT_SMALL, ACCENT, "START  save");
+        text(dc, x, h * 0.79, Graphics.FONT_SMALL, DIM, "BACK  more");
     }
 
     // The exercise's name, one line: in `big`, one size down if it doesn't fit, cut if it still doesn't.

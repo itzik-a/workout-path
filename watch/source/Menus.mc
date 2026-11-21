@@ -43,7 +43,7 @@ class MenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id == :save) {
             _r.end();
             _r.save();
-            System.exit();
+            leaveWorkout(true, 2);
         } else if (id == :discard) {
             WatchUi.pushView(new WatchUi.Confirmation("Discard this workout?"), new DiscardDelegate(_r), WatchUi.SLIDE_LEFT);
         }
@@ -66,7 +66,7 @@ class DiscardDelegate extends WatchUi.ConfirmationDelegate {
     function onResponse(response as WatchUi.Confirm) as Boolean {
         if (response == WatchUi.CONFIRM_YES) {
             _r.discard();
-            System.exit();
+            leaveWorkout(false, 2); // the confirmation has closed itself; then the menu and the workout screen
         }
         // No: back to the menu.
         return true;

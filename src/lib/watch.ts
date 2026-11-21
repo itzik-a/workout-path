@@ -8,7 +8,7 @@
      WP1  <synced at, ms>
      D    <routine name>  <workout id Mon> … <workout id Sun>     weekly routine ("" = rest day)
      N    <routine name>  <workout id>                             rotation: the next workout
-     W    <workout id>  <name>  <minutes>  <hash of its file>
+     W    <workout id>  <name>  <minutes>  <hash of its file>  <sport: strength | run | bike | cardio>
    wpw-<workout id>.txt
      WP1  <workout id>
      C    <key>  <cue>                                             an exercise's cue (not written: the watch doesn't show cues)
@@ -32,6 +32,17 @@ export function hash(s: string): string {
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
   return (h >>> 0).toString(16);
+}
+
+/** What the watch records it as (watchSport): all spinning = indoor cycling, all running = running, all other
+    cardio = cardio training, anything else (incl. mixed) = strength training. */
+export function watchSport(w: Workout, s: AppState): "strength" | "run" | "bike" | "cardio" {
+  const ids = w.blocks.flatMap((b) => b.items.map((it) => it.exerciseId));
+  if (!ids.length) return "strength";
+  if (ids.every((id) => id === "spinning")) return "bike";
+  if (ids.every((id) => id === "running")) return "run";
+  if (ids.every((id) => getExercise(id, s.customExercises)?.section === "cardio")) return "cardio";
+  return "strength";
 }
 
 export function watchWorkout(w: Workout, s: AppState): string {
@@ -68,7 +79,7 @@ export function watchFiles(s: AppState): Record<string, string> {
   for (const w of s.workouts.filter((x) => !x.deletedAt)) {
     const text = watchWorkout(w, s);
     files[watchFile(w.id)] = text;
-    index.push(["W", w.id, clean(w.name), estimateMinutes(w, s.customExercises), hash(text)].join("\t"));
+    index.push(["W", w.id, clean(w.name), estimateMinutes(w, s.customExercises), hash(text), watchSport(w, s)].join("\t"));
   }
   files[WATCH_INDEX] = index.join("\n") + "\n";
   return files;
