@@ -5,9 +5,12 @@
    - Each sync: read the gist, merge with local (src/lib/merge.ts), write back if anything changed.
    - Runs on start, after a local change (2 s after the first, then at most once a minute while editing), when the app comes back into view,
      when the network returns, and every 2 minutes while visible.
-   - The workout in progress (workoutPath.run) is not synced. */
+   - The workout in progress (workoutPath.run) is not synced.
+   - The Garmin watch app's files (src/lib/watch.ts: wpw-index.txt + one per workout) are written into the same gist
+     whenever they differ from what's there; the watch reads them from `watchUrl` (raw gist address). */
 import { useSyncExternalStore } from "react";
 import { merge, serialize } from "../lib/merge";
+import { watchFiles, WATCH_PREFIX } from "../lib/watch";
 import { getState, normalize, onLocalChange, replaceState, type AppState } from "./store";
 
 const CFG_KEY = "workoutPath.gist";
@@ -18,7 +21,7 @@ const API = "https://api.github.com";
 export const TOKEN_URL =
   "https://github.com/settings/tokens/new?scopes=gist&description=" + encodeURIComponent("Workout Path sync");
 
-interface Cfg { token: string; gistId?: string }
+interface Cfg { token: string; gistId?: string; /** the gist's GitHub user, for the raw address the watch reads */ owner?: string }
 
 export interface SyncStatus {
   kind: "off" | "busy" | "pending" | "ok" | "error" | "offline";
@@ -30,6 +33,8 @@ export interface SyncStatus {
   retryAt?: number;
   last?: number;
   gistId?: string;
+  /** where the watch app downloads its files (paste into its settings in the Connect IQ phone app) */
+  watchUrl?: string;
   /** GitHub API requests left in this hour's window, from the last response */
   quota?: { remaining: number; limit: number; reset: number };
 }
@@ -41,12 +46,16 @@ let status: SyncStatus = cfg ? { kind: "busy", text: "Connecting…" } : { kind:
 const listeners = new Set<() => void>();
 
 function setStatus(s: Partial<SyncStatus>) {
-  status = { ...status, ...s, gistId: cfg?.gistId };
+  status = { ...status, ...s, gistId: cfg?.gistId, watchUrl: watchUrl() };
   listeners.forEach((l) => l());
 }
 
 export function useSyncStatus() {
   return useSyncExternalStore((l) => { listeners.add(l); return () => { listeners.delete(l); }; }, () => status);
+}
+
+function watchUrl(): string | undefined {
+  return cfg?.gistId && cfg.owner ? `https://gist.githubusercontent.com/${cfg.owner}/${cfg.gistId}/raw/` : undefined;
 }
 
 function loadCfg(): Cfg | null {
@@ -107,7 +116,7 @@ async function gh<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 interface GistFile { content?: string; truncated?: boolean; raw_url?: string }
-interface Gist { id: string; files: Record<string, GistFile | undefined> }
+interface Gist { id: string; owner?: { login: string }; files: Record<string, GistFile | undefined> }
 
 /** The gist that holds FILE, found by filename (so every device finds the same one), or a new private one. */
 async function findOrCreateGist(): Promise<string> {
@@ -127,7 +136,7 @@ async function findOrCreateGist(): Promise<string> {
 /** The gist as last read or written: its ETag and our file's text. Reads send the ETag
     (If-None-Match); GitHub answers 304 when nothing changed, and a 304 doesn't count
     toward the hourly API limit, so polling an unchanged gist is free. */
-let lastRead: { gistId: string; etag: string; text: string } | null = null;
+let lastRead: { gistId: string; etag: string; text: string; watch: Record<string, string> } | null = null;
 
 async function readRemote(): Promise<AppState | null> {
   const gistId = cfg!.gistId!;
@@ -136,25 +145,43 @@ async function readRemote(): Promise<AppState | null> {
   let text: string;
   if (res.status === 304 && known) {
     text = known.text;
+    remoteWatch = known.watch;
   } else {
     const g = (await res.json()) as Gist;
+    if (g.owner?.login && cfg!.owner !== g.owner.login) { cfg!.owner = g.owner.login; saveCfg(); }
+    const watch: Record<string, string> = {};
+    for (const [name, wf] of Object.entries(g.files)) if (name.startsWith(WATCH_PREFIX) && wf) watch[name] = wf.truncated ? "" : wf.content ?? "";
+    remoteWatch = watch;
     const f = g.files[FILE];
     if (!f) { lastRead = null; return null; }
     text = f.content ?? "";
     if (f.truncated && f.raw_url) text = await (await fetch(f.raw_url, { cache: "no-store" })).text();
     const etag = res.headers.get("etag");
-    lastRead = etag ? { gistId, etag, text } : null;
+    lastRead = etag ? { gistId, etag, text, watch } : null;
   }
   try { return normalize(JSON.parse(text)); } catch { return null; }
 }
 
-async function writeRemote(s: AppState) {
+/** The watch files in the gist as last read or written (name → text). */
+let remoteWatch: Record<string, string> = {};
+
+/** What to send so the gist's watch files match `s`: changed ones, and null for ones to delete. Empty = nothing to do. */
+function watchPatch(s: AppState): { want: Record<string, string>; patch: Record<string, { content: string } | null> } {
+  const want = watchFiles(s);
+  const patch: Record<string, { content: string } | null> = {};
+  for (const [name, text] of Object.entries(want)) if (remoteWatch[name] !== text) patch[name] = { content: text };
+  for (const name of Object.keys(remoteWatch)) if (!(name in want)) patch[name] = null;
+  return { want, patch };
+}
+
+async function writeRemote(s: AppState, watch = watchPatch(s)) {
   const gistId = cfg!.gistId!;
   const text = serialize(s);
-  const res = await ghFetch(`/gists/${gistId}`, { method: "PATCH", body: JSON.stringify({ files: { [FILE]: { content: text } } }) });
+  const res = await ghFetch(`/gists/${gistId}`, { method: "PATCH", body: JSON.stringify({ files: { [FILE]: { content: text }, ...watch.patch } }) });
+  remoteWatch = watch.want;
   // The reply carries the new version's ETag: the next read is a free 304 unless another device wrote since.
   const etag = res.headers.get("etag");
-  lastRead = etag ? { gistId, etag, text } : null;
+  lastRead = etag ? { gistId, etag, text, watch: watch.want } : null;
 }
 
 // ── sync loop ─────────────────────────────────────────────────
@@ -242,7 +269,8 @@ async function doSync(manual = false) {
     const local = getState();
     const merged = remote ? merge(local, remote) : local;
     if (serialize(merged) !== serialize(local)) replaceState(merged);
-    if (!remote || serialize(merged) !== serialize(remote)) { await writeRemote(merged); lastPush = Date.now(); }
+    const watch = watchPatch(merged);
+    if (!remote || serialize(merged) !== serialize(remote) || Object.keys(watch.patch).length) { await writeRemote(merged, watch); lastPush = Date.now(); }
     slowDowns = 0;
     setStatus({ kind: "ok", text: "Synced", detail: undefined, retryAt: undefined, last: Date.now() });
   } catch (e) {

@@ -2,7 +2,6 @@
 import Toybox.Activity;
 import Toybox.ActivityRecording;
 import Toybox.Attention;
-import Toybox.Communications;
 import Toybox.FitContributor;
 import Toybox.Lang;
 import Toybox.System;
@@ -19,10 +18,7 @@ class Runner {
     var endsAt as Number? = null;
     var startedAt as Number = 0;
     var finishedAt as Number = 0;
-    var downloadText as String = "Download: waiting";
-    // The last few inputs (P = key pressed, K = key, T = tap, S = select acted on, s = select ignored), shown small
-    // on the screen while we find out how the 970 sends START and taps. Remove once settled.
-    var inputLog as String = "";
+    var title as String;
     // while paused: when it started, and what was left of a timed step
     private var _pausedAt as Number = 0;
     private var _leftMs as Number? = null;
@@ -33,8 +29,9 @@ class Runner {
     private var _fHold as FitContributor.Field?;
     private var _timer as Timer.Timer = new Timer.Timer();
 
-    function initialize(list as Array<Step>) {
+    function initialize(list as Array<Step>, name as String) {
         steps = list;
+        title = name;
     }
 
     function step() as Step {
@@ -92,16 +89,10 @@ class Runner {
         return true;
     }
 
-    function note(s as String) as Void {
-        inputLog = inputLog + " " + s;
-        if (inputLog.length() > 18) { inputLog = inputLog.substring(inputLog.length() - 18, inputLog.length()) as String; }
-        WatchUi.requestUpdate();
-    }
-
     // ── Workout ─────────────────────────────────────────────
     private function begin() as Void {
         var s = ActivityRecording.createSession({
-            :name => "Workout Path test",
+            :name => title.length() > 32 ? title.substring(0, 32) as String : title,
             :sport => Activity.SPORT_TRAINING,
             :subSport => Activity.SUB_SPORT_STRENGTH_TRAINING
         });
@@ -232,24 +223,4 @@ class Runner {
         }
     }
 
-    // ── Test download (W1): the sync gist's file, through the phone ──
-    // Without a gist URL (the store build), a small public file from the repo: same path through the phone.
-    function download() as Void {
-        var url = GIST_RAW_URL.length() > 0 ? GIST_RAW_URL
-            : "https://raw.githubusercontent.com/itzik-a/workout-path/main/src/data/progressions.ts";
-        Communications.makeWebRequest(url, null, {
-            :method => Communications.HTTP_REQUEST_METHOD_GET,
-            :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_TEXT_PLAIN
-        }, method(:onDownload));
-    }
-
-    function onDownload(code as Number, data as Dictionary or String or Null) as Void {
-        if (code == 200 && data instanceof String) {
-            downloadText = "Download OK: " + (data as String).length() + " chars";
-        } else {
-            downloadText = "Download failed: " + code;
-        }
-        System.println(downloadText);
-        WatchUi.requestUpdate();
-    }
 }

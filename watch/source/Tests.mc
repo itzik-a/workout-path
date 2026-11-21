@@ -1,11 +1,12 @@
 // Unit tests (built only with ./build.sh test): drive the runner through the sample and save,
 // so the simulator writes a FIT activity to check.
+import Toybox.Application;
 import Toybox.Lang;
 import Toybox.Test;
 
 (:test)
 function runsEveryStepAndSaves(logger as Test.Logger) as Boolean {
-    var r = new Runner(sampleWorkout());
+    var r = new Runner(sampleWorkout(), "Test");
     r.onStart(); // begin
     Test.assertEqual(r.phase, :run);
     for (var i = 0; i < r.steps.size(); i++) {
@@ -27,7 +28,7 @@ function clockFormats(logger as Test.Logger) as Boolean {
 
 (:test)
 function pauseKeepsTheStepAndTimeLeft(logger as Test.Logger) as Boolean {
-    var r = new Runner(sampleWorkout());
+    var r = new Runner(sampleWorkout(), "Test");
     r.onStart(); // begin: step 1 is a 20 s hold
     var before = r.left();
     r.pause();
@@ -46,7 +47,7 @@ function pauseKeepsTheStepAndTimeLeft(logger as Test.Logger) as Boolean {
 
 (:test)
 function skipFromThePauseMenu(logger as Test.Logger) as Boolean {
-    var r = new Runner(sampleWorkout());
+    var r = new Runner(sampleWorkout(), "Test");
     r.onStart();
     r.pause();
     r.skip();
@@ -63,7 +64,7 @@ function skipFromThePauseMenu(logger as Test.Logger) as Boolean {
 
 (:test)
 function tapPausesAndResumes(logger as Test.Logger) as Boolean {
-    var r = new Runner(sampleWorkout());
+    var r = new Runner(sampleWorkout(), "Test");
     Test.assertEqual(r.onTap(), false); // start screen: a tap is START
     r.onStart();
     Test.assert(r.onTap());
@@ -78,5 +79,54 @@ function tapPausesAndResumes(logger as Test.Logger) as Boolean {
     r.pause();
     r.end();
     r.discard();
+    return true;
+}
+
+// Same values as hash() in src/lib/watch.ts gives.
+(:test)
+function hashMatchesTheWebApp(logger as Test.Logger) as Boolean {
+    Test.assertEqual(textHash(""), "1505");
+    Test.assertEqual(textHash("a"), "2b606");
+    Test.assertEqual(textHash("Push up · Standard\n"), "6625359c");
+    Test.assertEqual(textHash("WP1\tx\nX\tWall sit\t\th\t60\n"), "13fc7ddc");
+    return true;
+}
+
+(:test)
+function parsesAWorkoutFile(logger as Test.Logger) as Boolean {
+    Application.Storage.setValue("w:test", "WP1\ttest\nC\tplank\tStraight line\n"
+        + "X\tPlank\tForearm\th\t60\t-\t1\t3\t\t\t\t-\t\t\tplank\n"
+        + "R\t30\tRest\n"
+        + "X\tPush up\t\tr\t8\tL\t2\t3\t10\t\t\tc\t1\t2\t\n");
+    var s = workoutSteps("test") as Array<Step>;
+    Test.assertEqual(s.size(), 3);
+    Test.assertEqual(s[0][:name], "Plank · Forearm");
+    Test.assertEqual(s[0][:secs], 60);
+    Test.assert(s[0][:reps] == null);
+    Test.assertEqual(s[0][:cue], "Straight line");
+    Test.assertEqual(s[0][:sets], 3);
+    Test.assertEqual(s[1][:kind], :rest);
+    Test.assertEqual(s[1][:secs], 30);
+    Test.assertEqual(s[2][:name], "Push up · left");
+    Test.assertEqual(s[2][:reps], 8);
+    Test.assertEqual(s[2][:kg], 10);
+    Test.assertEqual(s[2][:group], :circuit);
+    Test.assertEqual(s[2][:groupN], 2);
+    Test.assert(s[2][:cue] == null);
+    Application.Storage.deleteValue("w:test");
+    return true;
+}
+
+(:test)
+function listPutsTheNextWorkoutFirst(logger as Test.Logger) as Boolean {
+    var saved = Application.Storage.getValue("index");
+    Application.Storage.setValue("index", "WP1\t1\nN\tCardio\tb\nW\ta\tFirst\t20\th1\nW\tb\tSecond\t15\th2\n");
+    var e = entries();
+    Test.assertEqual(e.size(), 2);
+    Test.assertEqual(e[0][:id], "b");
+    Test.assertEqual(e[0][:why], "Next · Cardio");
+    Test.assertEqual(e[1][:name], "First");
+    Test.assertEqual(e[1][:mins], 20);
+    if (saved != null) { Application.Storage.setValue("index", saved); } else { Application.Storage.deleteValue("index"); }
     return true;
 }

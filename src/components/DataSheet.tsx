@@ -14,6 +14,21 @@ function ago(t?: number) {
   return new Date(t).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
+/** The address the Garmin watch app downloads from: pasted once into its settings in the Connect IQ phone app. */
+function WatchAddress({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* select it by hand */ }
+  };
+  return (
+    <div className="watch-address">
+      <span className="muted small">Watch app address (Connect IQ app on the phone → Workout Path → Settings):</span>
+      <code className="small">{url}</code>
+      <button type="button" className="btn ghost" onClick={() => void copy()}>{copied ? "Copied" : "Copy"}</button>
+    </div>
+  );
+}
+
 const dotClass = (s: SyncStatus) => (s.kind === "ok" ? "ok" : s.kind === "busy" ? "busy" : s.kind === "pending" ? "pending" : s.kind === "error" ? "err" : "");
 
 export function SyncPill({ onOpen }: { onOpen: () => void }) {
@@ -104,6 +119,7 @@ export function DataSheet({ onClose }: { onClose: () => void }) {
                   {" "}(resets {new Date(s.quota.reset).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })})
                 </p>
               )}
+              {s.watchUrl && <WatchAddress url={s.watchUrl} />}
               <p className="muted small">
                 Workouts, routines and history are saved to a private gist on your GitHub account. It syncs when you open the app,
                 after you make changes (at most once a minute while you edit, right away when you leave the app), and whenever you come back to it. A workout in progress stays on this device.

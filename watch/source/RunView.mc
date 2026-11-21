@@ -9,7 +9,7 @@ const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
 // Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
-const VERSION = "0.1.7";
+const VERSION = "0.1.8";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -33,11 +33,11 @@ class RunView extends WatchUi.View {
 
     private function drawReady(dc as Graphics.Dc) as Void {
         var w = dc.getWidth(), h = dc.getHeight(), x = w / 2;
-        text(dc, x, h * 0.26, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE, "Workout Path");
-        text(dc, x, h * 0.40, Graphics.FONT_SMALL, DIM, "Test · " + _r.steps.size() + " steps");
-        text(dc, x, h * 0.54, Graphics.FONT_XTINY, DIM, _r.downloadText);
+        var title = Graphics.fitTextToArea(_r.title, Graphics.FONT_MEDIUM, w * 0.8, h * 0.24, true);
+        text(dc, x, h * 0.32, Graphics.FONT_MEDIUM, Graphics.COLOR_WHITE, title);
+        text(dc, x, h * 0.52, Graphics.FONT_SMALL, DIM, _r.steps.size() + " steps");
         text(dc, x, h * 0.72, Graphics.FONT_SMALL, ACCENT, "START to begin");
-        text(dc, x, h * 0.86, Graphics.FONT_XTINY, DIM, "v" + VERSION + "  " + _r.inputLog);
+        text(dc, x, h * 0.86, Graphics.FONT_XTINY, DIM, "v" + VERSION);
     }
 
     private function drawStep(dc as Graphics.Dc) as Void {
@@ -88,7 +88,6 @@ class RunView extends WatchUi.View {
             var n = next[:secs];
             text(dc, x, h * 0.88, Graphics.FONT_XTINY, DIM, "Next: " + next[:name] + (n != null ? " " + clock(n as Number) : ""));
         }
-        text(dc, x, h * 0.94, Graphics.FONT_XTINY, 0x5A5A5A, _r.inputLog);
     }
 
     private function drawDone(dc as Graphics.Dc) as Void {
@@ -120,7 +119,7 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
 
     // On the 970 (tested 2026-11-21): START comes as a key (press / release / onKey, ENTER or START code) followed by
     // a select; a tap comes as a select alone, without onTap. So: START = the key; a select right after the key or
-    // an onTap is the same press and ignored; any other select is a tap. inputLog shows what came in.
+    // an onTap is the same press and ignored; any other select is a tap.
     private var _keyAt as Number = -10000;
     private var _tapAt as Number = -10000;
 
@@ -134,7 +133,6 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onKeyPressed(evt as WatchUi.KeyEvent) as Boolean {
-        _r.note("P" + evt.getKey());
         if (!isStart(evt)) { return false; }
         if (!recent(_keyAt)) { _r.onStart(); }
         _keyAt = System.getTimer();
@@ -148,7 +146,6 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onKey(evt as WatchUi.KeyEvent) as Boolean {
-        _r.note("K" + evt.getKey());
         if (!isStart(evt)) { return false; } // BACK etc. go on to the behaviours below
         if (!recent(_keyAt)) { _r.onStart(); }
         _keyAt = System.getTimer();
@@ -156,18 +153,14 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onTap(evt as WatchUi.ClickEvent) as Boolean {
-        _r.note("T");
         _tapAt = System.getTimer();
         if (!_r.onTap()) { _r.onStart(); } // on the start screen a tap starts
         return true;
     }
 
     function onSelect() as Boolean {
-        if (recent(_keyAt) || recent(_tapAt)) {
-            _r.note("s");
-        } else {
-            _r.note("S");
-            if (!_r.onTap()) { _r.onStart(); } // a tap: pause / resume (on the start screen it starts)
+        if (!recent(_keyAt) && !recent(_tapAt) && !_r.onTap()) {
+            _r.onStart(); // a tap: pause / resume (on the start screen it starts)
         }
         return true;
     }

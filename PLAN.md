@@ -172,7 +172,7 @@ Garmin's workout player doesn't fit how I train: every exercise shows Garmin's n
 
 ### What it does
 
-- **Workouts on the watch.** The web app writes a small `watch.json` next to `workout-path.json` in the sync gist: the workouts already turned into steps (from `garminTree()`) and today's workout from my followed routines. The watch downloads it through the phone (Bluetooth) and keeps a copy, so it works offline.
+- **Workouts on the watch.** The web app writes small text files next to `workout-path.json` in the sync gist: the workouts already turned into steps (the web player's `buildSteps()`) and what my followed routines say is next. The watch downloads it through the phone (Bluetooth) and keeps a copy, so it works offline.
 - **Player.** My exercise and variation names and the cue; holds count down by themselves; reps show the target and one press ends the set (no count to confirm); rests count down; switch sides, interval holds, weight; "next up"; pause, skip, back; vibration and beeps at each change.
 - **Recording.** Saved to Garmin Connect as strength training (heart rate, time, calories, training effect), one lap per set.
 
@@ -186,12 +186,12 @@ Garmin's workout player doesn't fit how I train: every exercise shows Garmin's n
 - Forerunner 970: Connect IQ 6.0.3, 454 × 454 AMOLED, 768 KB for a watch app.
 - Recording: `ActivityRecording.createSession` (sport training / strength training), `addLap()`; my own numbers per lap or session through `FitContributor` fields.
 - Downloads: `Communications.makeWebRequest` through the phone, https only, and the response's content type must match what the app asks for. The raw gist file is `text/plain`, so the watch reads text and parses it itself. Size limit (simulator): 13.9 KB works, 17 KB fails (-402, too large), and `workout-path.json` is already 19 KB, so the watch gets its own small file(s).
-- Personal use: built with my own developer key (kept outside the repo) and copied to the watch over USB (`GARMIN/APPS`); no store.
+- Personal use: built with my own developer key (kept outside the repo); installed as a private beta on the Connect IQ store (USB copying to `GARMIN/APPS` didn't work on this Mac).
 - The gist id is never committed (the repo is public and the gist holds all my data): it goes into the build from an ignored local file.
 
 ### Milestones
 
-W1. **Test on the watch.** A minimal app in `watch/` (Monkey C) on the 970: a built-in sample workout (a reps step, a hold, a rest), recorded as strength training with a lap per step, plus a test download of the gist file. Check: it installs and runs; what Connect saves (sport, heart rate, laps, my lap fields); whether the download works from a sideloaded app. This decides whether to go on. (Built 2026-11-21: runs in the simulator, unit tests pass; waiting for the test on the watch.)
-W2. **Data path.** The web app writes `watch.json` to the gist on sync; the watch downloads, parses and stores it; a list of workouts with today's first.
+W1. **Test on the watch.** A minimal app in `watch/` (Monkey C) on the 970: a built-in sample workout (a reps step, a hold, a rest), recorded as strength training with a lap per step, plus a test download of the gist file. Check: it installs and runs; what Connect saves (sport, heart rate, laps, my lap fields); whether the download works from a sideloaded app. This decides whether to go on. (Done 2026-11-21, installed as a private beta on the store: Connect saves it as strength training under my workout's name, with heart rate and calories; START / tap / BACK settled on the watch. Connect shows its own empty Sets table for strength training, not the laps; whether my lap fields are in the file: check from an exported FIT in W4.)
+W2. **Data path.** The web app writes the watch's files to the gist on sync (a small index + one file per workout, plain text, so each stays far under the size limit and only changed workouts are downloaded); the watch downloads, parses and stores them; a list of workouts with today's first. The sync address is an app setting pasted in the phone app, never in the package.
 W3. **Player.** The full step-by-step flow above.
 W4. **Recording.** The session saved to Connect, with a lap per set and my lap fields.
