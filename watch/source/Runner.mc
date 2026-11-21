@@ -166,12 +166,11 @@ class Runner {
     }
 
     // ── Test download (W1): the sync gist's file, through the phone ──
+    // Without a gist URL (the store build), a small public file from the repo: same path through the phone.
     function download() as Void {
-        if (GIST_RAW_URL.length() == 0) {
-            downloadText = "Download: no URL in Secrets.mc";
-            return;
-        }
-        Communications.makeWebRequest(GIST_RAW_URL, null, {
+        var url = GIST_RAW_URL.length() > 0 ? GIST_RAW_URL
+            : "https://raw.githubusercontent.com/itzik-a/workout-path/main/src/data/progressions.ts";
+        Communications.makeWebRequest(url, null, {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
             :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_TEXT_PLAIN
         }, method(:onDownload));
