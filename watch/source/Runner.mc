@@ -56,17 +56,31 @@ class Runner {
             begin();
         } else if (phase == :run) {
             endStep();
+        } else if (phase == :paused) {
+            resume();
         } else if (phase == :done) {
             save();
             System.exit();
         }
     }
 
-    // BACK: leave the start screen; during the workout, pause and open the menu (Resume / Save /
+    // Tap on the screen: pause / resume, like tapping the ring in the web app's player.
+    // On the start screen a tap starts (false = handled as START); on the end screen it does nothing.
+    function onTap() as Boolean {
+        if (phase == :ready) { return false; }
+        if (phase == :run) {
+            pause();
+        } else if (phase == :paused) {
+            resume();
+        }
+        return true;
+    }
+
+    // BACK: leave the start screen; during the workout (or paused by a tap), pause and open the menu (Resume / Save /
     // Discard), so a press by mistake costs nothing; on the end screen, the menu without Resume.
     function onBack() as Boolean {
         if (phase == :ready) { return false; }
-        if (phase == :run) {
+        if (phase == :run || phase == :paused) {
             pause();
             openMenu(self, true);
         } else if (phase == :done) {

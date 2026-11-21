@@ -41,7 +41,7 @@ class RunView extends WatchUi.View {
         var w = dc.getWidth(), h = dc.getHeight(), x = w / 2;
         var st = _r.step();
         var rest = st[:kind] == :rest;
-        var colour = rest ? REST : ACCENT;
+        var colour = _r.phase == :paused ? DIM : rest ? REST : ACCENT;
         var secs = st[:secs];
 
         // Ring: time left in a timed step.
@@ -79,7 +79,9 @@ class RunView extends WatchUi.View {
         }
 
         var next = _r.nextStep();
-        if (next != null) {
+        if (_r.phase == :paused) {
+            text(dc, x, h * 0.88, Graphics.FONT_XTINY, ACCENT, "Tap or START to resume");
+        } else if (next != null) {
             var n = next[:secs];
             text(dc, x, h * 0.88, Graphics.FONT_XTINY, DIM, "Next: " + next[:name] + (n != null ? " " + clock(n as Number) : ""));
         }
@@ -119,5 +121,9 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
 
     function onBack() as Boolean {
         return _r.onBack();
+    }
+
+    function onTap(evt as WatchUi.ClickEvent) as Boolean {
+        return _r.onTap();
     }
 }
