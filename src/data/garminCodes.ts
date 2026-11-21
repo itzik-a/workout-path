@@ -36,6 +36,7 @@ export const GARMIN_CODES: Record<string, string> = {
   "iso-pull-up": "PULL_UP/PULL_UP",
   "box-squat": "SQUAT/SQUAT", bulgarian: "LUNGE/DUMBBELL_BULGARIAN_SPLIT_SQUAT", cossack: "LUNGE/SIDE_LUNGE",
   nordic: "LEG_CURL/LEG_CURL", "reverse-nordic": "SQUAT/SQUAT", "iso-deadlift": "DEADLIFT/DEADLIFT",
+  "tibialis-raise": "WARM_UP/WARM_UP", // Garmin has no tibialis / toe raise ("Calf Raise" is the opposite movement)
   handstand: "TOTAL_BODY/TOTAL_BODY", crow: "TOTAL_BODY/TOTAL_BODY", "walk-press": "TOTAL_BODY/TOTAL_BODY",
   planche: "TOTAL_BODY/TOTAL_BODY", "front-lever": "CORE/MODIFIED_FRONT_LEVER",
   "wall-split": "WARM_UP/STRETCH_SIDE_SPLIT", "front-split": "WARM_UP/STRETCH_FRONT_SPLIT", "side-split": "WARM_UP/STRETCH_SIDE_SPLIT",

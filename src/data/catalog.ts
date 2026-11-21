@@ -792,6 +792,21 @@ export const EXERCISES: Exercise[] = [
     cue: "Kneel tall, lean back in one line from knees to head, quads doing the work. Hold: stop at the deepest angle you can keep still.",
   },
   {
+    id: "tibialis-raise",
+    name: "Tibialis raise",
+    section: "legs",
+    regions: ["lower"],
+    mode: "reps",
+    equipment: ["wall"],
+    dose: { sets: 3, reps: 15 },
+    variations: [
+      { id: "raises", name: "Raises" },
+      { id: "hold", name: "Hold (toes up)", mode: "hold", dose: { sets: 3, seconds: 30 } },
+    ],
+    cue: "Back and hips on the wall, heels a foot or so out, legs straight; pull the toes up toward the shins as high as they go, lower slowly. Feet further out is harder.",
+    aliases: ["Tib raise", "Wall tibialis raise", "Toe raise", "Shin raise"],
+  },
+  {
     id: "iso-deadlift",
     name: "Iso deadlift",
     section: "legs",
