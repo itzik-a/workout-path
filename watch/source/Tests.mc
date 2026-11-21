@@ -45,6 +45,23 @@ function pauseKeepsTheStepAndTimeLeft(logger as Test.Logger) as Boolean {
 }
 
 (:test)
+function skipFromThePauseMenu(logger as Test.Logger) as Boolean {
+    var r = new Runner(sampleWorkout());
+    r.onStart();
+    r.pause();
+    r.skip();
+    Test.assertEqual(r.phase, :run);
+    Test.assertEqual(r.index, 1);
+    for (var i = 1; i < r.steps.size(); i++) {
+        r.pause();
+        r.skip();
+    }
+    Test.assertEqual(r.phase, :done); // skipping the last step finishes
+    r.discard();
+    return true;
+}
+
+(:test)
 function tapPausesAndResumes(logger as Test.Logger) as Boolean {
     var r = new Runner(sampleWorkout());
     Test.assertEqual(r.onTap(), false); // start screen: a tap is START

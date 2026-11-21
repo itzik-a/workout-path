@@ -173,6 +173,12 @@ class Runner {
         WatchUi.requestUpdate();
     }
 
+    // Skip from the pause menu: go on running, and close this step's lap as if START ended it.
+    function skip() as Void {
+        resume();
+        if (phase == :run) { endStep(); }
+    }
+
     // End early from the pause menu (Save / Discard).
     function end() as Void {
         if (phase == :paused) {

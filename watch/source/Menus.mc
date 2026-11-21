@@ -1,4 +1,4 @@
-// The pause / end menu, like Garmin's own: Resume (while paused), Save, Discard (asks first).
+// The pause / end menu, like Garmin's own: Resume and Skip (while paused), Save, Discard (asks first).
 // BACK in the menu resumes when paused, so a BACK pressed by mistake twice still costs nothing.
 import Toybox.Lang;
 import Toybox.System;
@@ -8,6 +8,8 @@ function openMenu(runner as Runner, paused as Boolean) as Void {
     var menu = new WatchUi.Menu2({ :title => paused ? "Paused" : "Done" });
     if (paused) {
         menu.addItem(new WatchUi.MenuItem("Resume", null, :resume, null));
+        var next = runner.nextStep();
+        menu.addItem(new WatchUi.MenuItem("Skip", next != null ? "Next: " + next[:name] : "Finish", :skip, null));
     }
     menu.addItem(new WatchUi.MenuItem("Save", null, :save, null));
     menu.addItem(new WatchUi.MenuItem("Discard", null, :discard, null));
@@ -29,6 +31,9 @@ class MenuDelegate extends WatchUi.Menu2InputDelegate {
         if (id == :resume) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             _r.resume();
+        } else if (id == :skip) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            _r.skip();
         } else if (id == :save) {
             _r.end();
             _r.save();
