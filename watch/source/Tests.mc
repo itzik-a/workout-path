@@ -130,3 +130,33 @@ function listPutsTheNextWorkoutFirst(logger as Test.Logger) as Boolean {
     if (saved != null) { Application.Storage.setValue("index", saved); } else { Application.Storage.deleteValue("index"); }
     return true;
 }
+
+// Covered by the watch's own screen: the step holds without stopping the recording, and goes on when it's back.
+(:test)
+function coveredScreenHoldsTheStep(logger as Test.Logger) as Boolean {
+    var r = new Runner(sampleWorkout(), "Test");
+    r.onStart();
+    var before = r.left();
+    r.hold();
+    Test.assertEqual(r.phase, :paused);
+    Test.assert(r.held);
+    Test.assertEqual(r.left(), before);
+    r.unhold();
+    Test.assertEqual(r.phase, :run);
+    Test.assert(!r.held);
+    Test.assertEqual(r.index, 0);
+    // a pause of mine is not undone by the screen coming back
+    r.pause();
+    r.hold();
+    r.unhold();
+    Test.assertEqual(r.phase, :paused);
+    // covered, then BACK: a real pause, which the screen coming back doesn't resume
+    r.resume();
+    r.hold();
+    r.pause();
+    r.unhold();
+    Test.assertEqual(r.phase, :paused);
+    r.end();
+    r.discard();
+    return true;
+}

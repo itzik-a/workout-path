@@ -21,6 +21,8 @@ class Runner {
     var title as String;
     // while paused: when it started, and what was left of a timed step
     private var _pausedAt as Number = 0;
+    // Paused by hold() (something covered the screen), not by me: the recording goes on, and it resumes by itself.
+    var held as Boolean = false;
     private var _leftMs as Number? = null;
 
     private var _session as ActivityRecording.Session?;
@@ -149,19 +151,45 @@ class Runner {
 
     // Freeze the step and pause the recording (its timer stops, as with Garmin's own pause).
     function pause() as Void {
+        if (held) {
+            held = false; // covered, then paused by me: now a real pause
+        } else if (phase == :run) {
+            freeze();
+        } else {
+            return;
+        }
+        var s = _session;
+        if (s != null && s.isRecording()) { s.stop(); }
+        WatchUi.requestUpdate();
+    }
+
+    // Something covered the workout screen (the watch's own "Set 1" screen when the recording starts, a phone
+    // notification): hold the step's timer until the screen is back (unhold), so the step doesn't run unseen.
+    // The recording goes on.
+    function hold() as Void {
         if (phase != :run) { return; }
+        freeze();
+        held = true;
+    }
+
+    function unhold() as Void {
+        if (held) {
+            held = false;
+            resume();
+        }
+    }
+
+    private function freeze() as Void {
         _timer.stop();
         _pausedAt = System.getTimer();
         _leftMs = endsAt != null ? (endsAt as Number) - _pausedAt : null;
-        var s = _session;
-        if (s != null && s.isRecording()) { s.stop(); }
         phase = :paused;
-        WatchUi.requestUpdate();
     }
 
     // Go on with the same step: the time away doesn't count, a timed step keeps what it had left.
     function resume() as Void {
         if (phase != :paused) { return; }
+        held = false;
         var now = System.getTimer(), away = now - _pausedAt;
         stepStart += away;
         startedAt += away;

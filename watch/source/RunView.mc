@@ -9,7 +9,7 @@ const ACCENT = 0xE8661C; // the web app's orange (dark theme)
 const REST = 0x4FA3E0;
 const DIM = 0x9A9A9A;
 // Shown on the start screen; keep it equal to the version typed in at upload (apps.garmin.com).
-const VERSION = "0.1.8";
+const VERSION = "0.1.9";
 
 class RunView extends WatchUi.View {
     private var _r as Runner;
@@ -17,6 +17,15 @@ class RunView extends WatchUi.View {
     function initialize(runner as Runner) {
         View.initialize();
         _r = runner;
+    }
+
+    // Covered by something else (not my own pause menu, which pauses first): hold the step until it's back.
+    function onHide() as Void {
+        _r.hold();
+    }
+
+    function onShow() as Void {
+        _r.unhold();
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {
@@ -82,9 +91,7 @@ class RunView extends WatchUi.View {
         }
 
         var next = _r.nextStep();
-        if (_r.phase == :paused) {
-            text(dc, x, h * 0.88, Graphics.FONT_XTINY, ACCENT, "Tap or START to resume");
-        } else if (next != null) {
+        if (next != null) {
             var n = next[:secs];
             text(dc, x, h * 0.88, Graphics.FONT_XTINY, DIM, "Next: " + next[:name] + (n != null ? " " + clock(n as Number) : ""));
         }
