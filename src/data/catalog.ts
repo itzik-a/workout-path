@@ -59,7 +59,8 @@ export type Equipment =
   | "strap"
   | "anchor"
   | "parallettes"
-  | "kettlebell";
+  | "kettlebell"
+  | "rings";
 
 /** What I have at home. The builder can hide exercises that need anything else. */
 export const HOME_EQUIPMENT: Equipment[] = [
@@ -75,6 +76,7 @@ export const HOME_EQUIPMENT: Equipment[] = [
   "strap",
   "anchor", // the bed, for Nordics
   "kettlebell", // 12 kg
+  "rings",
 ];
 
 export const REGION_LABEL: Record<Region, string> = {
@@ -106,6 +108,7 @@ export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   anchor: "Bed (anchor)",
   parallettes: "Parallettes",
   kettlebell: "Kettlebell",
+  rings: "Gymnastic rings",
   chair: "Chair",
 };
 
@@ -961,6 +964,150 @@ export const EXERCISES: Exercise[] = [
       { id: "full", name: "Full", dose: { sets: 5, seconds: 5 } },
     ],
     cue: "Arms locked, push the bar down toward your hips, shoulders down away from the ears; hips in line with the shoulders, glutes tight.",
+  },
+  {
+    id: "front-lever-row",
+    name: "Front lever row",
+    section: "skills",
+    focus: ["strength"],
+    regions: ["upper", "core"],
+    mode: "reps",
+    equipment: ["pull-up-bar"],
+    dose: { sets: 4, reps: 5 },
+    variations: [
+      { id: "tuck", name: "Tuck" },
+      { id: "adv-tuck", name: "Advanced tuck (flat back)" },
+      { id: "straddle", name: "Straddle", dose: { sets: 4, reps: 3 } },
+      { id: "full", name: "Full", dose: { sets: 4, reps: 2 } },
+    ],
+    cue: "From the front lever position, arms straight, pull the bar to the hips, body staying level; lower with control back to straight arms.",
+    aliases: ["Lever row", "FL row"],
+  },
+  {
+    id: "front-lever-pull-up",
+    name: "Front lever pull-up",
+    section: "skills",
+    focus: ["strength"],
+    regions: ["upper", "core"],
+    mode: "reps",
+    equipment: ["pull-up-bar"],
+    dose: { sets: 4, reps: 3 },
+    variations: [
+      { id: "tuck", name: "Tuck" },
+      { id: "adv-tuck", name: "Advanced tuck (flat back)" },
+      { id: "straddle", name: "Straddle" },
+      { id: "full", name: "Full", dose: { sets: 4, reps: 1 } },
+    ],
+    cue: "Hold the lever, then pull up toward the bar keeping the body horizontal, and lower back to the lever without dropping the hips.",
+    aliases: ["Lever pull-up", "FL pull-up"],
+  },
+  {
+    id: "muscle-up",
+    name: "Muscle-up",
+    section: "skills",
+    focus: ["strength"],
+    regions: ["upper", "core"],
+    mode: "reps",
+    equipment: ["pull-up-bar"],
+    dose: { sets: 4, reps: 3 },
+    variations: [
+      { id: "high-pull", name: "High pull-ups (bar to the chest)", dose: { sets: 4, reps: 5 } },
+      { id: "negative", name: "Negatives (from the top, slowly)" },
+      { id: "jumping", name: "Jumping (a small jump to the top)" },
+      { id: "strict", name: "Strict" },
+    ],
+    cue: "Pull explosively to the lower chest, lean the chest over the bar and turn the wrists over fast, then press out of the dip; keep the legs together and quiet.",
+    aliases: ["Bar muscle-up", "Muscle up"],
+  },
+  {
+    id: "one-arm-pull-up",
+    name: "One-arm pull-up",
+    section: "skills",
+    focus: ["strength"],
+    regions: ["upper"],
+    mode: "reps",
+    perSide: true,
+    equipment: ["pull-up-bar"],
+    dose: { sets: 3, reps: 2 },
+    variations: [
+      { id: "archer", name: "Archer pull-up", dose: { sets: 3, reps: 4 } },
+      { id: "typewriter", name: "Typewriter pull-up", dose: { sets: 3, reps: 3 } },
+      { id: "assisted", name: "Assisted (other hand on a towel)", dose: { sets: 3, reps: 3 } },
+      { id: "top-hold", name: "One-arm hold at the top", mode: "hold", dose: { sets: 3, seconds: 10 } },
+      { id: "negative", name: "One-arm negatives" },
+      { id: "full", name: "Full", dose: { sets: 3, reps: 1 } },
+    ],
+    cue: "Shoulder packed down before you pull, the other arm and the legs quiet; pull the elbow to the ribs and keep the body from turning.",
+    aliases: ["One arm pull up", "OAP", "Archer pull-up"],
+  },
+  {
+    id: "skin-the-cat",
+    name: "Skin the cat",
+    section: "skills",
+    focus: ["mobility", "strength"],
+    regions: ["upper", "core"],
+    mode: "reps",
+    equipment: ["rings"],
+    dose: { sets: 3, reps: 3 },
+    variations: [
+      { id: "through", name: "Through and back" },
+      { id: "german-hang", name: "German hang", mode: "hold", dose: { sets: 3, seconds: 20 } },
+    ],
+    cue: "From a hang, tuck the knees and roll backward through the arms, lower slowly into the German hang as far as the shoulders allow, then come back the same way. Also on the bar.",
+    aliases: ["German hang"],
+  },
+  {
+    id: "bridge",
+    name: "Bridge",
+    section: "skills",
+    focus: ["flexibility", "strength"],
+    regions: ["upper", "core", "lower"],
+    mode: "hold",
+    equipment: ["wall"],
+    dose: { sets: 3, seconds: 20 },
+    variations: [
+      { id: "floor", name: "From the floor" },
+      { id: "straight-arm", name: "Straight arms (shoulders over the hands)" },
+      { id: "wall-walk", name: "Wall walk-down and up", mode: "reps", dose: { sets: 3, reps: 3 } },
+      { id: "stand-to-bridge", name: "Stand to bridge", mode: "reps", dose: { sets: 3, reps: 3 } },
+    ],
+    cue: "Hands by the ears, fingers toward the feet; push the floor away until the arms are straight and the chest moves over the hands, legs working, neck relaxed.",
+    aliases: ["Wheel", "Back bridge", "Full bridge"],
+  },
+  {
+    id: "iron-cross",
+    name: "Iron cross",
+    section: "skills",
+    focus: ["strength", "isometric"],
+    regions: ["upper"],
+    mode: "hold",
+    equipment: ["rings"],
+    dose: { sets: 5, seconds: 5 },
+    variations: [
+      { id: "support-to", name: "Ring support, turned out", dose: { sets: 3, seconds: 20 } },
+      { id: "band", name: "Band-assisted" },
+      { id: "partial", name: "Partial (rings wide, arms at 45°)" },
+      { id: "full", name: "Full", dose: { sets: 5, seconds: 3 } },
+    ],
+    cue: "Arms locked with the rings turned out, press the rings down and out to the sides, shoulders down, body straight. Go slowly: the elbows and shoulders need time to adapt.",
+    aliases: ["Cross"],
+  },
+  {
+    id: "manna",
+    name: "Manna",
+    section: "skills",
+    focus: ["strength", "flexibility"],
+    regions: ["upper", "core"],
+    mode: "hold",
+    equipment: ["parallettes"],
+    dose: { sets: 5, seconds: 5 },
+    variations: [
+      { id: "compression", name: "Seated compression lifts", mode: "reps", dose: { sets: 3, reps: 10 } },
+      { id: "v-sit", name: "V-sit", dose: { sets: 4, seconds: 10 } },
+      { id: "high-v-sit", name: "High V-sit (hips past the hands)" },
+      { id: "full", name: "Full", dose: { sets: 5, seconds: 3 } },
+    ],
+    cue: "Arms straight, push the shoulders back and down, hips forward past the hands, legs straight and lifted as high as the compression allows.",
   },
 
   // ── Flexibility ────────────────────────────────────────────────

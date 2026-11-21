@@ -34,6 +34,8 @@ export const GARMIN_CODES: Record<string, string> = {
   "iso-strap-press:lateral": "LATERAL_RAISE/LATERAL_RAISE", "iso-strap-press:press-back": "SHOULDER_STABILITY/SHOULDER_STABILITY",
   "pull-up": "PULL_UP/PULL_UP", "chin-up": "PULL_UP/CHIN_UP", hang: "PULL_UP/PULL_UP", "hang:l-sit": "CORE/HANGING_L_SIT",
   "iso-pull-up": "PULL_UP/PULL_UP",
+  "muscle-up": "PULL_UP/PULL_UP", "one-arm-pull-up": "PULL_UP/PULL_UP", "front-lever-pull-up": "PULL_UP/PULL_UP",
+  "front-lever-row": "CORE/MODIFIED_FRONT_LEVER", "manna": "CORE/CORE", // the bridge, iron cross, skin the cat: Skills' "Total Body"
   "box-squat": "SQUAT/SQUAT", "pistol-squat": "SQUAT/SQUAT", bulgarian: "LUNGE/DUMBBELL_BULGARIAN_SPLIT_SQUAT", cossack: "LUNGE/SIDE_LUNGE",
   nordic: "LEG_CURL/LEG_CURL", "reverse-nordic": "SQUAT/SQUAT", "iso-deadlift": "DEADLIFT/DEADLIFT",
   "calf-raise": "CALF_RAISE/CALF_RAISE",

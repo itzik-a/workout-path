@@ -61,13 +61,15 @@ export const TEMPLATES: Template[] = [
   {
     id: "skills",
     name: "Skills",
-    blurb: "Every skill: handstand, walk press, crow, planche, front lever and L-sit. Practice fresh, stop before form breaks.",
+    blurb: "Handstand, walk press, crow, planche, front lever, muscle-up, one-arm pull-up and L-sit. Practice fresh, stop before form breaks.",
     blocks: [
       one({ ex: "handstand", v: "chest-to-wall", sets: 5, seconds: 20, rest: 60 }),
       one({ ex: "walk-press", sets: 3, reps: 5, rest: 60 }),
       one({ ex: "crow", v: "crow", sets: 5, seconds: 15, rest: 45 }),
       one({ ex: "planche", v: "lean", sets: 4, seconds: 20, rest: 60 }),
       one({ ex: "front-lever", v: "tuck", sets: 5, seconds: 10, rest: 90 }),
+      one({ ex: "muscle-up", v: "high-pull", sets: 4, reps: 5, rest: 90 }),
+      one({ ex: "one-arm-pull-up", v: "archer", sets: 3, reps: 4, rest: 90 }),
       one({ ex: "l-v-sit", v: "tuck", sets: 4, seconds: 10, rest: 60 }),
     ],
   },
