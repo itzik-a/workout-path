@@ -89,4 +89,30 @@ export const TEMPLATES: Template[] = [
       one({ ex: "reverse-nordic", v: "hold", rest: 60 }),
     ],
   },
+  {
+    id: "core",
+    name: "Core",
+    blurb: "Front and back paired (hollow body with superman, held then rocked), then planks for the front and sides, dragon flags and back extensions. Lower back stays down in every hollow.",
+    blocks: [
+      one({ ex: "cat-cow", sets: 1, reps: 10, rest: 15 }),
+      {
+        kind: "superset", rounds: 3, restBetween: 60,
+        items: [
+          { ex: "hollow-body", v: "full", seconds: 30, rest: 15 },
+          { ex: "superman", v: "hold", seconds: 20, rest: 0 },
+        ],
+      },
+      {
+        kind: "superset", rounds: 2, restBetween: 60,
+        items: [
+          { ex: "hollow-body", v: "rock", reps: 15, rest: 15 },
+          { ex: "superman", v: "arch-rock", reps: 15, rest: 0 },
+        ],
+      },
+      one({ ex: "plank", v: "rkc", sets: 3, seconds: 15, rest: 30 }),
+      one({ ex: "side-plank", v: "forearm", sets: 3, seconds: 30, rest: 30 }),
+      one({ ex: "dragon-flag", v: "tuck", sets: 3, reps: 5, rest: 90 }),
+      one({ ex: "roman-chair", v: "back", sets: 3, reps: 12, rest: 60 }),
+    ],
+  },
 ];
