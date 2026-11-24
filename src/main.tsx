@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { startSync } from "./state/sync";
+import "./lib/theme";
 import "./styles.css";
 
 startSync();

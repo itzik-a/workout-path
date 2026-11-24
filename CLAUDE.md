@@ -61,6 +61,7 @@ Vite + React 19 + TypeScript. Node 22 (`.nvmrc`). On this Mac `npm start` runs `
 
 - Design mobile-first (iPhone ~390 px), tap targets at least 44 px, safe-area padding. Below 768 px: bottom tab bar. From 1024 px: sidebar + two panes. Check both.
 - Colours only from the CSS tokens in `:root`; light and dark themes must both stay readable.
+- **Theme**: System / Light / Dark per device (`src/lib/theme.ts`, localStorage "workoutPath.theme", nothing stored = System), chosen in Sync & backup (`components/ThemePicker.tsx`). It sets `<html data-theme="light|dark">`; an inline script in `index.html` does it before the first paint. Dark tokens are `:root[data-theme="dark"]`, a dark-only rule is `:where(:root[data-theme="dark"]) .x { … }`. Never use `@media (prefers-color-scheme: dark)` in CSS. (The synced `settings.theme` field is unused: the choice is per device.)
 - Audio starts only from a user tap (iOS). Timers use timestamps so they survive the screen locking.
 - New state fields must be optional in `normalize()` so older saved copies still load.
 - Run `npm run build` after edits; it must pass with no type errors.

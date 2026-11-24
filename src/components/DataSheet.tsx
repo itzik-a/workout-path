@@ -4,6 +4,7 @@ import { exportBackup, importBackup, readBackup } from "../lib/backup";
 import { getState } from "../state/store";
 import { TOKEN_URL, connect, disconnect, syncNow, useSyncStatus, type SyncStatus } from "../state/sync";
 import { IconExternal } from "./Icons";
+import { ThemePicker } from "./ThemePicker";
 
 function ago(t?: number) {
   if (!t) return "not yet";
@@ -175,6 +176,11 @@ export function DataSheet({ onClose }: { onClose: () => void }) {
             <input ref={file} type="file" accept="application/json,.json" hidden onChange={(e) => void onFile(e.target.files?.[0])} />
           </div>
           {note && <p className="small" role="status">{note}</p>}
+        </section>
+        <section className="dlg-section" aria-labelledby="theme-title">
+          <h3 id="theme-title">Appearance</h3>
+          <ThemePicker />
+          <p className="muted small">System follows this device's light or dark setting. Each device keeps its own choice.</p>
         </section>
       </div>
     </dialog>

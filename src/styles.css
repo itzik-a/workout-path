@@ -49,45 +49,44 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0C0B0A;
-    --surface: #171513;
-    --surface-2: #211F1C;
-    --ink: #F1EEEA;
-    --muted: #A39C94;
-    --line: rgba(255, 255, 255, .08);
-    --track: rgba(255, 255, 255, .09);
-    --accent: #FB923C;
-    --accent-2: #FDBA74;
-    --accent-soft: #3A2213;
-    --on-accent: #1A0E05;
-    --good: #4ADE9A;
-    --good-soft: #10301F;
-    --danger: #FF7676;
-    --raised: #312D29;
-    --reps: #93B4FF;
-    --reps-soft: #18233D;
-    --hold: #FDBA74;
-    --hold-soft: #3A2213;
-    --time: #6EE7A0;
-    --time-soft: #0F2E1C;
-    --chart: #E8661C;
-    --toast-bg: #F1EEEA;
-    --toast-ink: #15120F;
-    --toast-action: #C2410C;
-    --shadow-lg: 0 2px 6px rgba(0, 0, 0, .35), 0 16px 40px rgba(0, 0, 0, .55);
-    --glass: rgba(23, 21, 19, .74);
-    --glass-line: rgba(255, 255, 255, .07);
-    --shadow: 0 1px 2px rgba(0, 0, 0, .3);
-    --shadow-chip: 0 1px 3px rgba(0, 0, 0, .4);
-    --mv-skin: #3A332D;
-    --mv-line: #D6D3D1;
-    --mv-prop: #A8A29E;
-    --mv-ground: #26221F;
-    --mv-ball: #A4B23A;
-    color-scheme: dark;
-  }
+/* Dark: <html data-theme="dark">, set from the choice in settings or the system's (src/lib/theme.ts) */
+:root[data-theme="dark"] {
+  --bg: #0C0B0A;
+  --surface: #171513;
+  --surface-2: #211F1C;
+  --ink: #F1EEEA;
+  --muted: #A39C94;
+  --line: rgba(255, 255, 255, .08);
+  --track: rgba(255, 255, 255, .09);
+  --accent: #FB923C;
+  --accent-2: #FDBA74;
+  --accent-soft: #3A2213;
+  --on-accent: #1A0E05;
+  --good: #4ADE9A;
+  --good-soft: #10301F;
+  --danger: #FF7676;
+  --raised: #312D29;
+  --reps: #93B4FF;
+  --reps-soft: #18233D;
+  --hold: #FDBA74;
+  --hold-soft: #3A2213;
+  --time: #6EE7A0;
+  --time-soft: #0F2E1C;
+  --chart: #E8661C;
+  --toast-bg: #F1EEEA;
+  --toast-ink: #15120F;
+  --toast-action: #C2410C;
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, .35), 0 16px 40px rgba(0, 0, 0, .55);
+  --glass: rgba(23, 21, 19, .74);
+  --glass-line: rgba(255, 255, 255, .07);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-chip: 0 1px 3px rgba(0, 0, 0, .4);
+  --mv-skin: #3A332D;
+  --mv-line: #D6D3D1;
+  --mv-prop: #A8A29E;
+  --mv-ground: #26221F;
+  --mv-ball: #A4B23A;
+  color-scheme: dark;
 }
 
 /* ---------- Base ---------- */
@@ -142,7 +141,7 @@ kbd {
   gap: 12px;
   min-width: 0;
 }
-@media (prefers-color-scheme: dark) { .card { box-shadow: inset 0 0 0 1px var(--line); } }
+:where(:root[data-theme="dark"]) .card { box-shadow: inset 0 0 0 1px var(--line); }
 
 .tag {
   display: inline-flex; align-items: center; gap: 4px; justify-self: start;
@@ -281,7 +280,7 @@ kbd {
   background: var(--surface); box-shadow: var(--shadow);
   animation: fade .2s ease-out;
 }
-@media (prefers-color-scheme: dark) { .filters { box-shadow: inset 0 0 0 1px var(--line); } }
+:where(:root[data-theme="dark"]) .filters { box-shadow: inset 0 0 0 1px var(--line); }
 
 .groups { display: grid; gap: 18px; }
 .group { display: grid; gap: 8px; }
@@ -482,7 +481,7 @@ html.dragging, html.dragging * { user-select: none; -webkit-user-select: none; c
   background: var(--surface); box-shadow: var(--shadow);
   transition: box-shadow .15s;
 }
-@media (prefers-color-scheme: dark) { .item-card { box-shadow: inset 0 0 0 1px var(--line); } }
+:where(:root[data-theme="dark"]) .item-card { box-shadow: inset 0 0 0 1px var(--line); }
 .handle {
   width: 40px; align-self: stretch; min-height: 52px;
   display: grid; place-items: center; padding: 0;
@@ -513,7 +512,7 @@ html.dragging, html.dragging * { user-select: none; -webkit-user-select: none; c
 }
 .group-card.drop-target, .builder-empty.drop-target { box-shadow: inset 0 0 0 2px var(--accent); }
 .group-top { background: transparent; box-shadow: none; }
-@media (prefers-color-scheme: dark) { .group-top { box-shadow: none; } }
+:where(:root[data-theme="dark"]) .group-top { box-shadow: none; }
 .group-top .item-editor { border-top-color: color-mix(in srgb, var(--accent) 25%, transparent); }
 .group-kind { font-weight: 700; color: var(--accent); }
 .group-items .item-card { box-shadow: none; }
@@ -983,3 +982,6 @@ code { font: .85em ui-monospace, "SF Mono", Menlo, monospace; background: var(--
 .watch-address { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .watch-address > span { flex-basis: 100%; }
 .watch-address code { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+/* Theme picker in settings (components/ThemePicker.tsx) */
+.theme-seg { justify-self: start; }
