@@ -59,6 +59,21 @@ export const TEMPLATES: Template[] = [
     ],
   },
   {
+    id: "pancake-strength",
+    name: "Pancake strength",
+    blurb: "The pancake trained through strength, 2–3 times a week: loaded folds and wide good mornings, Cossack squats, then end-range work in your deepest straddle (press down, relax and sink; pull down hands-free) and straddle leg lifts. Moderate effort at the end of the range: depth comes over weeks.",
+    blocks: [
+      one({ ex: "straddle-pelvic-tilt", sets: 2, reps: 10, rest: 15 }),
+      one({ ex: "pancake-good-morning", v: "plate", sets: 3, reps: 8, kg: 5, rest: 60 }),
+      one({ ex: "wide-good-morning", v: "barbell", sets: 3, reps: 8, kg: 30, rest: 90 }),
+      one({ ex: "cossack", sets: 3, reps: 6, rest: 60 }),
+      one({ ex: "pancake-press", sets: 4, seconds: 15, rest: 10 }),
+      one({ ex: "pancake-active", sets: 3, seconds: 10, rest: 15 }),
+      one({ ex: "straddle-leg-lift", v: "alternating", sets: 3, reps: 10, rest: 45 }),
+      one({ ex: "pancake", sets: 1, seconds: 60, rest: 0 }),
+    ],
+  },
+  {
     id: "skills",
     name: "Skills",
     blurb: "Handstand, walk press, crow, planche, front lever, muscle-up, one-arm pull-up and L-sit. Practice fresh, stop before form breaks.",

@@ -54,6 +54,10 @@ export const GARMIN_CODES: Record<string, string> = {
   planche: "TOTAL_BODY/TOTAL_BODY", "front-lever": "CORE/MODIFIED_FRONT_LEVER",
   "wall-split": "WARM_UP/STRETCH_SIDE_SPLIT", "front-split": "WARM_UP/STRETCH_FRONT_SPLIT", "side-split": "WARM_UP/STRETCH_SIDE_SPLIT",
   pancake: "WARM_UP/STRETCH_STRADDLE", pigeon: "WARM_UP/STRETCH_PIGEON_POSE", "jefferson-curl": "DEADLIFT/DEADLIFT",
+  // pancake strength: the straddle work as Garmin's straddle stretch (the step note says which), the hinge as an RDL
+  "straddle-pelvic-tilt": "WARM_UP/WARM_UP", "wide-good-morning": "DEADLIFT/ROMANIAN_DEADLIFT",
+  "pancake-good-morning": "WARM_UP/STRETCH_STRADDLE", "pancake-press": "WARM_UP/STRETCH_STRADDLE",
+  "pancake-active": "WARM_UP/STRETCH_STRADDLE", "straddle-leg-lift": "CORE/CORE",
 };
 
 /** Custom exercises (and anything not above): the generic entry of a category from the section. */
