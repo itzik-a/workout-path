@@ -60,7 +60,9 @@ export type Equipment =
   | "anchor"
   | "parallettes"
   | "kettlebell"
-  | "rings";
+  | "rings"
+  | "dip-belt"
+  | "barbell";
 
 /** What I have at home. The builder can hide exercises that need anything else. */
 export const HOME_EQUIPMENT: Equipment[] = [
@@ -77,6 +79,8 @@ export const HOME_EQUIPMENT: Equipment[] = [
   "anchor", // the bed, for Nordics
   "kettlebell", // 12 kg
   "rings",
+  "dip-belt", // chain belt: hang the kettlebell for weighted pull ups and dips
+  "barbell", // Olympic bar 20 kg + 2 × 5 kg + 2 × 10 kg plates (up to 50 kg)
 ];
 
 export const REGION_LABEL: Record<Region, string> = {
@@ -110,6 +114,8 @@ export const EQUIPMENT_LABEL: Record<Equipment, string> = {
   kettlebell: "Kettlebell",
   rings: "Gymnastic rings",
   chair: "Chair",
+  "dip-belt": "Dip belt",
+  barbell: "Barbell + plates",
 };
 
 /** Default dose when the exercise is added to a workout. */
@@ -657,6 +663,7 @@ export const EXERCISES: Exercise[] = [
     variations: [
       { id: "parallel", name: "Parallel bars" },
       { id: "bench", name: "Chair dips", dose: { sets: 3, reps: 12 } },
+      { id: "weighted", name: "Weighted (dip belt)", dose: { sets: 3, reps: 6, kg: 12 } },
     ],
     cue: "Shoulders down and back, go to about 90° at the elbow, lock out at the top.",
   },
@@ -711,6 +718,7 @@ export const EXERCISES: Exercise[] = [
     variations: [
       { id: "strict", name: "Strict" },
       { id: "negative", name: "Negatives (slow lower)" },
+      { id: "weighted", name: "Weighted (dip belt)", dose: { sets: 4, reps: 4, kg: 12 } },
     ],
     cue: "Overhand grip, start from a dead hang, chin over the bar, no kipping.",
   },
@@ -722,6 +730,10 @@ export const EXERCISES: Exercise[] = [
     mode: "reps",
     equipment: ["pull-up-bar"],
     dose: { sets: 4, reps: 6 },
+    variations: [
+      { id: "standard", name: "Bodyweight" },
+      { id: "weighted", name: "Weighted (dip belt)", dose: { sets: 4, reps: 5, kg: 12 } },
+    ],
     cue: "Underhand grip, shoulder width; pull the elbows down to the ribs.",
   },
   {
@@ -890,6 +902,128 @@ export const EXERCISES: Exercise[] = [
     equipment: ["strap"],
     dose: { sets: 3, seconds: 10 },
     cue: "Stand on the strap, set the length so you hinge with a flat back, then pull up hard.",
+  },
+
+  // Glutes: hip thrusts, hinges, single-leg squats and lunges, abduction
+  {
+    id: "hip-thrust",
+    name: "Barbell hip thrust",
+    section: "legs",
+    focus: ["strength"],
+    regions: ["lower"],
+    mode: "reps",
+    equipment: ["barbell", "chair"],
+    dose: { sets: 3, reps: 10, kg: 40 },
+    variations: [
+      { id: "barbell", name: "Barbell" },
+      { id: "paused", name: "Paused (2 s at the top)", dose: { sets: 3, reps: 8, kg: 40 } },
+    ],
+    cue: "Upper back on the couch or bed edge (a chair against the wall), bar padded over the hips; drive through the heels to a flat top, chin tucked, ribs down.",
+    aliases: ["Hip thrust", "Glute"],
+  },
+  {
+    id: "single-leg-hip-thrust",
+    name: "Single-leg hip thrust",
+    section: "legs",
+    focus: ["strength"],
+    regions: ["lower"],
+    mode: "reps",
+    perSide: true,
+    equipment: ["chair"],
+    dose: { sets: 3, reps: 10 },
+    variations: [
+      { id: "bodyweight", name: "Bodyweight" },
+      { id: "kettlebell", name: "Kettlebell on the hip", dose: { sets: 3, reps: 8, kg: 12 } },
+    ],
+    cue: "Shoulders on the chair or couch, one foot planted under the knee; lift until hip and knee line up, 2 s squeeze, hips level.",
+    aliases: ["Glute"],
+  },
+  {
+    id: "barbell-rdl",
+    name: "Romanian deadlift",
+    section: "legs",
+    regions: ["lower", "core"],
+    mode: "reps",
+    equipment: ["barbell"],
+    dose: { sets: 3, reps: 8, kg: 40 },
+    cue: "Soft knees, push the hips back with the bar against the legs; stop when the hamstrings stretch and the back would round, then squeeze the glutes to stand.",
+    aliases: ["RDL", "Hinge", "Glute"],
+  },
+  {
+    id: "single-leg-rdl",
+    name: "Single-leg Romanian deadlift",
+    section: "legs",
+    regions: ["lower", "core"],
+    mode: "reps",
+    perSide: true,
+    equipment: ["kettlebell"],
+    dose: { sets: 3, reps: 8, kg: 12 },
+    variations: [
+      { id: "bodyweight", name: "Bodyweight (reach)", dose: { sets: 3, reps: 10 } },
+      { id: "kettlebell", name: "Kettlebell" },
+    ],
+    cue: "Hinge on one leg, the other reaching back in line with the body; hips square to the floor, slow on the way down.",
+    aliases: ["RDL", "Hinge", "Glute"],
+  },
+  {
+    id: "kb-swing",
+    name: "Kettlebell swing",
+    section: "legs",
+    focus: ["strength", "cardio"],
+    regions: ["lower", "full"],
+    mode: "reps",
+    equipment: ["kettlebell"],
+    dose: { sets: 3, reps: 15, kg: 12 },
+    variations: [
+      { id: "two-hand", name: "Two hands" },
+      { id: "one-arm", name: "One arm", dose: { sets: 3, reps: 10, kg: 12 } },
+    ],
+    cue: "Hike the bell back between the legs, then snap the hips forward; the arms only guide it to chest height. Stand tall and squeeze at the top.",
+    aliases: ["Hinge", "Glute"],
+  },
+  {
+    id: "reverse-lunge",
+    name: "Reverse lunge",
+    section: "legs",
+    regions: ["lower"],
+    mode: "reps",
+    perSide: true,
+    dose: { sets: 3, reps: 10 },
+    variations: [
+      { id: "flat", name: "Bodyweight" },
+      { id: "deficit", name: "Deficit (front foot on a plate or step)" },
+      { id: "deficit-kb", name: "Deficit with the kettlebell", dose: { sets: 3, reps: 8, kg: 12 } },
+    ],
+    cue: "Step back long, lean the torso a little forward and sink until the back knee nearly touches; push up through the front heel.",
+    aliases: ["Glute"],
+  },
+  {
+    id: "skater-squat",
+    name: "Skater squat",
+    section: "legs",
+    regions: ["lower"],
+    mode: "reps",
+    perSide: true,
+    dose: { sets: 3, reps: 6 },
+    variations: [
+      { id: "assisted", name: "Assisted (hold a door frame)", dose: { sets: 3, reps: 8 } },
+      { id: "full", name: "Back knee to the floor" },
+      { id: "weighted", name: "Holding the kettlebell", dose: { sets: 3, reps: 5, kg: 12 } },
+    ],
+    cue: "Stand on one leg, the other bent behind you; sit back and down until the back knee touches a pillow, then stand without a push.",
+    aliases: ["Single-leg squat", "Glute"],
+  },
+  {
+    id: "side-lying-abduction",
+    name: "Side-lying hip abduction",
+    section: "legs",
+    regions: ["lower"],
+    mode: "reps",
+    perSide: true,
+    equipment: ["mat"],
+    dose: { sets: 2, reps: 15 },
+    cue: "Lie on your side, top leg straight and slightly behind you, toes forward; lift with the side of the hip, 1 s hold, lower slowly.",
+    aliases: ["Glute medius", "Abduction", "Glute"],
   },
 
   // ── Skills & Balance ───────────────────────────────────────────

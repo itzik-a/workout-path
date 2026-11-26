@@ -115,4 +115,17 @@ export const TEMPLATES: Template[] = [
       one({ ex: "roman-chair", v: "back", sets: 3, reps: 12, rest: 60 }),
     ],
   },
+  {
+    id: "glutes",
+    name: "Glutes",
+    blurb: "Heavy hip thrusts and Romanian deadlifts on the barbell, Bulgarian split squats with the kettlebell, swings, and side-lying abduction. Slow on the way down, squeeze at the top.",
+    blocks: [
+      one({ ex: "bulgarian", sets: 3, reps: 10, kg: 12, rest: 90 }),
+      one({ ex: "hip-thrust", v: "barbell", sets: 3, reps: 10, kg: 40, rest: 90 }),
+      one({ ex: "barbell-rdl", sets: 3, reps: 8, kg: 40, rest: 90 }),
+      one({ ex: "kb-swing", v: "two-hand", sets: 3, reps: 15, kg: 12, rest: 60 }),
+      one({ ex: "roman-chair", v: "glutes", sets: 2, reps: 12, rest: 60 }),
+      one({ ex: "side-lying-abduction", sets: 2, reps: 15, rest: 30 }),
+    ],
+  },
 ];
