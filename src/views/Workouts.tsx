@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Menu } from "../components/ui";
 import { TemplatesSheet } from "../components/TemplatesSheet";
 import { GarminSheet } from "../components/GarminSheet";
-import { IconPlay, IconPlus } from "../components/Icons";
+import { IconGrip, IconPlay, IconPlus } from "../components/Icons";
 import { startWorkout } from "./Player";
 import { showToast } from "../lib/toast";
+import { useDragSort } from "../lib/useDragSort";
 import { getExercise, workoutSummary } from "../lib/workout";
-import { createWorkout, deleteWorkout, duplicateWorkout, liveWorkouts, restoreWorkout } from "../state/actions";
+import { createWorkout, deleteWorkout, duplicateWorkout, liveWorkouts, moveWorkout, restoreWorkout } from "../state/actions";
 import { useAppState, type Workout } from "../state/store";
 import { Builder } from "./Builder";
 
@@ -32,6 +33,8 @@ function WorkoutList() {
   const list = liveWorkouts(s);
   const [tpl, setTpl] = useState(false);
   const [garmin, setGarmin] = useState(false);
+  const sort = useDragSort(list.length, moveWorkout);
+  const sortable = list.length > 1;
 
   return (
     <div className="workouts">
@@ -59,11 +62,12 @@ function WorkoutList() {
           </div>
         </div>
       ) : (
-        <ul className="workout-list">
-          {list.map((w) => {
+        <ul className={`workout-list${sortable ? " sortable" : ""}`}>
+          {list.map((w, i) => {
             const names = [...new Set(w.blocks.flatMap((b) => b.items.map((it) => getExercise(it.exerciseId, s.customExercises)?.name ?? "?")))];
             return (
-              <li key={w.id} className="card workout-card">
+              <li key={w.id} ref={sort.rowRef(i)} style={sort.rowStyle(i)} className={`card workout-card${sort.dragging === i ? " is-dragging" : ""}`}>
+                {sortable && <button type="button" className="handle" tabIndex={-1} aria-label={`Drag to reorder ${workoutName(w)}`} {...sort.handleProps(i)}><IconGrip /></button>}
                 <a className="workout-link" href={`#workouts/${w.id}`}>
                   <span className="workout-name">{workoutName(w)}</span>
                   <span className="muted small">{workoutSummary(w, s.customExercises)}</span>
@@ -77,6 +81,8 @@ function WorkoutList() {
                 <Menu
                   label={`More for ${workoutName(w)}`}
                   items={[
+                    { label: "Move up", hidden: i === 0, onSelect: () => moveWorkout(i, i - 1) },
+                    { label: "Move down", hidden: i === list.length - 1, onSelect: () => moveWorkout(i, i + 1) },
                     { label: "Duplicate", onSelect: () => { duplicateWorkout(w.id); showToast(`Duplicated ${workoutName(w)}`); } },
                     { label: "Delete", danger: true, onSelect: () => deleteWithUndo(w) },
                   ]}

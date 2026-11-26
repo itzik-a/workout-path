@@ -119,7 +119,7 @@ export interface AppState {
   exerciseNotes: Record<string, ExerciseNote>;
   workouts: Workout[];
   routines: Routine[];
-  /** routines that show on Today, in the order they were followed */
+  /** routines that show on Today (shown in the routines list's order) */
   following: string[];
   /** before several routines could be followed: the one followed (read by normalize() only) */
   activeRoutine?: string;
@@ -127,6 +127,10 @@ export interface AppState {
   /** deleted sessions, so a delete sticks after sync */
   sessionsDeleted: Tombstone[];
   settings: Settings;
+  /** when the workouts list was last reordered by hand (merge takes the list order from the newer one) */
+  workoutsOrderedAt?: number;
+  /** same for the routines list */
+  routinesOrderedAt?: number;
   updatedAt: number;
 }
 
@@ -165,6 +169,8 @@ export function normalize(s: unknown): AppState {
     sessions: arr(x.sessions),
     sessionsDeleted: arr<Tombstone | string>(x.sessionsDeleted).map((t) => (typeof t === "string" ? { id: t, at: 0 } : t)),
     settings: { ...d.settings, ...(x.settings || {}) },
+    ...(typeof x.workoutsOrderedAt === "number" ? { workoutsOrderedAt: x.workoutsOrderedAt } : {}),
+    ...(typeof x.routinesOrderedAt === "number" ? { routinesOrderedAt: x.routinesOrderedAt } : {}),
     updatedAt: x.updatedAt || 0,
   };
 }

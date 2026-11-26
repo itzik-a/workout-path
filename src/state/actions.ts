@@ -17,6 +17,23 @@ export function toggleEquipment(e: Equipment) {
 
 export const liveWorkouts = (s: AppState) => s.workouts.filter((w) => !w.deletedAt);
 
+/** Move an item within the visible (not deleted) part of a list; deleted ones go to the end. */
+function moveLive<T extends { deletedAt?: number }>(arr: T[], from: number, to: number): T[] {
+  const live = arr.filter((x) => !x.deletedAt);
+  move(live, from, to);
+  return [...live, ...arr.filter((x) => x.deletedAt)];
+}
+
+/** Reorder the workouts list (indices in `liveWorkouts`). */
+export function moveWorkout(from: number, to: number) {
+  update((s) => { s.workouts = moveLive(s.workouts, from, to); s.workoutsOrderedAt = Date.now(); });
+}
+
+/** Reorder the routines list (indices in `liveRoutines`). Today shows followed routines in this order. */
+export function moveRoutine(from: number, to: number) {
+  update((s) => { s.routines = moveLive(s.routines, from, to); s.routinesOrderedAt = Date.now(); });
+}
+
 /** Change one workout, then tidy its blocks and stamp it. */
 function edit(id: string, fn: (w: Workout, s: AppState) => void) {
   update((s) => {

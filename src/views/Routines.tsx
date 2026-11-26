@@ -6,7 +6,7 @@ import { showToast } from "../lib/toast";
 import { useDragSort } from "../lib/useDragSort";
 import { liveWorkouts } from "../state/actions";
 import {
-  addToRotation, createRoutine, deleteRoutine, duplicateRoutine, moveInRotation, removeFromRotation, renameRoutine,
+  addToRotation, createRoutine, deleteRoutine, duplicateRoutine, moveInRotation, moveRoutine, removeFromRotation, renameRoutine,
   restoreRoutine, setFollowing, setRotationNext, setRoutineDay, setRoutineKind, setTrainDays,
 } from "../state/actions";
 import { getState, useAppState, type AppState, type Routine } from "../state/store";
@@ -31,6 +31,8 @@ export function Routines({ sub }: { sub?: string }) {
 function RoutineList() {
   const s = useAppState();
   const list = liveRoutines(s);
+  const sort = useDragSort(list.length, moveRoutine);
+  const sortable = list.length > 1;
   return (
     <div className="workouts">
       <div className="page-head page-head-row">
@@ -48,11 +50,12 @@ function RoutineList() {
           <button type="button" className="btn primary" onClick={newRoutine}><IconPlus /> New routine</button>
         </div>
       ) : (
-        <ul className="workout-list">
-          {list.map((r) => {
+        <ul className={`workout-list${sortable ? " sortable" : ""}`}>
+          {list.map((r, i) => {
             const active = s.following.includes(r.id);
             return (
-              <li key={r.id} className={`card workout-card routine-card${active ? " active" : ""}`}>
+              <li key={r.id} ref={sort.rowRef(i)} style={sort.rowStyle(i)} className={`card workout-card routine-card${active ? " active" : ""}${sort.dragging === i ? " is-dragging" : ""}`}>
+                {sortable && <button type="button" className="handle" tabIndex={-1} aria-label={`Drag to reorder ${routineName(r)}`} {...sort.handleProps(i)}><IconGrip /></button>}
                 <a className="workout-link" href={`#routines/${r.id}`}>
                   <span className="workout-name">{routineName(r)} {active && <span className="tag accent"><IconCheck /> Following</span>}</span>
                   <span className="muted small">{r.kind === "weekly" ? "Weekly" : "Rotation"}</span>
@@ -65,6 +68,8 @@ function RoutineList() {
                     active
                       ? { label: "Stop following", onSelect: () => setFollowing(r.id, false) }
                       : { label: "Follow this routine", onSelect: () => setFollowing(r.id, true) },
+                    { label: "Move up", hidden: i === 0, onSelect: () => moveRoutine(i, i - 1) },
+                    { label: "Move down", hidden: i === list.length - 1, onSelect: () => moveRoutine(i, i + 1) },
                     { label: "Duplicate", onSelect: () => { duplicateRoutine(r.id); showToast(`Duplicated ${routineName(r)}`); } },
                     { label: "Delete", danger: true, onSelect: () => deleteWithUndo(r) },
                   ]}

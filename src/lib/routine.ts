@@ -30,8 +30,8 @@ export const liveWorkout = (s: AppState, id?: string | null): Workout | undefine
 export const liveRoutines = (s: AppState) => s.routines.filter((r) => !r.deletedAt);
 
 /** Followed routines (not deleted), in the order they were followed. */
-export const followedRoutines = (s: AppState) =>
-  s.following.map((id) => s.routines.find((r) => r.id === id && !r.deletedAt)).filter((r): r is Routine => !!r);
+/** Followed routines in the order of the routines list (which can be reordered by dragging). */
+export const followedRoutines = (s: AppState) => liveRoutines(s).filter((r) => s.following.includes(r.id));
 
 export const isFollowed = (s: AppState, id: string) => s.following.includes(id);
 

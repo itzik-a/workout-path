@@ -5,6 +5,8 @@
      not touched after it (so Undo after a sync still restores)
    - notes and links per exercise: the copy edited last wins
    - settings and the followed routines (`following`): from whichever whole copy changed last
+   - the order of the workouts and routines lists: from the copy reordered last
+     (`workoutsOrderedAt` / `routinesOrderedAt`; if neither or both are the same, the newer copy)
    Only type imports here, so the merge can be tested on its own. */
 import type { AppState, Session, Tombstone } from "../state/store";
 
@@ -38,10 +40,21 @@ export function merge(a: AppState, b: AppState): AppState {
     .sort((x, y) => x.startedAt - y.startedAt);
   const sessionsDeleted: Tombstone[] = [...tomb.entries()].map(([id, at]) => ({ id, at })).sort((x, y) => x.at - y.at).slice(-1000);
 
+  /** The two copies with the one whose list order wins first. */
+  const byOrder = (k: "workoutsOrderedAt" | "routinesOrderedAt") => ((older[k] ?? 0) > (newer[k] ?? 0) ? [older, newer] : [newer, older]);
+  const [wa, wb] = byOrder("workoutsOrderedAt");
+  const [ra, rb] = byOrder("routinesOrderedAt");
+  const stamp = (k: "workoutsOrderedAt" | "routinesOrderedAt") => {
+    const at = Math.max(a[k] ?? 0, b[k] ?? 0);
+    return at ? { [k]: at } : {};
+  };
+
   return {
     ...structuredClone(newer),
-    workouts: structuredClone(byId(newer.workouts, older.workouts, newerItem)),
-    routines: structuredClone(byId(newer.routines, older.routines, newerItem)),
+    workouts: structuredClone(byId(wa.workouts, wb.workouts, newerItem)),
+    routines: structuredClone(byId(ra.routines, rb.routines, newerItem)),
+    ...stamp("workoutsOrderedAt"),
+    ...stamp("routinesOrderedAt"),
     customExercises: structuredClone(byId(newer.customExercises, older.customExercises, newerItem)),
     exerciseNotes: structuredClone(mergeNotes(newer.exerciseNotes, older.exerciseNotes)),
     sessions: structuredClone(sessions),

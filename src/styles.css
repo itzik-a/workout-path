@@ -584,6 +584,11 @@ button.ex-row { width: 100%; border: 0; background: transparent; text-align: lef
 .start-btn { flex: none; }
 .play-btn { background: var(--accent-soft); color: var(--accent); }
 .workout-card { grid-template-columns: minmax(0, 1fr) auto auto; }
+/* Reorderable lists: a grip handle in front of each card. */
+.workout-list.sortable .workout-card { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.workout-list.sortable .workout-link { padding-left: 0; border-radius: 0; }
+.workout-card .handle { min-height: 44px; width: 36px; margin-left: 2px; }
+.workout-list > li.is-dragging { box-shadow: var(--shadow-lg); }
 
 /* ---------- Player ---------- */
 html.playing body { padding-bottom: 0; }
