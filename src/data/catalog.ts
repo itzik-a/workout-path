@@ -468,6 +468,24 @@ export const EXERCISES: Exercise[] = [
     aliases: ["Forearm stretch", "Golfer's elbow"],
   },
 
+  // Knee: the quad's last degrees of straightening (the inner quad, VMO), after a knee injury
+  {
+    id: "terminal-knee-extension",
+    name: "Terminal knee extension",
+    section: "physio",
+    focus: ["isometric", "strength"],
+    regions: ["lower"],
+    mode: "hold",
+    perSide: true,
+    dose: { sets: 3, seconds: 10 },
+    variations: [
+      { id: "seated", name: "Seated, towel under the knee (quad set)" },
+      { id: "standing", name: "Standing, towel between the knee and a wall" },
+    ],
+    cue: "Leg straight, a rolled towel behind the knee; press the back of the knee into it by tightening the thigh, kneecap pulled up, the inner quad hard. 10 s, then let go fully.",
+    aliases: ["TKE", "Quad set", "VMO", "Knee"],
+  },
+
   // ── Stances ────────────────────────────────────────────────────
   {
     id: "horse-stance",
@@ -798,6 +816,21 @@ export const EXERCISES: Exercise[] = [
     equipment: ["chair"],
     dose: { sets: 3, reps: 8 },
     cue: "Back foot on the chair, front knee tracks over the toes, torso tall.",
+  },
+  {
+    id: "step-down",
+    name: "Step-down",
+    section: "legs",
+    regions: ["lower"],
+    mode: "reps",
+    perSide: true,
+    dose: { sets: 3, reps: 10 },
+    variations: [
+      { id: "front", name: "Forward (heel down in front)" },
+      { id: "lateral", name: "Lateral (off the side of the step)" },
+    ],
+    cue: "Stand on a stair on one leg; lower the other heel slowly (3 s) to just touch the floor, the standing knee tracking over the middle toes, hips level; stand back up without a push.",
+    aliases: ["Eccentric step down", "Knee"],
   },
   {
     id: "cossack",

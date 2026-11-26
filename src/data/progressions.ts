@@ -25,6 +25,7 @@ export const LADDERS: Ladder[] = [
   { ex: "hang", steps: [{ v: "dead", target: 60 }, { v: "active", target: 45 }, { v: "l-sit", target: 20 }] },
   { ex: "push-up", steps: [{ v: "standard", target: 20 }, { v: "fingertip", target: 15 }, { v: "one-arm", target: 5 }] },
   { ex: "wall-sit", steps: [{ v: "two-leg", target: 90 }, { v: "single-leg", target: 45 }] },
+  { ex: "step-down", steps: [{ v: "front", target: 12 }, { v: "lateral", target: 10 }] },
   { ex: "glute-bridge", steps: [{ v: "bridge", target: 20 }, { v: "single-leg", target: 12 }] },
   { ex: "pancake-good-morning", steps: [{ v: "bodyweight", target: 12 }, { v: "plate", target: 10 }, { v: "kettlebell", target: 8 }] },
   { ex: "wide-good-morning", steps: [{ v: "bodyweight", target: 12 }, { v: "kettlebell", target: 10 }, { v: "barbell", target: 8 }] },

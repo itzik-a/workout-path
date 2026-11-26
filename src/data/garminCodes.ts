@@ -47,6 +47,7 @@ export const GARMIN_CODES: Record<string, string> = {
   "skater-squat": "SQUAT/SQUAT",
   "side-lying-abduction": "HIP_STABILITY/SIDE_LYING_LEG_RAISE",
   "calf-raise": "CALF_RAISE/CALF_RAISE",
+  "step-down": "SQUAT/SQUAT", "terminal-knee-extension": "TOTAL_BODY/TOTAL_BODY",
   "spanish-squat": "SQUAT/SQUAT", "split-squat-hold": "LUNGE/LUNGE", "copenhagen-plank": "PLANK/SIDE_PLANK",
   // the new leg stretches use the Flexibility section's "Warm-up" (BY_SECTION): no close Garmin stretch codes known
   "tibialis-raise": "WARM_UP/WARM_UP", // Garmin has no tibialis / toe raise ("Calf Raise" is the opposite movement)
