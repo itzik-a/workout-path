@@ -161,4 +161,17 @@ export const TEMPLATES: Template[] = [
       one({ ex: "side-lying-abduction", sets: 2, reps: 15, rest: 30 }),
     ],
   },
+  {
+    id: "weighted-pull-ups",
+    name: "Weighted pull-ups",
+    blurb: "Strength sets with the dip belt: the 12 kg kettlebell for pull-ups, a 10 kg plate for chin-ups (or stack plates: 5, 10, 15, 17, 22 kg…). Warm up first, then heavy, then slow negatives and a dead hang. Full hang at the bottom, chin over the bar.",
+    blocks: [
+      one({ ex: "hang", v: "active", sets: 2, seconds: 20, rest: 45 }),
+      one({ ex: "pull-up", v: "strict", sets: 2, reps: 4, rest: 60 }),
+      one({ ex: "pull-up", v: "weighted", sets: 5, reps: 3, kg: 12, rest: 150 }),
+      one({ ex: "chin-up", v: "weighted", sets: 3, reps: 5, kg: 10, rest: 120 }),
+      one({ ex: "pull-up", v: "negative", sets: 2, reps: 3, rest: 90 }),
+      one({ ex: "hang", v: "dead", sets: 1, seconds: 45, rest: 0 }),
+    ],
+  },
 ];
