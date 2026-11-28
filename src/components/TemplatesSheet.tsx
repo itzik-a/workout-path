@@ -4,12 +4,13 @@ import { TEMPLATES } from "../data/templates";
 import { fromTemplate, getExercise, workoutSummary } from "../lib/workout";
 import { createFromTemplate } from "../state/actions";
 import { showToast } from "../lib/toast";
+import { backdropClose } from "../lib/backdrop";
 
 export function TemplatesSheet({ onClose }: { onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => { ref.current?.showModal(); }, []);
   return (
-    <dialog ref={ref} className="dlg" aria-labelledby="tpl-title" onClose={onClose} onClick={(e) => { if (e.target === ref.current) ref.current.close(); }}>
+    <dialog ref={ref} className="dlg" aria-labelledby="tpl-title" onClose={onClose} {...backdropClose(ref)}>
       <div className="dlg-body">
         <div className="dlg-grip" aria-hidden="true" />
         <div className="card-head">

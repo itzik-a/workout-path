@@ -164,7 +164,7 @@ kbd {
   transition: transform .12s ease, background .15s ease, color .15s, opacity .15s;
 }
 .btn:active { transform: scale(.97); }
-.btn.primary { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--on-accent); box-shadow: 0 6px 18px -6px var(--accent); }
+.btn.primary { background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--on-accent); }
 .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
 .btn.sm { min-height: 36px; padding: 6px 14px; font-size: .88rem; position: relative; }
 .btn.sm::after { content: ""; position: absolute; inset: -4px 0; } /* 44px tap target */

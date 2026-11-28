@@ -5,6 +5,7 @@ import { getState } from "../state/store";
 import { TOKEN_URL, connect, disconnect, syncNow, useSyncStatus, type SyncStatus } from "../state/sync";
 import { IconExternal } from "./Icons";
 import { ThemePicker } from "./ThemePicker";
+import { backdropClose } from "../lib/backdrop";
 
 function ago(t?: number) {
   if (!t) return "not yet";
@@ -94,7 +95,7 @@ export function DataSheet({ onClose }: { onClose: () => void }) {
   const connected = s.kind !== "off";
 
   return (
-    <dialog ref={ref} className="dlg" aria-labelledby="dlg-title" onClose={onClose} onClick={(e) => { if (e.target === ref.current) ref.current.close(); }}>
+    <dialog ref={ref} className="dlg" aria-labelledby="dlg-title" onClose={onClose} {...backdropClose(ref)}>
       <div className="dlg-body">
         <div className="dlg-grip" aria-hidden="true" />
         <div className="card-head">
