@@ -89,6 +89,23 @@
   color-scheme: dark;
 }
 
+/* Bear: <html data-style="bear"> (src/lib/theme.ts), Bear's greys and text (as in Knowledge Path's Graphite: light from
+   bear.app's CSS and its Mac screenshot, dark from Bear's dark theme) with this app's accent kept, and its dark sidebar.
+   Contrast is Bear's: #888 muted is 3.5:1 on white. */
+:root[data-style="bear"] {
+  --bg: #F3F5F7; --surface: #FFFFFF; --surface-2: #E4E5E6; --raised: #FFFFFF; --ink: #444444; --muted: #888888;
+  --line: #E2E6E9; --track: #E4E5E6; --toast-bg: #2E3235; --toast-ink: #FFFFFF;
+  --glass: rgba(255, 255, 255, .76); --glass-line: rgba(68, 68, 68, .06); --grid: #E4E5E6; --axis: #D9D9D9;
+  /* the sidebar's own: background, selected row, text, icons, its edge */
+  --side-bg: #2E3235; --side-sel: #474747; --side-sel-ink: #FFFFFF; --side-ink: #DCE0E3; --side-muted: #A0A4A5; --side-edge: #2E3235;
+}
+:root[data-style="bear"][data-theme="dark"] {
+  --bg: #1F2022; --surface: #232325; --surface-2: #2F3032; --raised: #535355; --ink: #BCC0C3; --muted: #8A8B8D;
+  --line: #393A3C; --track: #2F3032; --toast-bg: #E2E2E4; --toast-ink: #1F2022;
+  --glass: rgba(31, 32, 34, .76); --glass-line: rgba(255, 255, 255, .06); --grid: #2C2D2F; --axis: #393A3C;
+  --side-bg: #292A2C; --side-sel: #535355; --side-sel-ink: #E2E2E4; --side-ink: #ACADAF; --side-muted: #959597; --side-edge: #2C2D2F;
+}
+
 /* ---------- Base ---------- */
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -351,6 +368,21 @@ kbd {
   .ex-row:hover { background: var(--surface-2); }
   .ex-row[aria-current="true"] { background: var(--accent-soft); }
   .detail .display { font-size: 2.1rem; }
+}
+
+/* Bear's dark sidebar: the usual tokens, redefined inside it, so its links, the brand and the sync pill all follow;
+   the page you're on is Bear's grey row, not an accent tint. */
+@media (min-width: 768px) {
+  :root[data-style="bear"] .sidebar {
+    /* raised things (a picked segment) are Bear's grey row; wells behind them a faint wash; hairlines light on dark */
+    --surface: var(--side-bg); --surface-2: rgba(255, 255, 255, .07); --raised: var(--side-sel); --line: rgba(255, 255, 255, .08);
+    --ink: var(--side-ink); --muted: var(--side-muted);
+    background: var(--side-bg); border-right-color: var(--side-edge); color: var(--side-ink); color-scheme: dark;
+  }
+  :root[data-style="bear"] .side-nav a:hover { background: rgba(255, 255, 255, .06); }
+  :root[data-style="bear"] .side-nav a[aria-current="page"],
+  :root[data-style="bear"] .side-nav a[aria-current="page"] svg { background: var(--side-sel); color: var(--side-sel-ink); }
+  :root[data-style="bear"] .side-nav a[aria-current="page"] svg { background: none; }
 }
 
 /* ---------- Shared controls ---------- */

@@ -10,12 +10,17 @@
 <meta name="theme-color" content="#F6F5F3" media="(prefers-color-scheme: light)" data-for="light">
 <meta name="theme-color" content="#0C0B0A" media="(prefers-color-scheme: dark)" data-for="dark">
 <script>
-/* Light or dark before the first paint: this device's choice, else the system's. src/lib/theme.ts does the same afterwards. */
+/* Light or dark, and the style, before the first paint: this device's choices, else the system's mode and Classic.
+   src/lib/theme.ts does the same afterwards (the Bear backgrounds here match its BARS). */
 (function () {
-  var t; try { t = localStorage.getItem("workoutPath.theme"); } catch (e) {}
-  if (t !== "light" && t !== "dark") return void (document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.dataset.theme = t;
-  document.querySelectorAll('meta[name="theme-color"][data-for]').forEach(function (m) { m.media = m.dataset.for === t ? "all" : "not all"; });
+  var root = document.documentElement, t, st;
+  try { t = localStorage.getItem("workoutPath.theme"); st = localStorage.getItem("workoutPath.style"); } catch (e) {}
+  root.dataset.style = st === "bear" ? "bear" : "classic";
+  var metas = document.querySelectorAll('meta[name="theme-color"][data-for]');
+  if (st === "bear") metas.forEach(function (m) { m.content = m.dataset.for === "dark" ? "#1F2022" : "#F3F5F7"; });
+  if (t !== "light" && t !== "dark") return void (root.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  root.dataset.theme = t;
+  metas.forEach(function (m) { m.media = m.dataset.for === t ? "all" : "not all"; });
 })();
 </script>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">

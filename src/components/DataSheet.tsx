@@ -4,7 +4,7 @@ import { exportBackup, importBackup, readBackup } from "../lib/backup";
 import { getState } from "../state/store";
 import { TOKEN_URL, connect, disconnect, syncNow, useSyncStatus, type SyncStatus } from "../state/sync";
 import { IconExternal } from "./Icons";
-import { ThemePicker } from "./ThemePicker";
+import { StylePicker, ThemePicker } from "./ThemePicker";
 import { backdropClose } from "../lib/backdrop";
 
 function ago(t?: number) {
@@ -181,7 +181,8 @@ export function DataSheet({ onClose }: { onClose: () => void }) {
         <section className="dlg-section" aria-labelledby="theme-title">
           <h3 id="theme-title">Appearance</h3>
           <ThemePicker />
-          <p className="muted small">System follows this device's light or dark setting. Each device keeps its own choice.</p>
+          <StylePicker />
+          <p className="muted small">System follows this device's light or dark setting. Bear is cool greys with a dark sidebar, keeping the accent. Each device keeps its own choice.</p>
         </section>
       </div>
     </dialog>
